@@ -1,4 +1,4 @@
 {
-  "cleanertooltips.configuration.modEnabled": "Cleaner Tooltips",
-  "cleanertooltips.configuration.addSharpness": "Sharpness value"
+  "cleanertooltips.configuration.enabled": "Cleaner Tooltips",
+  "cleanertooltips.configuration.sharpness": "Include Sharpness"
 }

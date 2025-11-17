@@ -10,12 +10,12 @@ public class Config {
 
     static {
         MOD_ENABLED = BUILDER
-                .comment("Should the cleaner tooltips be enabled?")
-                .define("modEnabled", true);
+                .comment("Whether Cleaner Tooltips should be enabled.")
+                .define("enabled", true);
 
         ADD_SHARPNESS = BUILDER
-                .comment("Should the sharpness enchantment be included in the attribute value?")
-                .define("addSharpness", true);
+                .comment("Should sharpness be included when calculating the attack damage?")
+                .define("sharpness", true);
     }
 
     static final ModConfigSpec SPEC = BUILDER.build();

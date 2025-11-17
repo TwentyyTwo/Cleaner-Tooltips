@@ -85,6 +85,7 @@ public class CleanerTooltips {
             List<Either<FormattedText, TooltipComponent>> tooltip = event.getTooltipElements();
             Component itemName = stack.getHoverName();
 
+            // Ensures the tooltip is always below the name, which ensures better compatibility between other mods
             int nameIndex = -1;
             for (int i = 0; i < tooltip.size(); i++) {
                 var component = tooltip.get(i);
@@ -102,6 +103,7 @@ public class CleanerTooltips {
         event.setSkipAll(!Screen.hasShiftDown() && Config.MOD_ENABLED.getAsBoolean());
     }
 
+    // Calculates the attribute value and returns it as a Mutable Component, which is used for width calculation and rendering purposes
     private static MutableComponent formatting(ItemAttributeModifiers.Entry entry, double baseValue, ItemStack stack) {
         double value = entry.modifier().amount();
 
@@ -127,6 +129,7 @@ public class CleanerTooltips {
         }
     }
 
+    // Renders the icon and value for the respective attribute, and returns the total width that is then used as the x position for the next attribute
     private static int renderTooltip(GuiGraphics guiGraphics, ItemAttributeModifiers.Entry entry, int x, int y, ItemStack stack) {
         ResourceLocation icon = getIcon(entry.attribute());
         guiGraphics.blit(icon, x, y, 0, 0, 9, 9, 9, 9);
@@ -139,7 +142,6 @@ public class CleanerTooltips {
         return x;
     }
 
-    // The attributes to be added to the tooltip
     public record AttributeTooltip(ItemStack stack) implements TooltipComponent, ClientTooltipComponent {
 
         @Override

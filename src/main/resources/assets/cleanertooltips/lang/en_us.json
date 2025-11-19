@@ -1,4 +1,5 @@
 {
   "cleanertooltips.configuration.enabled": "Cleaner Tooltips",
-  "cleanertooltips.configuration.sharpness": "Include Sharpness"
+  "cleanertooltips.configuration.sharpness": "Include Sharpness",
+  "cleanertooltips.configuration.durability": "Display Durability"
 }

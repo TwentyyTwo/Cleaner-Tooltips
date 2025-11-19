@@ -142,6 +142,24 @@ public class CleanerTooltips {
         return x;
     }
 
+    private static MutableComponent durabilityFormatting(ItemStack stack) {
+        int maxDurability = stack.getMaxDamage();
+        int curDurability = maxDurability - stack.getDamageValue();
+
+        return Component.empty()
+                .append(Component.literal(String.valueOf(curDurability)).withStyle(ChatFormatting.WHITE))
+                .append(Component.literal("/").withStyle(ChatFormatting.DARK_GRAY))
+                .append(Component.literal(String.valueOf(maxDurability)).withStyle(ChatFormatting.DARK_GRAY));
+    }
+
+    private static void renderDurabilityTooltip(GuiGraphics guiGraphics, int x, int y, ItemStack stack) {
+        ResourceLocation durability = ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/durability.png");
+        guiGraphics.blit(durability , x, y, 0, 0, 16, 9, 16, 9);
+
+        guiGraphics.drawString(mc.font, durabilityFormatting(stack), x + 16 + GAP, y + 1, -1);
+
+    }
+
     public record AttributeTooltip(ItemStack stack) implements TooltipComponent, ClientTooltipComponent {
 
         @Override
@@ -158,6 +176,7 @@ public class CleanerTooltips {
                 if (entry.modifier().amount() + baseValue == 0) continue;
                 width += mc.font.width(formatting(entry, baseValue, stack)) + 9 + GAP + GROUP_GAP;
             }
+            if (Config.DURABILITY.getAsBoolean() && stack.getMaxDamage() > 0) width += mc.font.width(durabilityFormatting(stack)) + 16 + GAP + GROUP_GAP;
             return width - GROUP_GAP;
         }
 
@@ -174,6 +193,7 @@ public class CleanerTooltips {
                 if (entry.modifier().amount() + baseValue == 0) continue;
                 groupX = renderTooltip(guiGraphics, entry, groupX, y - 1, stack);
             }
+            if (Config.DURABILITY.getAsBoolean() && stack.getMaxDamage() > 0) renderDurabilityTooltip(guiGraphics, groupX, y - 1, stack);
             pose.popPose();
         }
     }

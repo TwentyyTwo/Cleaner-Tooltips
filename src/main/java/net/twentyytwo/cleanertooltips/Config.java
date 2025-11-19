@@ -7,6 +7,7 @@ public class Config {
 
     public static final ModConfigSpec.BooleanValue MOD_ENABLED;
     public static final ModConfigSpec.BooleanValue ADD_SHARPNESS;
+    public static final ModConfigSpec.BooleanValue DURABILITY;
 
     static {
         MOD_ENABLED = BUILDER
@@ -16,6 +17,10 @@ public class Config {
         ADD_SHARPNESS = BUILDER
                 .comment("Should sharpness be included when calculating the attack damage?")
                 .define("sharpness", true);
+
+        DURABILITY = BUILDER
+                .comment("Should durability be included in the tooltip?")
+                .define("durability", false);
     }
 
     static final ModConfigSpec SPEC = BUILDER.build();

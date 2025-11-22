@@ -107,7 +107,7 @@ public class CleanerTooltips {
     private static MutableComponent formatting(ItemAttributeModifiers.Entry entry, double baseValue, ItemStack stack) {
         double value = entry.modifier().amount();
 
-        if (Config.ADD_SHARPNESS.getAsBoolean()) {
+        if (Config.ADD_SHARPNESS.getAsBoolean() && mc.level != null) {
             HolderLookup.Provider registries = mc.level.registryAccess();
             Holder.Reference<Enchantment> sharpnessHolder = registries.lookupOrThrow(Registries.ENCHANTMENT)
                     .getOrThrow(ResourceKey.create(Registries.ENCHANTMENT, ResourceLocation.fromNamespaceAndPath("minecraft", "sharpness")));
@@ -134,7 +134,7 @@ public class CleanerTooltips {
         ResourceLocation icon = getIcon(entry.attribute());
         guiGraphics.blit(icon, x, y, 0, 0, 9, 9, 9, 9);
 
-        double baseValue = mc.player.getAttributeBaseValue(entry.attribute());
+        double baseValue = mc.player != null ? mc.player.getAttributeBaseValue(entry.attribute()) : 0;
         MutableComponent valueStr = formatting(entry, baseValue, stack);
 
         guiGraphics.drawString(mc.font, valueStr, x + 9 + GAP, y + 1, -1);
@@ -172,7 +172,7 @@ public class CleanerTooltips {
             int width = 0;
             ItemAttributeModifiers modifiers = stack.getAttributeModifiers();
             for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-                double baseValue = mc.player.getAttributeBaseValue(entry.attribute());
+                double baseValue = mc.player != null ? mc.player.getAttributeBaseValue(entry.attribute()) : 0;
                 if (entry.modifier().amount() + baseValue == 0) continue;
                 width += mc.font.width(formatting(entry, baseValue, stack)) + 9 + GAP + GROUP_GAP;
             }
@@ -189,7 +189,7 @@ public class CleanerTooltips {
 
             int groupX = x;
             for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-                double baseValue = mc.player.getAttributeBaseValue(entry.attribute());
+                double baseValue = mc.player != null ? mc.player.getAttributeBaseValue(entry.attribute()) : 0;
                 if (entry.modifier().amount() + baseValue == 0) continue;
                 groupX = renderTooltip(guiGraphics, entry, groupX, y - 1, stack);
             }

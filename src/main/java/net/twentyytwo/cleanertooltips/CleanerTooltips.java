@@ -1,13 +1,14 @@
 package net.twentyytwo.cleanertooltips;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.datafixers.util.Either;
 import com.mojang.logging.LogUtils;
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -33,12 +34,16 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.client.event.GatherSkippedAttributeTooltipsEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
+import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
+import net.neoforged.neoforge.client.settings.KeyConflictContext;
 import net.neoforged.neoforge.common.BooleanAttribute;
 import net.neoforged.neoforge.common.PercentageAttribute;
+import net.neoforged.neoforge.common.util.Lazy;
 import org.jetbrains.annotations.NotNull;
+import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
 import java.util.List;
@@ -60,10 +65,19 @@ public class CleanerTooltips {
     private static final int GAP = 3; // The gap between the icon and the value
     private static final int GROUP_GAP = 8; // The gap between attributes
 
+    public static final Lazy<KeyMapping> HIDE_TOOLTIP = Lazy.of(() -> new KeyMapping(
+            "key.cleanertooltips.hide_tooltip",
+            KeyConflictContext.GUI,
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_LEFT_SHIFT,
+            "key.categories.inventory"
+    ));
+
     @SubscribeEvent()
-    public static void registerAttributeTooltip(RegisterClientTooltipComponentFactoriesEvent event) {
-        event.register(AttributeTooltip.class, payload -> payload);
-    }
+    public static void registerKeybind(RegisterKeyMappingsEvent event) { event.register(HIDE_TOOLTIP.get()); }
+
+    @SubscribeEvent()
+    public static void registerAttributeTooltip(RegisterClientTooltipComponentFactoriesEvent event) { event.register(AttributeTooltip.class, payload -> payload); }
 
     private static ResourceLocation getIcon(Holder<Attribute> attribute) {
         ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
@@ -81,7 +95,7 @@ public class CleanerTooltips {
     public static void addTooltip(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
 
-        if (!Screen.hasShiftDown() && Config.MOD_ENABLED.getAsBoolean() && !stack.getAttributeModifiers().modifiers().isEmpty() && mc.player != null) {
+        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), HIDE_TOOLTIP.get().getKey().getValue()) && !stack.getAttributeModifiers().modifiers().isEmpty() && mc.player != null) {
             List<Either<FormattedText, TooltipComponent>> tooltip = event.getTooltipElements();
             Component itemName = stack.getHoverName();
 
@@ -100,7 +114,7 @@ public class CleanerTooltips {
 
     @SubscribeEvent()
     public static void hideAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(!Screen.hasShiftDown() && Config.MOD_ENABLED.getAsBoolean());
+        event.setSkipAll(!InputConstants.isKeyDown(mc.getWindow().getWindow(), HIDE_TOOLTIP.get().getKey().getValue()) && Config.MOD_ENABLED.getAsBoolean());
     }
 
     // Calculates the attribute value and returns it as a Mutable Component, which is used for width calculation and rendering purposes

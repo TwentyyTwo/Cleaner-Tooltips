@@ -1,5 +1,7 @@
 {
   "cleanertooltips.configuration.enabled": "Cleaner Tooltips",
   "cleanertooltips.configuration.sharpness": "Include Sharpness",
-  "cleanertooltips.configuration.durability": "Display Durability"
+  "cleanertooltips.configuration.durability": "Display Durability",
+
+  "key.cleanertooltips.hide_tooltip": "Hide Cleaner Tooltips"
 }

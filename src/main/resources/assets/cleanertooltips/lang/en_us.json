@@ -2,6 +2,7 @@
   "cleanertooltips.configuration.enabled": "Cleaner Tooltips",
   "cleanertooltips.configuration.sharpness": "Include Sharpness",
   "cleanertooltips.configuration.durability": "Display Durability",
+  "cleanertooltips.configuration.durability_pos": "Durability Position",
 
   "key.cleanertooltips.hide_tooltip": "Hide Cleaner Tooltips"
 }

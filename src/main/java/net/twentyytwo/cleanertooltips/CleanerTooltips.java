@@ -77,7 +77,10 @@ public class CleanerTooltips {
     public static void registerKeybind(RegisterKeyMappingsEvent event) { event.register(HIDE_TOOLTIP.get()); }
 
     @SubscribeEvent()
-    public static void registerAttributeTooltip(RegisterClientTooltipComponentFactoriesEvent event) { event.register(AttributeTooltip.class, payload -> payload); }
+    public static void registerTooltips(RegisterClientTooltipComponentFactoriesEvent event) {
+        event.register(AttributeTooltip.class, payload -> payload);
+        event.register(DurabilityTooltip.class, payload -> payload);
+    }
 
     private static ResourceLocation getIcon(Holder<Attribute> attribute) {
         ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
@@ -109,6 +112,9 @@ public class CleanerTooltips {
                 }
             }
             tooltip.add((nameIndex >= 0) ? nameIndex + 1 : 1, Either.right(new AttributeTooltip(stack)));
+            if (Config.DURABILITY.getAsBoolean() && Config.DURABILITY_POS.get() == Config.POS_VALUES.DEFAULT && stack.getMaxDamage() > 0) {
+                tooltip.addLast(Either.right(new DurabilityTooltip(stack)));
+            }
         }
     }
 
@@ -156,24 +162,6 @@ public class CleanerTooltips {
         return x;
     }
 
-    private static MutableComponent durabilityFormatting(ItemStack stack) {
-        int maxDurability = stack.getMaxDamage();
-        int curDurability = maxDurability - stack.getDamageValue();
-
-        return Component.empty()
-                .append(Component.literal(String.valueOf(curDurability)).withStyle(ChatFormatting.WHITE))
-                .append(Component.literal("/").withStyle(ChatFormatting.DARK_GRAY))
-                .append(Component.literal(String.valueOf(maxDurability)).withStyle(ChatFormatting.DARK_GRAY));
-    }
-
-    private static void renderDurabilityTooltip(GuiGraphics guiGraphics, int x, int y, ItemStack stack) {
-        ResourceLocation durability = ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/durability.png");
-        guiGraphics.blit(durability , x, y, 0, 0, 16, 9, 16, 9);
-
-        guiGraphics.drawString(mc.font, durabilityFormatting(stack), x + 16 + GAP, y + 1, -1);
-
-    }
-
     public record AttributeTooltip(ItemStack stack) implements TooltipComponent, ClientTooltipComponent {
 
         @Override
@@ -190,7 +178,9 @@ public class CleanerTooltips {
                 if (entry.modifier().amount() + baseValue == 0) continue;
                 width += mc.font.width(formatting(entry, baseValue, stack)) + 9 + GAP + GROUP_GAP;
             }
-            if (Config.DURABILITY.getAsBoolean() && stack.getMaxDamage() > 0) width += mc.font.width(durabilityFormatting(stack)) + 16 + GAP + GROUP_GAP;
+            // Only if POS_VALUES.INLINE is selected
+            boolean displayDurability = Config.DURABILITY.getAsBoolean() && stack.getMaxDamage() > 0;
+            if (displayDurability && Config.DURABILITY_POS.get() == Config.POS_VALUES.INLINE) width += mc.font.width(durabilityFormatting(stack)) + 9 + GAP + GROUP_GAP;
             return width - GROUP_GAP;
         }
 
@@ -207,7 +197,51 @@ public class CleanerTooltips {
                 if (entry.modifier().amount() + baseValue == 0) continue;
                 groupX = renderTooltip(guiGraphics, entry, groupX, y - 1, stack);
             }
-            if (Config.DURABILITY.getAsBoolean() && stack.getMaxDamage() > 0) renderDurabilityTooltip(guiGraphics, groupX, y - 1, stack);
+            // Only if POS_VALUES.INLINE is selected
+            boolean displayDurability = Config.DURABILITY.getAsBoolean() && stack.getMaxDamage() > 0;
+            if (displayDurability && Config.DURABILITY_POS.get() == Config.POS_VALUES.INLINE) renderDurabilityTooltip(guiGraphics, groupX, y - 1, stack);
+            pose.popPose();
+        }
+    }
+
+    private static MutableComponent durabilityFormatting(ItemStack stack) {
+        int maxDurability = stack.getMaxDamage();
+        int curDurability = maxDurability - stack.getDamageValue();
+
+        return Component.empty()
+                .append(Component.literal(String.valueOf(curDurability)).withStyle(ChatFormatting.WHITE))
+                .append(Component.literal("/").withStyle(ChatFormatting.DARK_GRAY))
+                .append(Component.literal(String.valueOf(maxDurability)).withStyle(ChatFormatting.DARK_GRAY));
+    }
+
+    private static void renderDurabilityTooltip(GuiGraphics guiGraphics, int x, int y, ItemStack stack) {
+        ResourceLocation durability = ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/durability.png");
+        guiGraphics.blit(durability , x, y, 0, 0, 9, 9, 9, 9);
+
+        guiGraphics.drawString(mc.font, durabilityFormatting(stack), x + 9 + GAP, y + 1, -1);
+
+    }
+
+    public record DurabilityTooltip(ItemStack stack) implements TooltipComponent, ClientTooltipComponent{
+
+        @Override
+        public int getHeight() {
+            return 10;
+        }
+
+        @Override
+        public int getWidth(@NotNull Font font) {
+            int width = 0;
+            width += mc.font.width(durabilityFormatting(stack)) + 9 + GAP;
+            return width;
+        }
+
+        @Override
+        public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
+            PoseStack pose = guiGraphics.pose();
+            pose.pushPose();
+
+            renderDurabilityTooltip(guiGraphics, x, y - 1, stack);
             pose.popPose();
         }
     }

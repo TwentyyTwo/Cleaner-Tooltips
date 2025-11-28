@@ -11,8 +11,9 @@ public class Config {
     public static final ModConfigSpec.EnumValue<POS_VALUES> DURABILITY_POS;
 
     public enum POS_VALUES {
-        DEFAULT,
-        INLINE
+        INLINE,
+        BOTTOM,
+        BELOW
     }
 
     static {
@@ -21,16 +22,16 @@ public class Config {
                 .define("enabled", true);
 
         ADD_SHARPNESS = BUILDER
-                .comment("Should sharpness be included when calculating the attack damage?")
+                .comment("Should sharpness change the damage value?")
                 .define("sharpness", true);
 
         DURABILITY = BUILDER
-                .comment("Should durability be included in the tooltip?")
+                .comment("Should durability be displayed in the tooltip?")
                 .define("durability", false);
 
         DURABILITY_POS = BUILDER // Not yet implemented
-                .comment("Set to DEFAULT to display the durability at the bottom of the tooltip.\nSet to INLINE to display the durability next to the attributes.")
-                .defineEnum("durability_pos", POS_VALUES.DEFAULT);
+                .comment("Set to INLINE to display the durability next to the attributes.\nSet to BELOW to display the durability below the attributes.\nSet to BOTTOM to display the durability at the bottom of the tooltip.")
+                .defineEnum("durability_pos", POS_VALUES.INLINE);
     }
 
     static final ModConfigSpec SPEC = BUILDER.build();

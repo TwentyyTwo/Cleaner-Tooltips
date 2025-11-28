@@ -53,6 +53,7 @@ import java.util.List;
 public class CleanerTooltips {
 
     public static final String MOD_ID = "cleanertooltips";
+    @SuppressWarnings("unused")
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public CleanerTooltips(ModContainer container) {
@@ -98,7 +99,10 @@ public class CleanerTooltips {
     public static void addTooltip(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
 
-        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), HIDE_TOOLTIP.get().getKey().getValue()) && !stack.getAttributeModifiers().modifiers().isEmpty() && mc.player != null) {
+        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), HIDE_TOOLTIP.get().getKey().getValue()) &&
+                !stack.getAttributeModifiers().modifiers().isEmpty() &&
+                mc.player != null &&
+                Config.MOD_ENABLED.getAsBoolean()) {
             List<Either<FormattedText, TooltipComponent>> tooltip = event.getTooltipElements();
             Component itemName = stack.getHoverName();
 
@@ -112,8 +116,12 @@ public class CleanerTooltips {
                 }
             }
             tooltip.add((nameIndex >= 0) ? nameIndex + 1 : 1, Either.right(new AttributeTooltip(stack)));
-            if (Config.DURABILITY.getAsBoolean() && Config.DURABILITY_POS.get() == Config.POS_VALUES.DEFAULT && stack.getMaxDamage() > 0) {
-                tooltip.addLast(Either.right(new DurabilityTooltip(stack)));
+
+            if (Config.DURABILITY.getAsBoolean() && stack.getMaxDamage() > 0) {
+                switch (Config.DURABILITY_POS.get()) {
+                    case BELOW -> tooltip.add((nameIndex >= 0) ? nameIndex + 2 : 2, Either.right(new DurabilityTooltip(stack)));
+                    case BOTTOM -> tooltip.addLast(Either.right(new DurabilityTooltip(stack)));
+                }
             }
         }
     }

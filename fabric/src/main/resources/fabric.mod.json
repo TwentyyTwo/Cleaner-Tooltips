@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "${mod_id}",
+  "version": "${version}",
+
+  "name": "${mod_name}",
+  "description": "${description}",
+  "authors": ["${mod_author}"],
+  "contact": {
+    "homepage": "https://github.com/TwentyyTwo",
+    "sources": "https://github.com/TwentyyTwo/Cleaner-Tooltips"
+  },
+
+  "license": "${license}",
+  "icon": "icon.png",
+  "environment": "client",
+  "entrypoints": {
+    "client": ["net.twentyytwo.cleanertooltips.CleanerTooltipsFabric"],
+    "modmenu": ["net.twentyytwo.cleanertooltips.ModMenuApiImpl"]
+  },
+  "mixins": [
+    "cleanertooltips.mixins.json",
+    "cleanertooltips.fabric.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.0",
+    "fabric-api": "*",
+    "cloth-config": ">=11.0.0",
+    "minecraft": "${minecraft_version}",
+    "java": ">=21"
+  }
+}

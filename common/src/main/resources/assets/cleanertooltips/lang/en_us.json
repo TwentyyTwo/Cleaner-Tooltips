@@ -1,0 +1,20 @@
+{
+  "text.autoconfig.cleanertooltips.title": "Cleaner Tooltips Config",
+
+  "text.autoconfig.cleanertooltips.option.enabled": "Cleaner Tooltips",
+  "text.autoconfig.cleanertooltips.option.enabled.@Tooltip": "Whether Cleaner Tooltips should be enabled.",
+  "text.autoconfig.cleanertooltips.option.sharpness": "Calculate Sharpness",
+  "text.autoconfig.cleanertooltips.option.sharpness.@Tooltip": "Should sharpness change the damage value?",
+  "text.autoconfig.cleanertooltips.option.durability": "Display Durability",
+  "text.autoconfig.cleanertooltips.option.durability.@Tooltip": "Should durability be displayed in the tooltip?",
+  "text.autoconfig.cleanertooltips.option.durabilityPos": "Durability Position",
+  "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[0]": "Options:",
+  "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[1]": "Set to INLINE to display the durability next to the attributes.",
+  "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[2]": "Set to BOTTOM to display the durability at the bottom of the tooltip.",
+  "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[3]": "Set to BELOW to display the durability below the attributes.",
+
+  "text.autoconfig.cleanertooltips.option.enabled.@PrefixText": "General",
+  "text.autoconfig.cleanertooltips.option.sharpness.@PrefixText": "Customization",
+
+  "key.cleanertooltips.hide_tooltip": "Hide Cleaner Tooltips"
+}

@@ -1,4 +1,4 @@
-package net.twentyytwo.cleanertooltips;
+package net.twentyytwo.cleanertooltips.api;
 
 import net.minecraft.world.item.ItemStack;
 

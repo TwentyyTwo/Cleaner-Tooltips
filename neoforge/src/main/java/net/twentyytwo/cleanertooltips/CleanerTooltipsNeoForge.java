@@ -2,7 +2,6 @@ package net.twentyytwo.cleanertooltips;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import me.shedaniel.autoconfig.AutoConfig;
-import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
@@ -21,7 +20,6 @@ import java.util.function.Supplier;
 @Mod(value = CleanerTooltips.MOD_ID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = CleanerTooltips.MOD_ID, value = Dist.CLIENT)
 public class CleanerTooltipsNeoForge {
-     ItemStack stack = ItemStack.EMPTY;
     public CleanerTooltipsNeoForge(ModContainer container) {
         CleanerTooltips.init();
         container.registerExtensionPoint(IConfigScreenFactory.class, (Supplier<IConfigScreenFactory>) () ->

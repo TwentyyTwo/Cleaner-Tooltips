@@ -10,11 +10,12 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositione
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
-import net.twentyytwo.cleanertooltips.api.IStackHolder;
+import net.twentyytwo.cleanertooltips.api.IItemStackHolder;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
@@ -50,11 +51,23 @@ public abstract class GuiGraphicsMixin {
     private void makeMutable(GuiGraphics instance, Font font, List<ClientTooltipComponent> components, int mouseX, int mouseY, ClientTooltipPositioner tooltipPositioner) {
         List<ClientTooltipComponent> mutableComponents = new ArrayList<>(components);
         Minecraft mc = Minecraft.getInstance();
-        if (mc.screen instanceof IStackHolder holder) {
+        if (mc.screen instanceof IItemStackHolder holder) {
             ItemStack stack = holder.cleanerTooltips$getStack();
 
-            if (!stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY).modifiers().isEmpty() && mc.player != null &&
-            !InputConstants.isKeyDown(mc.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()) && CleanerTooltips.config.enabled) {
+            // Not the cleanest solution, but it works
+            ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
+            ItemAttributeModifiers defaultModifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
+            if (defaultModifiers.showInTooltip()) {
+                for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
+                    stack.forEachModifier(slot, (attribute, modifier) -> {
+                        builder.add(attribute, modifier, slot);
+                    });
+                }
+            }
+            ItemAttributeModifiers modifiers = new ItemAttributeModifiers(builder.build().modifiers(), defaultModifiers.showInTooltip());
+
+            if (!modifiers.modifiers().isEmpty() && mc.player != null && CleanerTooltips.config.enabled &&
+            !InputConstants.isKeyDown(mc.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue())) {
 
                 // Ensures the tooltip is always below the name, which ensures better compatibility between other mods
                 Component itemName = stack.getHoverName();
@@ -66,7 +79,7 @@ public abstract class GuiGraphicsMixin {
                         break;
                     }
                 }
-                mutableComponents.add((nameIndex >= 0) ? nameIndex + 1 : 1, new CleanerTooltips.AttributeTooltip(stack));
+                mutableComponents.add((nameIndex >= 0) ? nameIndex + 1 : 1, new CleanerTooltips.AttributeTooltip(stack, modifiers));
 
                 if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {
                     switch (CleanerTooltips.config.durabilityPos) {

@@ -38,7 +38,7 @@ public class CleanerTooltips {
 
     public static final String MOD_ID = "cleanertooltips";
     public static final Logger LOGGER = LogUtils.getLogger();
-    public static final net.minecraft.client.Minecraft mc = Minecraft.getInstance();
+    public static final Minecraft mc = Minecraft.getInstance();
 
     public static KeyMapping hideTooltip;
 
@@ -60,6 +60,7 @@ public class CleanerTooltips {
     static {
         ATTRIBUTE_TYPE_MAP.put(Attributes.KNOCKBACK_RESISTANCE, AttributeType.PERCENTAGE);
         ATTRIBUTE_TYPE_MAP.put(Attributes.MOVEMENT_SPEED, AttributeType.PERCENTAGE);
+        ATTRIBUTE_TYPE_MAP.put(Attributes.SWEEPING_DAMAGE_RATIO, AttributeType.PERCENTAGE);
 
         hideTooltip = new KeyMapping(
                 "key.cleanertooltips.hide_tooltip",
@@ -79,7 +80,7 @@ public class CleanerTooltips {
         ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
 
         if (attributeKey == null) return ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/default.png");
-        String texturePath = "textures/gui/attribute/" + attributeKey.getPath().replaceFirst("^generic\\.", "") + ".png";
+        String texturePath = "textures/gui/attribute/" + attributeKey.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
         ResourceLocation resourceLocation =  ResourceLocation.fromNamespaceAndPath("cleanertooltips", texturePath);
         if (mc.getResourceManager().getResource(resourceLocation).isEmpty())
             return ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/default.png");

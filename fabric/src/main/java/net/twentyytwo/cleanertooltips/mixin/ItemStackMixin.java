@@ -19,8 +19,7 @@ public class ItemStackMixin {
 
     @Inject( method = "addAttributeTooltips", at = @At("HEAD"), cancellable = true)
     private void hideDefaultAttributes(Consumer<Component> tooltipAdder, @Nullable Player player, CallbackInfo ci) {
-        Minecraft mc = Minecraft.getInstance();
-        if (!InputConstants.isKeyDown(mc.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue())) {
+        if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()) && CleanerTooltips.config.enabled) {
             ci.cancel();
         }
     }

@@ -5,8 +5,6 @@
   "compatibilityLevel": "JAVA_18",
   "mixins": [],
   "client": [
-    "GuiGraphicsMixin",
-    "AbstractContainerScreenMixin",
     "KeyMappingAccessor"
   ],
   "injectors": {

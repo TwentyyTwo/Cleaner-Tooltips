@@ -66,6 +66,6 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(!InputConstants.isKeyDown(CleanerTooltips.mc.getWindow().getWindow(), CleanerTooltips.hideTooltip.getKey().getValue()) && CleanerTooltips.config.enabled);
+        event.setSkipAll(!InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), CleanerTooltips.hideTooltip.getKey().getValue()) && CleanerTooltips.config.enabled);
     }
 }

@@ -19,6 +19,8 @@ public class CleanerTooltipsConfig implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     public boolean sharpness = true;
 
+    @ConfigEntry.Gui.PrefixText
+
     // Whether durability should be displayed in the tooltip.
     @ConfigEntry.Gui.Tooltip
     public boolean durability = false;
@@ -27,6 +29,9 @@ public class CleanerTooltipsConfig implements ConfigData {
     @ConfigEntry.Gui.Tooltip(count = 4)
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public posValues durabilityPos = posValues.INLINE;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean durabilityColor = true;
 
     public enum posValues {
         INLINE,

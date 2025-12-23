@@ -12,9 +12,12 @@
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[1]": "Set to INLINE to display the durability next to the attributes.",
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[2]": "Set to BOTTOM to display the durability at the bottom of the tooltip.",
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[3]": "Set to BELOW to display the durability below the attributes.",
+  "text.autoconfig.cleanertooltips.option.durabilityColor": "Durability Color",
+  "text.autoconfig.cleanertooltips.option.durabilityColor.@Tooltip": "Should the color change depending on the remaining durability?",
 
   "text.autoconfig.cleanertooltips.option.enabled.@PrefixText": "General",
   "text.autoconfig.cleanertooltips.option.sharpness.@PrefixText": "Customization",
+  "text.autoconfig.cleanertooltips.option.durability.@PrefixText": "Durability",
 
   "key.cleanertooltips.hide_tooltip": "Hide Cleaner Tooltips"
 }

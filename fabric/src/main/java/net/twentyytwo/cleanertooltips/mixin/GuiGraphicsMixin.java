@@ -1,6 +1,5 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -32,8 +31,7 @@ public class GuiGraphicsMixin {
     private void addTooltip(Font font, List<Component> tooltipLines, Optional<TooltipComponent> visualTooltipComponent, int mouseX, int mouseY, CallbackInfo ci, List<ClientTooltipComponent> list) {
         int i = 0;
         for (ClientTooltipComponent tooltipComponent : list) System.out.println(i++ + " clientComponent " + tooltipComponent);
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.screen instanceof IItemStackHolder holder) {
+        if (CleanerTooltips.MC.screen instanceof IItemStackHolder holder) {
             ItemStack stack = holder.cleanerTooltips$getStack();
             ItemAttributeModifiers modifiers = CleanerTooltipsUtil.getAttributeModifiers(stack);
 
@@ -55,8 +53,7 @@ public class GuiGraphicsMixin {
 
     @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;II)V", at = @At("HEAD"))
     private void onRenderTooltipHead(Font font, List<Component> tooltipLines, Optional<TooltipComponent> visualTooltipComponent, int mouseX, int mouseY, CallbackInfo ci) {
-        Minecraft mc = Minecraft.getInstance();
-        if (mc.screen instanceof IItemStackHolder holder) {
+        if (CleanerTooltips.MC.screen instanceof IItemStackHolder holder) {
             ItemStack stack = holder.cleanerTooltips$getStack();
             if (CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(stack))) tooltipLines.add(1, Component.empty());
         }

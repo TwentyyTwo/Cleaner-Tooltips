@@ -12,9 +12,12 @@
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[1]": "Stelle auf INLINE um die Haltbarkeit neben den Attributen anzuzeigen.",
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[2]": "Stelle auf BOTTOM um die Haltbarkeit am ende des Tooltips anzuzeigen.",
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[3]": "Stelle auf BELOW um die Haltbarkeit under den Attributen anzuzeigen.",
+  "text.autoconfig.cleanertooltips.option.durabilityColor": "Haltbarkeit Farbe",
+  "text.autoconfig.cleanertooltips.option.durabilityColor.@Tooltip": "Soll die Farbe sich je nach Haltbarkeit ändern?",
 
   "text.autoconfig.cleanertooltips.option.enabled.@PrefixText": "Allgemein",
   "text.autoconfig.cleanertooltips.option.sharpness.@PrefixText": "Personalisierung",
+  "text.autoconfig.cleanertooltips.option.durability.@PrefixText": "Haltbarkeit",
 
   "key.cleanertooltips.hide_tooltip": "Cleaner Tooltips verstecken"
 }

@@ -1,7 +1,6 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
@@ -19,7 +18,7 @@ public class ItemStackMixin {
 
     @Inject( method = "addAttributeTooltips", at = @At("HEAD"), cancellable = true)
     private void hideDefaultAttributes(Consumer<Component> tooltipAdder, @Nullable Player player, CallbackInfo ci) {
-        if (!InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()) && CleanerTooltips.config.enabled) {
+        if (!InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()) && CleanerTooltips.config.enabled) {
             ci.cancel();
         }
     }

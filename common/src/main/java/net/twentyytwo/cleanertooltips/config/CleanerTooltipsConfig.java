@@ -13,8 +13,6 @@ public class CleanerTooltipsConfig implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     public boolean enabled = true;
 
-    @ConfigEntry.Gui.PrefixText
-
     // Whether sharpness should change the damage value.
     @ConfigEntry.Gui.Tooltip
     public boolean sharpness = true;

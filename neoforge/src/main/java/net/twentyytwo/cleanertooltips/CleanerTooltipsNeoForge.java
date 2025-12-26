@@ -36,7 +36,9 @@ public class CleanerTooltipsNeoForge {
     }
 
     @SubscribeEvent()
-    public static void registerKeybind(RegisterKeyMappingsEvent event) { event.register(CleanerTooltips.hideTooltip); }
+    public static void registerKeybind(RegisterKeyMappingsEvent event) {
+        event.register(CleanerTooltips.hideTooltip);
+    }
 
     @SubscribeEvent()
     public static void registerTooltips(RegisterClientTooltipComponentFactoriesEvent event) {

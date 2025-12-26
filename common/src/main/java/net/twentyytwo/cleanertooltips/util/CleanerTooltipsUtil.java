@@ -99,31 +99,11 @@ public class CleanerTooltipsUtil {
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), AttributeDisplayType.NUMBER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_break_speed"), AttributeDisplayType.MULTIPLIER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.burning_time"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.explosion_knockback_resistance"), AttributeDisplayType.PERCENTAGE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.fall_damage_multiplier"), AttributeDisplayType.MULTIPLIER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.flying_speed"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.follow_range"), AttributeDisplayType.NUMBER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), AttributeDisplayType.MULTIPLIER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.jump_strength"), AttributeDisplayType.PERCENTAGE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.knockback_resistance"), AttributeDisplayType.PERCENTAGE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.luck"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_absorption"), AttributeDisplayType.NUMBER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.mining_efficiency"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_efficiency"), AttributeDisplayType.PERCENTAGE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"), AttributeDisplayType.MULTIPLIER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.oxygen_bonus"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.safe_fall_distance"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.scale"), AttributeDisplayType.MULTIPLIER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.sneaking_speed"), AttributeDisplayType.MULTIPLIER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.step_height"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.submerged_mining_speed"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.sweeping_damage_ratio"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.water_movement_efficiency"), AttributeDisplayType.PERCENTAGE);
-
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("neoforge", "creative_flight"), AttributeDisplayType.BOOLEAN);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("neoforge", "swim_speed"), AttributeDisplayType.MULTIPLIER);
     }
 }

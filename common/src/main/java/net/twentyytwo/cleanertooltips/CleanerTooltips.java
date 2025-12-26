@@ -27,6 +27,7 @@ import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
@@ -60,15 +61,15 @@ public class CleanerTooltips {
         config = AutoConfig.getConfigHolder(CleanerTooltipsConfig.class).getConfig();
     }
 
-    // Returns the resource location for the given attribute
+    @Nullable
     private static ResourceLocation getIcon(Holder<Attribute> attribute) {
         ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
 
-        if (attributeKey == null) return ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/default.png");
+        if (attributeKey == null) return null;
         String texturePath = "textures/gui/attribute/" + attributeKey.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
         ResourceLocation resourceLocation =  ResourceLocation.fromNamespaceAndPath("cleanertooltips", texturePath);
         if (MC.getResourceManager().getResource(resourceLocation).isEmpty())
-            return ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/default.png");
+            return null;
         return resourceLocation;
     }
 
@@ -119,7 +120,7 @@ public class CleanerTooltips {
 
     /**
      * @param stack The {@code ItemStack} the {@code AttributeTooltip} should be added on to.
-     * @param modifiers The {@code ItemAttributeModifiers} of the stack, should be obtained via {@link CleanerTooltipsUtil#getAttributeModifiers(ItemStack) getAttributeModifiers}.
+     * @param modifiers The {@code ItemAttributeModifiers} of the stack; should be obtained via {@link CleanerTooltipsUtil#getAttributeModifiers(ItemStack) getAttributeModifiers}.
      */
     public record AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers, List<TooltipEntry> cachedEntries) implements TooltipComponent, ClientTooltipComponent {
 
@@ -143,8 +144,16 @@ public class CleanerTooltips {
         @Override
         public int getWidth(@NotNull Font font) {
             int width = 0;
-            for (TooltipEntry entry : cachedEntries)
+            boolean anyIconNull = false;
+            for (TooltipEntry entry : cachedEntries) {
+                if (entry.icon() == null) {
+                    anyIconNull = true;
+                    continue;
+                }
                 width += entry.textWidth() + 9 + GAP + GROUP_GAP;
+            }
+
+            if (anyIconNull) width += font.width("[+]") + GROUP_GAP;
 
             // Only if POS_VALUES.INLINE is selected
             boolean displayDurability = config.durability && stack.getMaxDamage() > 0;
@@ -155,8 +164,19 @@ public class CleanerTooltips {
         @Override
         public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
             int groupX = x;
-            for (TooltipEntry entry : cachedEntries)
+            boolean anyIconNull = false;
+            for (TooltipEntry entry : cachedEntries) {
+                if (entry.icon() == null) {
+                    anyIconNull = true;
+                    continue;
+                }
                 groupX = renderTooltip(guiGraphics, entry, groupX, y - 1);
+            }
+
+            if (anyIconNull) {
+                guiGraphics.drawString(font, Component.literal("[+]").withStyle(ChatFormatting.YELLOW), groupX, y, -1);
+                groupX += font.width("[+]") + GROUP_GAP;
+            }
 
             // Only if posValues.INLINE is selected
             boolean displayDurability = config.durability && stack.getMaxDamage() > 0;

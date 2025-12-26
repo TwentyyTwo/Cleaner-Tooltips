@@ -16,7 +16,6 @@
   "text.autoconfig.cleanertooltips.option.durabilityColor.@Tooltip": "Should the color change depending on the remaining durability?",
 
   "text.autoconfig.cleanertooltips.option.enabled.@PrefixText": "General",
-  "text.autoconfig.cleanertooltips.option.sharpness.@PrefixText": "Customization",
   "text.autoconfig.cleanertooltips.option.durability.@PrefixText": "Durability",
 
   "key.cleanertooltips.hide_tooltip": "Hide Cleaner Tooltips"

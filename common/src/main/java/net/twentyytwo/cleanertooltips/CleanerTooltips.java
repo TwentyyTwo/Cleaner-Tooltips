@@ -74,7 +74,7 @@ public class CleanerTooltips {
     }
 
     // Calculates the attribute value and returns it as a Mutable Component, which is used for width calculation and rendering purposes
-    private static MutableComponent formatting(ItemAttributeModifiers.Entry entry, double baseValue, ItemStack stack) {
+    private static MutableComponent formatting(ItemAttributeModifiers.Entry entry, double baseValue, ItemStack stack, AttributeDisplayType displayType) {
         double value = entry.modifier().amount();
 
         if (config.sharpness && MC.level != null && entry.attribute().equals(Attributes.ATTACK_DAMAGE)) {
@@ -84,7 +84,7 @@ public class CleanerTooltips {
             if (sharpnessLevel > 0) value += (0.5 * sharpnessLevel) + 0.5;
         }
 
-        switch (CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER)) {
+        switch (displayType) {
             case BOOLEAN -> {
                 return Component.literal(value > (double) 0.0F ? "Enabled" : "Disabled").withStyle(ChatFormatting.WHITE);
             }
@@ -129,8 +129,10 @@ public class CleanerTooltips {
 
             for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
                 double baseValue = MC.player != null && MC.player.getAttributes().hasAttribute(entry.attribute()) ? MC.player.getAttributeBaseValue(entry.attribute()) : 0;
+                AttributeDisplayType displayType = CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER);
                 if (entry.modifier().amount() + baseValue != 0) {
-                    MutableComponent text = formatting(entry, baseValue, stack);
+                    if (displayType == AttributeDisplayType.DIFFERENCE && entry.modifier().amount() == 0) continue;
+                    MutableComponent text = formatting(entry, baseValue, stack, displayType);
                     cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.attribute())));
                 }
             }

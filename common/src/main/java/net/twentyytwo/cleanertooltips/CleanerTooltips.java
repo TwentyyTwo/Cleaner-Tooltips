@@ -155,7 +155,7 @@ public class CleanerTooltips {
                 width += entry.textWidth() + 9 + GAP + GROUP_GAP;
             }
 
-            if (anyIconNull) width += font.width("[+]") + GROUP_GAP;
+            if (anyIconNull && config.hiddenAttributesHint) width += font.width("[+]") + GROUP_GAP;
 
             // Only if POS_VALUES.INLINE is selected
             boolean displayDurability = config.durability && stack.getMaxDamage() > 0;
@@ -175,7 +175,7 @@ public class CleanerTooltips {
                 groupX = renderTooltip(guiGraphics, entry, groupX, y - 1);
             }
 
-            if (anyIconNull) {
+            if (anyIconNull && config.hiddenAttributesHint) {
                 guiGraphics.drawString(font, Component.literal("[+]").withStyle(ChatFormatting.YELLOW), groupX, y, -1);
                 groupX += font.width("[+]") + GROUP_GAP;
             }

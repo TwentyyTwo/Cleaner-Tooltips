@@ -5,6 +5,8 @@
   "text.autoconfig.cleanertooltips.option.enabled.@Tooltip": "Ob Cleaner Tooltips aktiviert sein soll.",
   "text.autoconfig.cleanertooltips.option.sharpness": "Schärfe Berechnen",
   "text.autoconfig.cleanertooltips.option.sharpness.@Tooltip": "Soll Schärfe den Schaden verändern?",
+  "text.autoconfig.cleanertooltips.option.hiddenAttributesHint": "Versteckte Attribute Hinweis",
+  "text.autoconfig.cleanertooltips.option.hiddenAttributesHint.@Tooltip": "Ob auf versteckte Attribute hingewiesen werden soll.",
   "text.autoconfig.cleanertooltips.option.durability": "Haltbarkeit Anzeigen",
   "text.autoconfig.cleanertooltips.option.durability.@Tooltip": "Soll die Haltbarkeit im Tooltip angezeigt werden?",
   "text.autoconfig.cleanertooltips.option.durabilityPos": "Haltbarkeit Position",

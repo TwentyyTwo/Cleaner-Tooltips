@@ -5,6 +5,8 @@
   "text.autoconfig.cleanertooltips.option.enabled.@Tooltip": "Whether Cleaner Tooltips should be enabled.",
   "text.autoconfig.cleanertooltips.option.sharpness": "Calculate Sharpness",
   "text.autoconfig.cleanertooltips.option.sharpness.@Tooltip": "Should sharpness change the damage value?",
+  "text.autoconfig.cleanertooltips.option.hiddenAttributesHint": "Hidden Attributes Hint",
+  "text.autoconfig.cleanertooltips.option.hiddenAttributesHint.@Tooltip": "Whether hidden attributes should be hinted at.",
   "text.autoconfig.cleanertooltips.option.durability": "Display Durability",
   "text.autoconfig.cleanertooltips.option.durability.@Tooltip": "Should durability be displayed in the tooltip?",
   "text.autoconfig.cleanertooltips.option.durabilityPos": "Durability Position",

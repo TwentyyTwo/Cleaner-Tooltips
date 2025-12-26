@@ -17,6 +17,9 @@ public class CleanerTooltipsConfig implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     public boolean sharpness = true;
 
+    @ConfigEntry.Gui.Tooltip
+    public boolean hiddenAttributesHint = true;
+
     @ConfigEntry.Gui.PrefixText
 
     // Whether durability should be displayed in the tooltip.

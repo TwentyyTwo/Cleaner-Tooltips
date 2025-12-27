@@ -1,18 +1,20 @@
 package net.twentyytwo.cleanertooltips.util;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Multimap;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.mixin.KeyMappingAccessor;
 
@@ -64,15 +66,12 @@ public class CleanerTooltipsUtil {
      * {@code ItemStack}, which works for all {@code EquipmentSlotGroup}
      *
      * @param stack the item which modifiers are returned*/
-    public static ItemAttributeModifiers getAttributeModifiers(ItemStack stack) {
-        ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
-        ItemAttributeModifiers defaultModifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
-        if (defaultModifiers.showInTooltip()) {
-            for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
-                stack.forEachModifier(slot, (attribute, modifier) -> builder.add(attribute, modifier, slot));
-            }
+    public static Multimap<Attribute, AttributeModifier> getAttributeModifiers(ItemStack stack) {
+        Multimap<Attribute, AttributeModifier> multimap = HashMultimap.create();
+        for (EquipmentSlot slot : EquipmentSlot.values()) {
+            multimap.putAll(stack.getAttributeModifiers(slot));
         }
-        return new ItemAttributeModifiers(builder.build().modifiers(), defaultModifiers.showInTooltip());
+        return multimap;
     }
 
     /**
@@ -81,10 +80,10 @@ public class CleanerTooltipsUtil {
      * minimize the total amount of calculations.
      *
      * @param modifiers the {@code ItemAttributeModifiers} of the {@code ItemStack}*/
-    public static boolean shouldAddTooltip(ItemAttributeModifiers modifiers) {
+    public static boolean shouldAddTooltip(Multimap<Attribute, AttributeModifier> modifiers) {
         Minecraft mc = CleanerTooltips.MC;
         return !InputConstants.isKeyDown(mc.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()) &&
-                !modifiers.modifiers().isEmpty() && mc.player != null && CleanerTooltips.config.enabled;
+                !modifiers.isEmpty() && mc.player != null && CleanerTooltips.config.enabled;
     }
 
     /**
@@ -92,18 +91,18 @@ public class CleanerTooltipsUtil {
      */
     public static final Map<ResourceLocation, AttributeDisplayType> ATTRIBUTE_DISPLAY_MAP = new HashMap<>();
     static {
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor_toughness"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_damage"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_knockback"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_break_speed"), AttributeDisplayType.MULTIPLIER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), AttributeDisplayType.MULTIPLIER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.knockback_resistance"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.luck"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"), AttributeDisplayType.MULTIPLIER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.armor"), AttributeDisplayType.NUMBER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.armor_toughness"), AttributeDisplayType.NUMBER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.attack_damage"), AttributeDisplayType.NUMBER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.attack_knockback"), AttributeDisplayType.NUMBER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.attack_speed"), AttributeDisplayType.NUMBER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "player.block_break_speed"), AttributeDisplayType.MULTIPLIER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "player.block_interaction_range"), AttributeDisplayType.DIFFERENCE);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "player.entity_interaction_range"), AttributeDisplayType.DIFFERENCE);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.gravity"), AttributeDisplayType.MULTIPLIER);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.knockback_resistance"), AttributeDisplayType.PERCENTAGE);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.luck"), AttributeDisplayType.PERCENTAGE);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.max_health"), AttributeDisplayType.DIFFERENCE);
+        ATTRIBUTE_DISPLAY_MAP.put(new ResourceLocation("minecraft", "generic.movement_speed"), AttributeDisplayType.MULTIPLIER);
     }
 }

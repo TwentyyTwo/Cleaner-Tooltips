@@ -1,5 +1,6 @@
 package net.twentyytwo.cleanertooltips;
 
+import com.google.common.collect.Multimap;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.logging.LogUtils;
 import me.shedaniel.autoconfig.AutoConfig;
@@ -10,19 +11,17 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.MobType;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
-import net.minecraft.world.item.enchantment.Enchantments;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
@@ -33,6 +32,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class CleanerTooltips {
 
@@ -45,7 +45,7 @@ public class CleanerTooltips {
 
     private static final int GAP = 3; // The gap between the icon and the value
     private static final int GROUP_GAP = 8; // The gap between attributes
-    private static final ResourceLocation DURABILITY_ICON = ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/durability.png");
+    private static final ResourceLocation DURABILITY_ICON = new ResourceLocation("cleanertooltips", "textures/gui/attribute/durability.png");
 
     static {
         hideTooltip = new KeyMapping(
@@ -62,46 +62,40 @@ public class CleanerTooltips {
     }
 
     @Nullable
-    private static ResourceLocation getIcon(Holder<Attribute> attribute) {
-        ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
+    private static ResourceLocation getIcon(Attribute attribute) {
+        ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute);
 
         if (attributeKey == null) return null;
         String texturePath = "textures/gui/attribute/" + attributeKey.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
-        ResourceLocation resourceLocation =  ResourceLocation.fromNamespaceAndPath("cleanertooltips", texturePath);
+        ResourceLocation resourceLocation = new ResourceLocation("cleanertooltips", texturePath);
         if (MC.getResourceManager().getResource(resourceLocation).isEmpty())
             return null;
         return resourceLocation;
     }
 
     // Calculates the attribute value and returns it as a Mutable Component, which is used for width calculation and rendering purposes
-    private static MutableComponent formatting(ItemAttributeModifiers.Entry entry, double baseValue, ItemStack stack, AttributeDisplayType displayType) {
-        double value = entry.modifier().amount();
-
-        if (config.sharpness && MC.level != null && entry.attribute().equals(Attributes.ATTACK_DAMAGE)) {
-            int sharpnessLevel = EnchantmentHelper.getItemEnchantmentLevel(MC.level.registryAccess()
-                            .lookupOrThrow(Registries.ENCHANTMENT)
-                            .getOrThrow(Enchantments.SHARPNESS), stack);
-            if (sharpnessLevel > 0) value += (0.5 * sharpnessLevel) + 0.5;
-        }
+    private static MutableComponent formatting(Attribute attribute, double value, double baseValue, ItemStack stack, AttributeDisplayType displayType) {
+        if (config.sharpness && MC.level != null && attribute.equals(Attributes.ATTACK_DAMAGE))
+            value += EnchantmentHelper.getDamageBonus(stack, MobType.UNDEFINED);
 
         switch (displayType) {
             case BOOLEAN -> {
                 return Component.literal(value > (double) 0.0F ? "Enabled" : "Disabled").withStyle(ChatFormatting.WHITE);
             }
             case DIFFERENCE -> {
-                return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value))
+                return Component.literal((value > 0 ? "+" : "") + ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(value))
                         .withStyle(ChatFormatting.WHITE);
             }
             case MULTIPLIER -> {
-                return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format((value + baseValue) / baseValue) + "x")
+                return Component.literal(ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format((value + baseValue) / baseValue) + "x")
                         .withStyle(ChatFormatting.WHITE);
             }
             case PERCENTAGE -> {
-                return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value * 100) + "%")
+                return Component.literal((value > 0 ? "+" : "") + ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(value * 100) + "%")
                         .withStyle(ChatFormatting.WHITE);
             }
             default -> {
-                return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value + baseValue)
+                return Component.literal(ItemStack.ATTRIBUTE_MODIFIER_FORMAT.format(value + baseValue)
                         .formatted(ChatFormatting.WHITE));
             }
         }
@@ -122,18 +116,18 @@ public class CleanerTooltips {
      * @param stack The {@code ItemStack} the {@code AttributeTooltip} should be added on to.
      * @param modifiers The {@code ItemAttributeModifiers} of the stack; should be obtained via {@link CleanerTooltipsUtil#getAttributeModifiers(ItemStack) getAttributeModifiers}.
      */
-    public record AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers, List<TooltipEntry> cachedEntries) implements TooltipComponent, ClientTooltipComponent {
+    public record AttributeTooltip(ItemStack stack, Multimap<Attribute, AttributeModifier> modifiers, List<TooltipEntry> cachedEntries) implements TooltipComponent, ClientTooltipComponent {
 
-        public AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
+        public AttributeTooltip(ItemStack stack, Multimap<Attribute, AttributeModifier> modifiers) {
             this(stack, modifiers, new ArrayList<>());
 
-            for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-                double baseValue = MC.player != null && MC.player.getAttributes().hasAttribute(entry.attribute()) ? MC.player.getAttributeBaseValue(entry.attribute()) : 0;
-                AttributeDisplayType displayType = CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER);
-                if (entry.modifier().amount() + baseValue != 0) {
-                    if (displayType == AttributeDisplayType.DIFFERENCE && entry.modifier().amount() == 0) continue;
-                    MutableComponent text = formatting(entry, baseValue, stack, displayType);
-                    cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.attribute())));
+            for (Map.Entry<Attribute, AttributeModifier> entry : modifiers.entries()) {
+                double baseValue = MC.player != null && MC.player.getAttributes().hasAttribute(entry.getKey()) ? MC.player.getAttributeBaseValue(entry.getKey()) : 0;
+                AttributeDisplayType displayType = CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.getKey()), AttributeDisplayType.NUMBER);
+                if (entry.getValue().getAmount() + baseValue != 0) {
+                    if (displayType == AttributeDisplayType.DIFFERENCE && entry.getValue().getAmount() == 0) continue;
+                    MutableComponent text = formatting(entry.getKey(), entry.getValue().getAmount(), baseValue, stack, displayType);
+                    cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.getKey())));
                 }
             }
         }

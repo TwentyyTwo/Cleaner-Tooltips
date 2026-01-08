@@ -1,6 +1,5 @@
 package net.twentyytwo.cleanertooltips;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Either;
 import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.network.chat.FormattedText;
@@ -51,23 +50,26 @@ public class CleanerTooltipsNeoForge {
         ItemStack stack = event.getItemStack();
         ItemAttributeModifiers modifiers = CleanerTooltipsUtil.getAttributeModifiers(stack);
 
-        if (CleanerTooltipsUtil.shouldAddTooltip(modifiers)) {
-            List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
+        List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
+        int insertIndex = CleanerTooltipsUtil.getInsertIndex(stack, tooltipElements);
 
-            int nameIndex = CleanerTooltipsUtil.getInsertIndex(stack, tooltipElements);
-            tooltipElements.add(nameIndex, Either.right(new AttributeTooltip(stack, modifiers)));
+        boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers);
+        if (shouldAdd) tooltipElements.add(insertIndex, Either.right(new AttributeTooltip(stack, modifiers)));
 
-            if (CleanerTooltips.config.durability && CleanerTooltips.config.durabilityPos != CleanerTooltipsConfig.posValues.INLINE && stack.getMaxDamage() > 0) {
-                switch (CleanerTooltips.config.durabilityPos) {
-                    case BELOW -> tooltipElements.add(nameIndex + 1, Either.right(new DurabilityTooltip(stack)));
-                    case BOTTOM -> tooltipElements.addLast(Either.right(new DurabilityTooltip(stack)));
+        if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {
+            switch (CleanerTooltips.config.durabilityPos) {
+                case INLINE -> {
+                    if (shouldAdd) return;
+                    tooltipElements.add(insertIndex, Either.right(new DurabilityTooltip(stack)));
                 }
+                case BELOW -> tooltipElements.add(shouldAdd ? insertIndex + 1 : insertIndex, Either.right(new DurabilityTooltip(stack)));
+                case BOTTOM -> tooltipElements.addLast(Either.right(new DurabilityTooltip(stack)));
             }
         }
     }
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(!InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), CleanerTooltips.hideTooltip.getKey().getValue()) && CleanerTooltips.config.enabled);
+        event.setSkipAll(CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(event.getStack())));
     }
 }

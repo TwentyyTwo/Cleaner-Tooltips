@@ -6,6 +6,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
@@ -83,8 +84,28 @@ public class CleanerTooltipsUtil {
      * @param modifiers the {@code ItemAttributeModifiers} of the {@code ItemStack}*/
     public static boolean shouldAddTooltip(ItemAttributeModifiers modifiers) {
         Minecraft mc = CleanerTooltips.MC;
-        return !InputConstants.isKeyDown(mc.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()) &&
-                !modifiers.modifiers().isEmpty() && mc.player != null && CleanerTooltips.config.enabled;
+
+        if (mc.player == null)
+            return false;
+        else if (!CleanerTooltips.config.enabled)
+            return false;
+        else if (InputConstants.isKeyDown(mc.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()))
+            return false;
+        else if (modifiers.modifiers().isEmpty())
+            return false;
+
+        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) { // Seems inefficient, might fix later
+            double baseValue = mc.player != null && mc.player.getAttributes().hasAttribute(entry.attribute()) ? mc.player.getAttributeBaseValue(entry.attribute()) : 0;
+            switch (CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.get(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()))) {
+                case DIFFERENCE -> {
+                    if (entry.modifier().amount() != 0) return true;
+                }
+                case null, default -> {
+                    if (entry.modifier().amount() + baseValue != 0) return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

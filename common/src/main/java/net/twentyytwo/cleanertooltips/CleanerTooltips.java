@@ -130,8 +130,7 @@ public class CleanerTooltips {
             for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
                 double baseValue = MC.player != null && MC.player.getAttributes().hasAttribute(entry.attribute()) ? MC.player.getAttributeBaseValue(entry.attribute()) : 0;
                 AttributeDisplayType displayType = CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER);
-                if (entry.modifier().amount() + baseValue != 0) {
-                    if (displayType == AttributeDisplayType.DIFFERENCE && entry.modifier().amount() == 0) continue;
+                if (entry.modifier().amount() + baseValue != 0 && !(displayType == AttributeDisplayType.DIFFERENCE && entry.modifier().amount() == 0)) {
                     MutableComponent text = formatting(entry, baseValue, stack, displayType);
                     cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.attribute())));
                 }
@@ -231,7 +230,7 @@ public class CleanerTooltips {
         @Override
         public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
             guiGraphics.blit(DURABILITY_ICON , x, y - 1, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, text, x + 9 + GAP, y + 1, -1);
+            guiGraphics.drawString(MC.font, text, x + 9 + GAP, y, -1);
         }
     }
 }

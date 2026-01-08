@@ -27,7 +27,7 @@ public class CleanerTooltipsConfig implements ConfigData {
     public boolean durability = false;
 
     // Set the position of the durability.
-    @ConfigEntry.Gui.Tooltip(count = 4)
+    @ConfigEntry.Gui.Tooltip(count = 2)
     @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
     public posValues durabilityPos = posValues.INLINE;
 

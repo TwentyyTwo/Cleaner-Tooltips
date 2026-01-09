@@ -96,7 +96,7 @@ public class CleanerTooltipsUtil {
 
         for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) { // Seems inefficient, might fix later
             double baseValue = mc.player != null && mc.player.getAttributes().hasAttribute(entry.attribute()) ? mc.player.getAttributeBaseValue(entry.attribute()) : 0;
-            switch (CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.get(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()))) {
+            switch (ATTRIBUTE_DISPLAY_MAP.get(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()))) {
                 case DIFFERENCE -> {
                     if (entry.modifier().amount() != 0) return true;
                 }

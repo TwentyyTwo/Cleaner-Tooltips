@@ -1,15 +1,15 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.core.Holder;
-import net.minecraft.core.registries.Registries;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import org.jetbrains.annotations.Nullable;
@@ -34,12 +34,18 @@ public abstract class ItemStackMixin {
 
     // Fixes the attack damage not changing with sharpness
     @ModifyVariable(method = "addModifierTooltip", at = @At(value = "STORE"), ordinal = 1)
-    private double addAttackDamage(double value, @Local(argsOnly = true) Holder<Attribute> attribute) {
-        if (CleanerTooltips.config.sharpness && CleanerTooltips.MC.level != null && attribute.equals(Attributes.ATTACK_DAMAGE)) {
-            int sharpnessLevel = EnchantmentHelper.getItemEnchantmentLevel(CleanerTooltips.MC.level.registryAccess()
-                    .lookupOrThrow(Registries.ENCHANTMENT)
-                    .getOrThrow(Enchantments.SHARPNESS), (ItemStack) (Object) this);
-            if (sharpnessLevel > 0) value += (0.5 * sharpnessLevel) + 0.5;
+    private double addAttackDamage(double value, @Local(argsOnly = true) AttributeModifier modifier) {
+        if (CleanerTooltips.config.sharpness && CleanerTooltips.MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) {
+            double modifierValue = modifier.amount() + CleanerTooltips.MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);
+
+            ItemEnchantments enchantments = ((ItemStack)(Object)this).getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+            for (var entry : enchantments.entrySet()) {
+                if (entry.getKey().unwrapKey().get() == Enchantments.SHARPNESS  && entry.getIntValue() > 0) {
+                    modifierValue += (0.5 * entry.getIntValue()) + 0.5;
+                    break;
+                }
+            }
+            return modifierValue;
         }
         return value;
     }

@@ -11,18 +11,18 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
@@ -77,11 +77,14 @@ public class CleanerTooltips {
     private static MutableComponent formatting(ItemAttributeModifiers.Entry entry, double baseValue, ItemStack stack, AttributeDisplayType displayType) {
         double value = entry.modifier().amount();
 
-        if (config.sharpness && MC.level != null && entry.attribute().equals(Attributes.ATTACK_DAMAGE)) {
-            int sharpnessLevel = EnchantmentHelper.getItemEnchantmentLevel(MC.level.registryAccess()
-                            .lookupOrThrow(Registries.ENCHANTMENT)
-                            .getOrThrow(Enchantments.SHARPNESS), stack);
-            if (sharpnessLevel > 0) value += (0.5 * sharpnessLevel) + 0.5;
+        if (config.sharpness && MC.player != null && entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID)) {
+            ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+            for (var enchantment : enchantments.entrySet()) {
+                if (enchantment.getKey().unwrapKey().isPresent() && enchantment.getKey().unwrapKey().get() == Enchantments.SHARPNESS  && enchantment.getIntValue() > 0) {
+                    value += (0.5 * enchantment.getIntValue()) + 0.5;
+                    break;
+                }
+            }
         }
 
         switch (displayType) {
@@ -90,19 +93,19 @@ public class CleanerTooltips {
             }
             case DIFFERENCE -> {
                 return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value))
-                        .withStyle(ChatFormatting.WHITE);
+                        .withStyle(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
             }
             case MULTIPLIER -> {
                 return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format((value + baseValue) / baseValue) + "x")
-                        .withStyle(ChatFormatting.WHITE);
+                                .withStyle(ChatFormatting.WHITE);
             }
             case PERCENTAGE -> {
-                return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value * 100) + "%")
-                        .withStyle(ChatFormatting.WHITE);
+                return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value * 100)
+                                .formatted(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE) + "%");
             }
             default -> {
-                return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value + baseValue)
-                        .formatted(ChatFormatting.WHITE));
+                return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value + baseValue))
+                                .withStyle((value + baseValue) < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
             }
         }
     }

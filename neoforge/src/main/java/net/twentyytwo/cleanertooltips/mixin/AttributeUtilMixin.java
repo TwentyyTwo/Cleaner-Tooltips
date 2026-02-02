@@ -22,7 +22,7 @@ public abstract class AttributeUtilMixin {
     @ModifyVariable(method = "applyTextFor",
             at = @At(value = "STORE"),
             name = "base")
-        private static double modifyAttackDamage(double base, @Local(argsOnly = true) ItemStack stack, @Local(name = "attr") Holder<Attribute> attr, @Local(name = "entityBase") double entityBase) {
+    private static double modifyAttackDamage(double base, @Local(argsOnly = true) ItemStack stack, @Local(name = "attr") Holder<Attribute> attr, @Local(name = "entityBase") double entityBase) {
 
         if (CleanerTooltips.config.sharpness && CleanerTooltips.MC.player != null  && attr.value().getBaseId() == Item.BASE_ATTACK_DAMAGE_ID) {
             double modifierValue = (base - entityBase) + CleanerTooltips.MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);

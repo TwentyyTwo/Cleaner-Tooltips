@@ -32,6 +32,7 @@ import org.lwjgl.glfw.GLFW;
 import org.slf4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 public class CleanerTooltips {
@@ -74,18 +75,7 @@ public class CleanerTooltips {
     }
 
     // Calculates the attribute value and returns it as a Mutable Component, which is used for width calculation and rendering purposes
-    private static MutableComponent formatting(ItemAttributeModifiers.Entry entry, double baseValue, ItemStack stack, AttributeDisplayType displayType) {
-        double value = entry.modifier().amount();
-
-        if (config.sharpness && MC.player != null && entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID)) {
-            ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-            for (var enchantment : enchantments.entrySet()) {
-                if (enchantment.getKey().unwrapKey().isPresent() && enchantment.getKey().unwrapKey().get() == Enchantments.SHARPNESS  && enchantment.getIntValue() > 0) {
-                    value += (0.5 * enchantment.getIntValue()) + 0.5;
-                    break;
-                }
-            }
-        }
+    private static MutableComponent formatting(double value, double baseValue, AttributeDisplayType displayType) {
 
         switch (displayType) {
             case BOOLEAN -> {
@@ -130,11 +120,56 @@ public class CleanerTooltips {
         public AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
             this(stack, modifiers, new ArrayList<>());
 
-            for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
+            List<ItemAttributeModifiers.Entry> entries = modifiers.modifiers();
+            int size = entries.size();
+            HashSet<Integer> isMultiplyBase = new HashSet<>();
+            boolean[] toSkip = new boolean[size];
+
+            // Handle sharpness
+            int sharpnessBonus = 0;
+            if (config.sharpness && MC.player != null) {
+                ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+                for (var enchantment : enchantments.entrySet()) {
+                    if (enchantment.getKey().unwrapKey().isPresent() && enchantment.getKey().unwrapKey().get() == Enchantments.SHARPNESS  && enchantment.getIntValue() > 0) {
+                        sharpnessBonus += (int) ((0.5 * enchantment.getIntValue()) + 0.5);
+                        break;
+                    }
+                }
+            }
+
+            for (int i = 0; i < size; i++) {
+                if (toSkip[i]) continue;
+
+                ItemAttributeModifiers.Entry entry = entries.get(i);
                 double baseValue = MC.player != null && MC.player.getAttributes().hasAttribute(entry.attribute()) ? MC.player.getAttributeBaseValue(entry.attribute()) : 0;
-                AttributeDisplayType displayType = CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER);
-                if (entry.modifier().amount() + baseValue != 0 && !(displayType == AttributeDisplayType.DIFFERENCE && entry.modifier().amount() == 0)) {
-                    MutableComponent text = formatting(entry, baseValue, stack, displayType);
+                double value = entry.modifier().amount();
+                double val = value + baseValue;
+
+                if (entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID)) value += sharpnessBonus;
+
+                // Checks if the current attribute exists multiple times, if it does, they get added together.
+                for (int j = i + 1; j < size; j++) {
+                    ItemAttributeModifiers.Entry compareEntry = modifiers.modifiers().get(j);
+                    if (entry.attribute().equals(compareEntry.attribute())) {
+                        toSkip[j] = true;
+                        double compareModifier = compareEntry.modifier().amount();
+
+                        switch (compareEntry.modifier().operation()) {
+                            case ADD_VALUE -> value += compareModifier;
+                            case ADD_MULTIPLIED_TOTAL -> value += ((val * ((double) 1.0f + compareModifier)) - val);
+                            case ADD_MULTIPLIED_BASE -> {
+                                toSkip[j] = false;
+                                isMultiplyBase.add(j);
+                            }
+                        }
+                    }
+                }
+
+                AttributeDisplayType displayType = !isMultiplyBase.contains(i)
+                        ? CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER)
+                        : AttributeDisplayType.PERCENTAGE;
+                if (value + baseValue != 0 && !(displayType == AttributeDisplayType.DIFFERENCE && value == 0)) {
+                    MutableComponent text = formatting(value, baseValue, displayType);
                     cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.attribute())));
                 }
             }

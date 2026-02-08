@@ -228,11 +228,13 @@ public class CleanerTooltips {
         int curDurability = maxDurability - stack.getDamageValue();
         float diff = (float) curDurability / maxDurability;
 
+        Component totalDurability = Component.literal(" / ").withStyle(ChatFormatting.DARK_GRAY).append(
+                Component.literal(String.valueOf(maxDurability)).withStyle(ChatFormatting.DARK_GRAY));
+
         return Component.literal(String.valueOf(curDurability))
                 .withStyle(!config.durabilityColor || curDurability == maxDurability
-                        ? ChatFormatting.WHITE : diff >= 0.5f ? ChatFormatting.GREEN : diff >= 0.15f ? ChatFormatting.GOLD : ChatFormatting.RED)
-                .append(Component.literal(" / ").withStyle(ChatFormatting.DARK_GRAY))
-                .append(Component.literal(String.valueOf(maxDurability)).withStyle(ChatFormatting.DARK_GRAY));
+                        ? ChatFormatting.GRAY : diff >= 0.5f ? ChatFormatting.GREEN : diff >= 0.15f ? ChatFormatting.GOLD : ChatFormatting.RED)
+                .append(CleanerTooltips.config.showMaximumDurability ? totalDurability : Component.empty());
     }
 
     private static void renderDurabilityTooltip(GuiGraphics guiGraphics, int x, int y, ItemStack stack) {

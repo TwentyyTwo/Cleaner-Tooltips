@@ -32,6 +32,9 @@ public class CleanerTooltipsConfig implements ConfigData {
     public posValues durabilityPos = posValues.INLINE;
 
     @ConfigEntry.Gui.Tooltip
+    public boolean showMaximumDurability = true;
+
+    @ConfigEntry.Gui.Tooltip
     public boolean durabilityColor = true;
 
     public enum posValues {

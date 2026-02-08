@@ -4,7 +4,7 @@
   "text.autoconfig.cleanertooltips.option.enabled": "Attribute Tooltips",
   "text.autoconfig.cleanertooltips.option.enabled.@Tooltip": "Whether the attribute tooltips should be enabled.",
   "text.autoconfig.cleanertooltips.option.sharpness": "Calculate Sharpness",
-  "text.autoconfig.cleanertooltips.option.sharpness.@Tooltip": "Should sharpness change the damage value?",
+  "text.autoconfig.cleanertooltips.option.sharpness.@Tooltip": "Should sharpness change the damage value? this fixes MC-271840.",
   "text.autoconfig.cleanertooltips.option.hiddenAttributesHint": "Hidden Attributes Hint",
   "text.autoconfig.cleanertooltips.option.hiddenAttributesHint.@Tooltip": "Whether hidden attributes should be hinted at.",
   "text.autoconfig.cleanertooltips.option.durability": "Display Durability",
@@ -12,6 +12,8 @@
   "text.autoconfig.cleanertooltips.option.durabilityPos": "Durability Position",
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[0]": "Choose the position of the durability.",
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[1]": "Note: if attribute tooltips are disabled, then both INLINE\nand BELOW will be displayed below the item name.",
+  "text.autoconfig.cleanertooltips.option.showMaximumDurability": "Display Maximum Durability",
+  "text.autoconfig.cleanertooltips.option.showMaximumDurability.@Tooltip": "Should the maximum durability be displayed?",
   "text.autoconfig.cleanertooltips.option.durabilityColor": "Durability Color",
   "text.autoconfig.cleanertooltips.option.durabilityColor.@Tooltip": "Should the color change depending on the remaining durability?",
 

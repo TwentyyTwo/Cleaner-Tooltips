@@ -1,6 +1,5 @@
 package net.twentyytwo.cleanertooltips.util;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
@@ -15,7 +14,6 @@ import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
-import net.twentyytwo.cleanertooltips.mixin.KeyMappingAccessor;
 
 import java.util.HashMap;
 import java.util.List;
@@ -88,8 +86,6 @@ public class CleanerTooltipsUtil {
         if (mc.player == null)
             return false;
         else if (!CleanerTooltips.config.enabled)
-            return false;
-        else if (InputConstants.isKeyDown(mc.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()))
             return false;
         else if (modifiers.modifiers().isEmpty())
             return false;

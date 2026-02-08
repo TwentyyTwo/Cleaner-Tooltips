@@ -1,5 +1,6 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -35,7 +36,8 @@ public class GuiGraphicsMixin {
 
             int nameIndex = CleanerTooltipsUtil.getReplaceIndex(list);
 
-            boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers);
+            boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers)
+                    && !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue());
             if (shouldAdd) list.set(nameIndex, new CleanerTooltips.AttributeTooltip(stack, modifiers));
 
             if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {
@@ -58,8 +60,10 @@ public class GuiGraphicsMixin {
     private void onRenderTooltipHead(Font font, List<Component> tooltipLines, Optional<TooltipComponent> visualTooltipComponent, int mouseX, int mouseY, CallbackInfo ci) {
         if (CleanerTooltips.MC.screen instanceof IItemStackHolder holder) {
             ItemStack stack = holder.cleanerTooltips$getStack();
-            if (CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(stack)) ||
-                    (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) && CleanerTooltips.config.durabilityPos != CleanerTooltipsConfig.posValues.BOTTOM) tooltipLines.add(1, Component.empty());
+            if ((CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(stack))
+                    && !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue()))
+                    || (CleanerTooltips.config.durability && stack.getMaxDamage() > 0)
+                    && CleanerTooltips.config.durabilityPos != CleanerTooltipsConfig.posValues.BOTTOM) tooltipLines.add(1, Component.empty());
         }
     }
 }

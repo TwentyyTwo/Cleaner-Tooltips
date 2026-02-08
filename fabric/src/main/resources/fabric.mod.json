@@ -19,14 +19,13 @@
     "modmenu": ["net.twentyytwo.cleanertooltips.ModMenuApiImpl"]
   },
   "mixins": [
-    "cleanertooltips.mixins.json",
     "cleanertooltips.fabric.mixins.json"
   ],
   "depends": {
-    "fabricloader": ">=0.16.0",
+    "fabricloader": ">=${fabric_loader_version}",
     "fabric-api": "*",
     "cloth-config": ">=11.0.0",
     "minecraft": "${minecraft_version}",
-    "java": ">=21"
+    "java": ">=${java_version}"
   }
 }

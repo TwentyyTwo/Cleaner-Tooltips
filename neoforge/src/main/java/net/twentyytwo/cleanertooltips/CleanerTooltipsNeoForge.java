@@ -1,5 +1,6 @@
 package net.twentyytwo.cleanertooltips;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Either;
 import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.network.chat.FormattedText;
@@ -53,7 +54,8 @@ public class CleanerTooltipsNeoForge {
         List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
         int insertIndex = CleanerTooltipsUtil.getInsertIndex(stack, tooltipElements);
 
-        boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers);
+        boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers)
+                && !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), CleanerTooltips.hideTooltip.getKey().getValue());
         if (shouldAdd) tooltipElements.add(insertIndex, Either.right(new AttributeTooltip(stack, modifiers)));
 
         if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {

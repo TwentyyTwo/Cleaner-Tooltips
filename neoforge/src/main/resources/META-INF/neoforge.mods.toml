@@ -12,9 +12,6 @@ description='''${description}'''
 logoFile = "icon.png"
 
 [[mixins]]
-config = "cleanertooltips.mixins.json"
-
-[[mixins]]
 config = "cleanertooltips.neoforge.mixins.json"
 
 [[dependencies.${mod_id}]]

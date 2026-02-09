@@ -1,6 +1,7 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -27,7 +28,8 @@ public abstract class ItemStackMixin {
     // Hides the default attributes when the icon attributes are displayed
     @Inject( method = "addAttributeTooltips", at = @At("HEAD"), cancellable = true)
     private void hideDefaultAttributes(Consumer<Component> tooltipAdder, @Nullable Player player, CallbackInfo ci) {
-        if (CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers((ItemStack) (Object) this))) {
+        if (CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers((ItemStack) (Object) this))
+                && !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue())) {
             ci.cancel();
         }
     }

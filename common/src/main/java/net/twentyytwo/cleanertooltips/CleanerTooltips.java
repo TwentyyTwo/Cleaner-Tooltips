@@ -1,7 +1,6 @@
 package net.twentyytwo.cleanertooltips;
 
 import com.mojang.blaze3d.platform.InputConstants;
-import com.mojang.logging.LogUtils;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
 import net.minecraft.ChatFormatting;
@@ -11,12 +10,14 @@ import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -29,17 +30,20 @@ import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
-import org.slf4j.Logger;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 public class CleanerTooltips {
 
     public static final String MOD_ID = "cleanertooltips";
-    public static final Logger LOGGER = LogUtils.getLogger();
     public static final Minecraft MC = Minecraft.getInstance();
+    public static final KeyMapping hideTooltip = new KeyMapping(
+            "key.cleanertooltips.hide_tooltip",
+            InputConstants.Type.KEYSYM,
+            GLFW.GLFW_KEY_LEFT_SHIFT,
+            KeyMapping.CATEGORY_INVENTORY
+    );
 
     public static KeyMapping hideTooltip;
     public static CleanerTooltipsConfig config;
@@ -47,15 +51,7 @@ public class CleanerTooltips {
     private static final int GAP = 3; // The gap between the icon and the value
     private static final int GROUP_GAP = 8; // The gap between attributes
     private static final ResourceLocation DURABILITY_ICON = ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/durability.png");
-
-    static {
-        hideTooltip = new KeyMapping(
-                "key.cleanertooltips.hide_tooltip",
-                InputConstants.Type.KEYSYM,
-                GLFW.GLFW_KEY_LEFT_SHIFT,
-                "key.categories.inventory"
-        );
-    }
+    private static final Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
     public static void init() {
         AutoConfig.register(CleanerTooltipsConfig.class, JanksonConfigSerializer::new);
@@ -64,7 +60,7 @@ public class CleanerTooltips {
 
     @Nullable
     private static ResourceLocation getIcon(Holder<Attribute> attribute) {
-        ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
+        ResourceLocation attributeKey = attributeRegistry.getKey(attribute.value());
 
         if (attributeKey == null) return null;
         String texturePath = "textures/gui/attribute/" + attributeKey.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
@@ -74,7 +70,6 @@ public class CleanerTooltips {
         return resourceLocation;
     }
 
-    // Calculates the attribute value and returns it as a Mutable Component, which is used for width calculation and rendering purposes
     private static MutableComponent formatting(double value, double baseValue, AttributeDisplayType displayType) {
 
         switch (displayType) {
@@ -83,7 +78,7 @@ public class CleanerTooltips {
             }
             case DIFFERENCE -> {
                 return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value))
-                        .withStyle(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
+                                .withStyle(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
             }
             case MULTIPLIER -> {
                 return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format((value + baseValue) / baseValue) + "x")
@@ -118,10 +113,6 @@ public class CleanerTooltips {
      */
     private record TooltipEntry(MutableComponent text, int textWidth, ResourceLocation icon) {}
 
-    /**
-     * @param stack The {@code ItemStack} the {@code AttributeTooltip} should be added on to.
-     * @param modifiers The {@code ItemAttributeModifiers} of the stack; should be obtained via {@link CleanerTooltipsUtil#getAttributeModifiers(ItemStack) getAttributeModifiers}.
-     */
     public record AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers, List<TooltipEntry> cachedEntries) implements TooltipComponent, ClientTooltipComponent {
 
         /**
@@ -131,11 +122,6 @@ public class CleanerTooltips {
          */
         public AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
             this(stack, modifiers, new ArrayList<>());
-
-            List<ItemAttributeModifiers.Entry> entries = modifiers.modifiers();
-            int size = entries.size();
-            HashSet<Integer> isMultiplyBase = new HashSet<>();
-            boolean[] toSkip = new boolean[size];
 
             // Handle sharpness
             int sharpnessBonus = 0;
@@ -149,38 +135,48 @@ public class CleanerTooltips {
                 }
             }
 
+            List<ItemAttributeModifiers.Entry> entries = modifiers.modifiers();
+            AttributeMap playerAttributes = MC.player.getAttributes();
+            int size = entries.size();
+            boolean[] isDuplicate = new boolean[size], renderAsPercentage = new boolean[size];
+
             for (int i = 0; i < size; i++) {
-                if (toSkip[i]) continue;
+                if (isDuplicate[i]) continue;
 
                 ItemAttributeModifiers.Entry entry = entries.get(i);
-                double baseValue = MC.player != null && MC.player.getAttributes().hasAttribute(entry.attribute()) ? MC.player.getAttributeBaseValue(entry.attribute()) : 0;
+                AttributeDisplayType displayType = CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP
+                        .getOrDefault(attributeRegistry.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER);
+
                 double value = entry.modifier().amount();
-                double val = value + baseValue;
+                double baseValue = (displayType == AttributeDisplayType.MULTIPLIER || displayType == AttributeDisplayType.NUMBER)
+                        && playerAttributes.hasAttribute(entry.attribute())
+                        ?  playerAttributes.getBaseValue(entry.attribute()) : 0;
+                double totalValue = value + baseValue;
 
                 if (entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID)) value += sharpnessBonus;
 
                 // Checks if the current attribute exists multiple times, if it does, they get added together.
                 for (int j = i + 1; j < size; j++) {
-                    ItemAttributeModifiers.Entry compareEntry = modifiers.modifiers().get(j);
-                    if (entry.attribute().equals(compareEntry.attribute())) {
-                        toSkip[j] = true;
-                        double compareModifier = compareEntry.modifier().amount();
+                    if (isDuplicate[j]) continue;
+                    ItemAttributeModifiers.Entry comparedEntry = entries.get(j);
+                    if (!entry.attribute().equals(comparedEntry.attribute())) continue;
 
-                        switch (compareEntry.modifier().operation()) {
-                            case ADD_VALUE -> value += compareModifier;
-                            case ADD_MULTIPLIED_TOTAL -> value += ((val * ((double) 1.0f + compareModifier)) - val);
-                            case ADD_MULTIPLIED_BASE -> {
-                                toSkip[j] = false;
-                                isMultiplyBase.add(j);
-                            }
+                    double comparedValue = comparedEntry.modifier().amount();
+                    switch (comparedEntry.modifier().operation()) {
+                        case ADD_VALUE -> {
+                            value += comparedValue;
+                            isDuplicate[j] = true;
                         }
+                        case ADD_MULTIPLIED_TOTAL -> {
+                            value += totalValue * comparedValue;
+                            isDuplicate[j] = true;
+                        }
+                        case ADD_MULTIPLIED_BASE -> renderAsPercentage[j] = true;
                     }
                 }
 
-                AttributeDisplayType displayType = !isMultiplyBase.contains(i)
-                        ? CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()), AttributeDisplayType.NUMBER)
-                        : AttributeDisplayType.PERCENTAGE;
-                if (value + baseValue != 0 && !(displayType == AttributeDisplayType.DIFFERENCE && value == 0)) {
+                if (renderAsPercentage[i]) displayType = AttributeDisplayType.PERCENTAGE;
+                if (totalValue != 0 && !((displayType == AttributeDisplayType.DIFFERENCE || displayType == AttributeDisplayType.PERCENTAGE) && value == 0)) {
                     MutableComponent text = formatting(value, baseValue, displayType);
                     cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.attribute())));
                 }
@@ -250,11 +246,10 @@ public class CleanerTooltips {
     }
 
     private static void renderDurabilityTooltip(GuiGraphics guiGraphics, int x, int y, ItemStack stack) {
-        guiGraphics.blit(DURABILITY_ICON , x, y, 0, 0, 9, 9, 9, 9);
+        guiGraphics.blit(DURABILITY_ICON, x, y, 0, 0, 9, 9, 9, 9);
         guiGraphics.drawString(MC.font, durabilityFormatting(stack), x + 9 + GAP, y + 1, -1);
     }
 
-    /** @param stack The ItemStack whose durability is used for the tooltip. */
     public record DurabilityTooltip(ItemStack stack, MutableComponent text, int textWidth) implements TooltipComponent, ClientTooltipComponent{
 
         /**

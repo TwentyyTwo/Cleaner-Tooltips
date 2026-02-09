@@ -35,6 +35,10 @@ public class CleanerTooltipsNeoForge {
                 (modContainer, parent) -> AutoConfig.getConfigScreen(CleanerTooltipsConfig.class, parent).get());
     }
 
+    private static boolean IsKeyNotDown() {
+        return !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), CleanerTooltips.hideTooltip.getKey().getValue());
+    }
+
     @SubscribeEvent()
     public static void registerKeybind(RegisterKeyMappingsEvent event) {
         event.register(CleanerTooltips.hideTooltip);
@@ -54,8 +58,7 @@ public class CleanerTooltipsNeoForge {
         List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
         int insertIndex = CleanerTooltipsUtil.getInsertIndex(stack, tooltipElements);
 
-        boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers)
-                && !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), CleanerTooltips.hideTooltip.getKey().getValue());
+        boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers) && IsKeyNotDown();
         if (shouldAdd) tooltipElements.add(insertIndex, Either.right(new AttributeTooltip(stack, modifiers)));
 
         if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {
@@ -72,6 +75,6 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(event.getStack())));
+        event.setSkipAll(CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(event.getStack())) && IsKeyNotDown());
     }
 }

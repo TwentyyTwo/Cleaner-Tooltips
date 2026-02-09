@@ -4,12 +4,15 @@ import com.mojang.datafixers.util.Either;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -19,6 +22,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Collection of useful functions.
+ */
 public class CleanerTooltipsUtil {
     /**
      * Gets the index of the item name and returns the index below it.
@@ -93,9 +99,12 @@ public class CleanerTooltipsUtil {
         else if (modifiers.modifiers().isEmpty())
             return false;
 
-        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) { // Seems inefficient, might fix later
-            double baseValue = mc.player != null && mc.player.getAttributes().hasAttribute(entry.attribute()) ? mc.player.getAttributeBaseValue(entry.attribute()) : 0;
-            switch (ATTRIBUTE_DISPLAY_MAP.get(BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value()))) {
+        AttributeMap playerAttributes = mc.player.getAttributes();
+        Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
+
+        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
+            double baseValue = mc.player != null && playerAttributes.hasAttribute(entry.attribute()) ? playerAttributes.getBaseValue(entry.attribute()) : 0;
+            switch (ATTRIBUTE_DISPLAY_MAP.get(attributeRegistry.getKey(entry.attribute().value()))) {
                 case DIFFERENCE -> {
                     if (entry.modifier().amount() != 0) return true;
                 }
@@ -117,7 +126,7 @@ public class CleanerTooltipsUtil {
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_damage"), AttributeDisplayType.NUMBER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_knockback"), AttributeDisplayType.NUMBER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_break_speed"), AttributeDisplayType.MULTIPLIER);
+        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_break_speed"), AttributeDisplayType.PERCENTAGE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), AttributeDisplayType.DIFFERENCE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), AttributeDisplayType.DIFFERENCE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), AttributeDisplayType.PERCENTAGE);

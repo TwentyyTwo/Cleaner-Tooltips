@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
 
-    // Hides the default attributes when the mod tooltip is displayed
+    // Hides the default attributes when the icon attributes are displayed
     @Inject( method = "addAttributeTooltips", at = @At("HEAD"), cancellable = true)
     private void hideDefaultAttributes(Consumer<Component> tooltipAdder, @Nullable Player player, CallbackInfo ci) {
         if (CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers((ItemStack) (Object) this))) {
@@ -32,7 +32,7 @@ public abstract class ItemStackMixin {
         }
     }
 
-    // Fixes the attack damage not changing with sharpness
+    // Fixes MC-271840
     @ModifyVariable(method = "addModifierTooltip", at = @At(value = "STORE"), ordinal = 1)
     private double addAttackDamage(double value, @Local(argsOnly = true) AttributeModifier modifier) {
         if (CleanerTooltips.config.sharpness && CleanerTooltips.MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) {

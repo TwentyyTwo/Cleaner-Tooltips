@@ -109,6 +109,13 @@ public class CleanerTooltips {
         return x;
     }
 
+    /**
+     * An object storing all the necessary information for calculating and rendering a custom tooltip.<br>
+     * Useful to avoid running the same code multiple times.
+     * @param text      a mutable component of the attribute modifier value
+     * @param textWidth the width of the {@code text}
+     * @param icon      the texture of the corresponding attribute. can be {@code null}
+     */
     private record TooltipEntry(MutableComponent text, int textWidth, ResourceLocation icon) {}
 
     /**
@@ -117,6 +124,11 @@ public class CleanerTooltips {
      */
     public record AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers, List<TooltipEntry> cachedEntries) implements TooltipComponent, ClientTooltipComponent {
 
+        /**
+         * A custom tooltip object rendering the attribute modifiers of an itemstack as icons.
+         * @param stack     the item stack
+         * @param modifiers the {@code ItemAttributeModifiers} of the itemstack
+         */
         public AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
             this(stack, modifiers, new ArrayList<>());
 
@@ -194,7 +206,7 @@ public class CleanerTooltips {
 
             if (anyIconNull && config.hiddenAttributesHint) width += font.width("[+]") + GROUP_GAP;
 
-            // Only if POS_VALUES.INLINE is selected
+            // Only if posValues.INLINE is selected
             boolean displayDurability = config.durability && stack.getMaxDamage() > 0;
             if (displayDurability && config.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) width += MC.font.width(durabilityFormatting(stack)) + 9 + GAP + GROUP_GAP;
             return width - GROUP_GAP;
@@ -245,6 +257,11 @@ public class CleanerTooltips {
     /** @param stack The ItemStack whose durability is used for the tooltip. */
     public record DurabilityTooltip(ItemStack stack, MutableComponent text, int textWidth) implements TooltipComponent, ClientTooltipComponent{
 
+        /**
+         * A custom durability tooltip rendering the durability of an itemstack on the tooltip. <br>
+         * Only used when the config option {@code INLINE} isn't selected, otherwise the durability tooltip is handled by the {@code AttributeTooltip} object.
+         * @param stack the item stack
+         */
         public DurabilityTooltip(ItemStack stack) {
             this(
                     stack,

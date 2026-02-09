@@ -21,10 +21,11 @@ import java.util.Map;
 
 public class CleanerTooltipsUtil {
     /**
-     * Returns the index at which the tooltip should be added.
-     *
-     * @param stack The item whose name is used for comparison
-     * @param tooltipElements The elements which are iterated over to find the name*/
+     * Gets the index of the item name and returns the index below it.
+     * @param stack             the item stack whose name is used
+     * @param tooltipElements   the elements of the tooltip
+     * @return                  the index at which the icon attributes should be added
+     */
     public static int getInsertIndex(ItemStack stack, List<Either<FormattedText, TooltipComponent>> tooltipElements) {
         Component itemName = stack.getHoverName();
         int nameIndex = 0;
@@ -39,10 +40,11 @@ public class CleanerTooltipsUtil {
     }
 
     /**
-     * Returns the index at which the empty component should be replaced.
-     * Has to be called after the empty component has been added to work properly.
-     *
-     * @param list the list of {@code ClientTooltipComponent} */
+     * Gets the index of the empty component which the icon attributes should replace.<br>
+     * Only for fabric, and should only be called after the empty component has been added.
+     * @param list  the {@code ClientTooltipComponent}s of the tooltip
+     * @return      the index of the second empty component
+     */
     public static int getReplaceIndex(List<ClientTooltipComponent> list) {
         int insertIndex = 1;
         int counter = 2;
@@ -59,10 +61,11 @@ public class CleanerTooltipsUtil {
     }
 
     /**
-     * Returns an {@code ItemAttributeModifiers} component of the given
-     * {@code ItemStack}, which works for all {@code EquipmentSlotGroup}
-     *
-     * @param stack the item which modifiers are returned*/
+     * Calculates the attribute modifiers of all equipment slots.<br>
+     * Works for every type of equipment.
+     * @param stack the item stack that is used for the attribute modifiers
+     * @return      {@code ItemAttributeModifiers} of the item stack
+     */
     public static ItemAttributeModifiers getAttributeModifiers(ItemStack stack) {
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
         ItemAttributeModifiers defaultModifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
@@ -75,11 +78,11 @@ public class CleanerTooltipsUtil {
     }
 
     /**
-     * Returns whether the tooltip should be added.<br>
-     * Takes in the {@code ItemAttributeModifiers} rather than an {@code ItemStack} to
-     * minimize the total amount of calculations.
-     *
-     * @param modifiers the {@code ItemAttributeModifiers} of the {@code ItemStack}*/
+     * Boolean to check whether the icon attributes should be added.<br>
+     * Note: the keybind is checked separately because of fabric and neoforge differences.
+     * @param modifiers the {@code ItemAttributeModifiers} of the item stack
+     * @return          whether the icon attributes should be added.
+     */
     public static boolean shouldAddTooltip(ItemAttributeModifiers modifiers) {
         Minecraft mc = CleanerTooltips.MC;
 
@@ -105,7 +108,7 @@ public class CleanerTooltipsUtil {
     }
 
     /**
-     * A list of most attributes and their associated {@code AttributeDisplayType}.
+     * A map of attributes where each attribute is associated with a {@code AttributeDisplayType}.
      */
     public static final Map<ResourceLocation, AttributeDisplayType> ATTRIBUTE_DISPLAY_MAP = new HashMap<>();
     static {

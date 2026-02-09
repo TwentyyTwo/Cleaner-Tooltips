@@ -22,8 +22,7 @@ public enum AttributeDisplayType {
     NUMBER,
     /**
      * Displays as a multiplier from the players default value.<br>
-     * Example:<br>
-     * An item increasing the {@code gravity} by twice the default value shows "2x".
+     * Currently has no use cases.
      */
     MULTIPLIER,
     /**

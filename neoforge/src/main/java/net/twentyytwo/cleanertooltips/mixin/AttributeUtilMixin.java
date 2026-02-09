@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.ModifyVariable;
 @Mixin(AttributeUtil.class)
 public abstract class AttributeUtilMixin {
 
-    // Fixes the attack damage not changing with sharpness
+    // Fixes MC-271840
     @ModifyVariable(method = "applyTextFor",
             at = @At(value = "STORE"),
             name = "base")

@@ -1,8 +1,8 @@
 {
   "text.autoconfig.cleanertooltips.title": "Cleaner Tooltips Konfiguration",
 
-  "text.autoconfig.cleanertooltips.option.enabled": "Attribut Tooltips",
-  "text.autoconfig.cleanertooltips.option.enabled.@Tooltip": "Ob die Attribut-Tooltips aktiviert sein soll.",
+  "text.autoconfig.cleanertooltips.option.enabled": "Icon Attribute",
+  "text.autoconfig.cleanertooltips.option.enabled.@Tooltip": "Ob die Icon-Attribute aktiviert sein soll.",
   "text.autoconfig.cleanertooltips.option.sharpness": "Schärfe Berechnen",
   "text.autoconfig.cleanertooltips.option.sharpness.@Tooltip": "Soll Schärfe den Schaden verändern? dies behebt MC-271840.",
   "text.autoconfig.cleanertooltips.option.hiddenAttributesHint": "Versteckte Attribute Hinweis",
@@ -11,7 +11,7 @@
   "text.autoconfig.cleanertooltips.option.durability.@Tooltip": "Soll die Haltbarkeit von Items im Tooltip angezeigt werden?",
   "text.autoconfig.cleanertooltips.option.durabilityPos": "Haltbarkeit Position",
   "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[0]": "Wähle die Position für die Haltbarkeit.",
-  "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[1]": "Hinweis: wenn Attribut-Tooltips deaktiviert sind,\nwerden sowohl INLINE als auch BELOW unter dem Namen angezeigt.",
+  "text.autoconfig.cleanertooltips.option.durabilityPos.@Tooltip[1]": "Hinweis: wenn Icon-Attribute deaktiviert sind,\nwerden sowohl INLINE als auch BELOW unter dem Namen angezeigt.",
   "text.autoconfig.cleanertooltips.option.showMaximumDurability": "Maximale Haltbarkeit Anzeigen",
   "text.autoconfig.cleanertooltips.option.showMaximumDurability.@Tooltip": "Soll die maximale haltbarkeit angezeigt werden?",
   "text.autoconfig.cleanertooltips.option.durabilityColor": "Haltbarkeit Farbe",

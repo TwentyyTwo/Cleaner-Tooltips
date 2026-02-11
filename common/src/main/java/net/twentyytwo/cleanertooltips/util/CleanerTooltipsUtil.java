@@ -126,7 +126,6 @@ public class CleanerTooltipsUtil {
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_damage"), AttributeDisplayType.NUMBER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_knockback"), AttributeDisplayType.NUMBER);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_break_speed"), AttributeDisplayType.PERCENTAGE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), AttributeDisplayType.DIFFERENCE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), AttributeDisplayType.DIFFERENCE);
         ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), AttributeDisplayType.PERCENTAGE);

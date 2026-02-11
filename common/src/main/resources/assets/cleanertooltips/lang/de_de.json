@@ -7,6 +7,8 @@
   "text.autoconfig.cleanertooltips.option.sharpness.@Tooltip": "Soll Schärfe den Schaden verändern? dies behebt MC-271840.",
   "text.autoconfig.cleanertooltips.option.hiddenAttributesHint": "Versteckte Attribute Hinweis",
   "text.autoconfig.cleanertooltips.option.hiddenAttributesHint.@Tooltip": "Ob auf versteckte Attribute hingewiesen werden soll.",
+  "text.autoconfig.cleanertooltips.option.miningSpeed": "Abbaugeschwindigkeit",
+  "text.autoconfig.cleanertooltips.option.miningSpeed.@Tooltip": "Soll die Abbaugeschwindigkeit angezeigt werden?",
   "text.autoconfig.cleanertooltips.option.durability": "Haltbarkeit Anzeigen",
   "text.autoconfig.cleanertooltips.option.durability.@Tooltip": "Soll die Haltbarkeit von Items im Tooltip angezeigt werden?",
   "text.autoconfig.cleanertooltips.option.durabilityPos": "Haltbarkeit Position",

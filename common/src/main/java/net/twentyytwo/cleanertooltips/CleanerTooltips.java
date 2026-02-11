@@ -19,6 +19,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -31,6 +32,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
+import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,6 +53,7 @@ public class CleanerTooltips {
     private static final int GAP = 3; // The gap between the icon and the value
     private static final int GROUP_GAP = 8; // The gap between attributes
     private static final ResourceLocation DURABILITY_ICON = ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/durability.png");
+    private static final ResourceLocation MINING_SPEED = ResourceLocation.fromNamespaceAndPath("cleanertooltips", "textures/gui/attribute/mining_speed_texture.png");
     private static final Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
 
     public static void init() {
@@ -113,7 +116,7 @@ public class CleanerTooltips {
      */
     private record TooltipEntry(MutableComponent text, int textWidth, ResourceLocation icon) {}
 
-    public record AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers, List<TooltipEntry> cachedEntries) implements TooltipComponent, ClientTooltipComponent {
+    public record AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers, List<TooltipEntry> cachedEntries, float miningSpeed) implements TooltipComponent, ClientTooltipComponent {
 
         /**
          * A custom tooltip object rendering the attribute modifiers of an itemstack as icons.
@@ -121,7 +124,7 @@ public class CleanerTooltips {
          * @param modifiers the {@code ItemAttributeModifiers} of the itemstack
          */
         public AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
-            this(stack, modifiers, new ArrayList<>());
+            this(stack, modifiers, new ArrayList<>(), 0);
 
             // Handle sharpness
             int sharpnessBonus = 0;
@@ -183,6 +186,11 @@ public class CleanerTooltips {
             }
         }
 
+        public AttributeTooltip {
+            if (config.miningSpeed && stack.getItem() instanceof DiggerItem item)
+                miningSpeed = getMiningSpeed(item, stack);
+        }
+
         @Override
         public int getHeight() {
             return 10;
@@ -202,6 +210,8 @@ public class CleanerTooltips {
 
             if (anyIconNull && config.hiddenAttributesHint) width += font.width("[+]") + GROUP_GAP;
 
+            if (miningSpeed > 0) width += font.width(DecimalFormat.getInstance().format(miningSpeed)) + GROUP_GAP + GAP + 9;
+
             // Only if posValues.INLINE is selected
             boolean displayDurability = config.durability && stack.getMaxDamage() > 0;
             if (displayDurability && config.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) width += MC.font.width(durabilityFormatting(stack)) + 9 + GAP + GROUP_GAP;
@@ -220,16 +230,41 @@ public class CleanerTooltips {
                 groupX = renderTooltip(guiGraphics, entry, groupX, y - 1);
             }
 
+            // Adds a hint if any attribute modifier doesn't have an icon
             if (anyIconNull && config.hiddenAttributesHint) {
                 guiGraphics.drawString(font, Component.literal("[+]").withStyle(ChatFormatting.YELLOW), groupX, y, -1);
                 groupX += font.width("[+]") + GROUP_GAP;
             }
+
+            if (miningSpeed > 0) groupX = renderMiningTooltip(guiGraphics, groupX, y - 1, miningSpeed);
 
             // Only if posValues.INLINE is selected
             boolean displayDurability = config.durability && stack.getMaxDamage() > 0;
             if (displayDurability && config.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) renderDurabilityTooltip(guiGraphics, groupX, y - 1, stack);
         }
     }
+
+    private static float getMiningSpeed(DiggerItem item, ItemStack stack) {
+        float speed = item.getTier().getSpeed();
+
+        ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        for (var enchantment : enchantments.entrySet()) {
+            if (enchantment.getKey().unwrapKey().isPresent() && enchantment.getKey().unwrapKey().get() == Enchantments.EFFICIENCY  && enchantment.getIntValue() > 0) {
+                speed += (float) (enchantment.getIntValue() * enchantment.getIntValue()) + 1;
+                break;
+            }
+        }
+        return speed;
+    }
+
+    private static int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y, float miningSpeed) {
+        String miningSpeedStr = DecimalFormat.getInstance().format(miningSpeed);
+        guiGraphics.blit(MINING_SPEED, x, y, 0, 0, 9, 9, 9, 9);
+        guiGraphics.drawString(MC.font, miningSpeedStr, x + 9 + GAP, y + 1, -1);
+        return x + MC.font.width(miningSpeedStr) + GROUP_GAP + GAP + 9;
+    }
+
+    // ----- Durability Section -----
 
     private static MutableComponent durabilityFormatting(ItemStack stack) {
         int maxDurability = stack.getMaxDamage();

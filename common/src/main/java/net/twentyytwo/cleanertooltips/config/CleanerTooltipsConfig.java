@@ -9,7 +9,7 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips;
 public class CleanerTooltipsConfig implements ConfigData {
     @ConfigEntry.Gui.PrefixText
 
-    // Whether Cleaner Tooltips should be enabled.
+    // Whether icon attributes should be enabled.
     @ConfigEntry.Gui.Tooltip
     public boolean enabled = true;
 
@@ -19,6 +19,9 @@ public class CleanerTooltipsConfig implements ConfigData {
 
     @ConfigEntry.Gui.Tooltip
     public boolean hiddenAttributesHint = true;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean miningSpeed = false;
 
     @ConfigEntry.Gui.PrefixText
 

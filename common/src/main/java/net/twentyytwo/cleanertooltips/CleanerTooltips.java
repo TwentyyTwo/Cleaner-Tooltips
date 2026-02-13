@@ -47,7 +47,6 @@ public class CleanerTooltips {
             KeyMapping.CATEGORY_INVENTORY
     );
 
-    public static KeyMapping hideTooltip;
     public static CleanerTooltipsConfig config;
 
     private static final int GAP = 3; // The gap between the icon and the value
@@ -107,6 +106,35 @@ public class CleanerTooltips {
         return x;
     }
 
+    private static double combineDuplicates(List<ItemAttributeModifiers.Entry> entries, boolean[] isDuplicate, boolean[] renderAsPercentage, int i, double value, double baseValue) {
+        int size = entries.size();
+        ItemAttributeModifiers.Entry entry = entries.get(i);
+
+        for (int j = i + 1; j < size; j++) {
+            if (isDuplicate[j]) continue;
+            double totalValue = value + baseValue;
+            ItemAttributeModifiers.Entry comparedEntry = entries.get(j);
+            if (!entry.attribute().equals(comparedEntry.attribute())) continue;
+
+            double comparedValue = comparedEntry.modifier().amount();
+            switch (comparedEntry.modifier().operation()) {
+                case ADD_VALUE -> {
+                    value += comparedValue;
+                    isDuplicate[j] = true;
+                }
+                case ADD_MULTIPLIED_TOTAL -> {
+                    value += totalValue * comparedValue;
+                    isDuplicate[j] = true;
+                }
+                case ADD_MULTIPLIED_BASE -> {
+                    System.out.println(comparedEntry);
+                    renderAsPercentage[j] = true;
+                }
+            }
+        }
+        return value;
+    }
+
     /**
      * An object storing all the necessary information for calculating and rendering a custom tooltip.<br>
      * Useful to avoid running the same code multiple times.
@@ -126,17 +154,7 @@ public class CleanerTooltips {
         public AttributeTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
             this(stack, modifiers, new ArrayList<>(), 0);
 
-            // Handle sharpness
-            int sharpnessBonus = 0;
-            if (config.sharpness && MC.player != null) {
-                ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-                for (var enchantment : enchantments.entrySet()) {
-                    if (enchantment.getKey().unwrapKey().isPresent() && enchantment.getKey().unwrapKey().get() == Enchantments.SHARPNESS  && enchantment.getIntValue() > 0) {
-                        sharpnessBonus += (int) ((0.5 * enchantment.getIntValue()) + 0.5);
-                        break;
-                    }
-                }
-            }
+            double sharpnessBonus = CleanerTooltipsUtil.getSharpnessBonus(stack);
 
             List<ItemAttributeModifiers.Entry> entries = modifiers.modifiers();
             AttributeMap playerAttributes = MC.player.getAttributes();
@@ -158,27 +176,9 @@ public class CleanerTooltips {
 
                 if (entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID)) value += sharpnessBonus;
 
-                // Checks if the current attribute exists multiple times, if it does, they get added together.
-                for (int j = i + 1; j < size; j++) {
-                    if (isDuplicate[j]) continue;
-                    ItemAttributeModifiers.Entry comparedEntry = entries.get(j);
-                    if (!entry.attribute().equals(comparedEntry.attribute())) continue;
-
-                    double comparedValue = comparedEntry.modifier().amount();
-                    switch (comparedEntry.modifier().operation()) {
-                        case ADD_VALUE -> {
-                            value += comparedValue;
-                            isDuplicate[j] = true;
-                        }
-                        case ADD_MULTIPLIED_TOTAL -> {
-                            value += totalValue * comparedValue;
-                            isDuplicate[j] = true;
-                        }
-                        case ADD_MULTIPLIED_BASE -> renderAsPercentage[j] = true;
-                    }
-                }
-
+                value = combineDuplicates(entries, isDuplicate, renderAsPercentage, i, value, baseValue);
                 if (renderAsPercentage[i]) displayType = AttributeDisplayType.PERCENTAGE;
+
                 if (totalValue != 0 && !((displayType == AttributeDisplayType.DIFFERENCE || displayType == AttributeDisplayType.PERCENTAGE) && value == 0)) {
                     MutableComponent text = formatting(value, baseValue, displayType);
                     cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.attribute())));
@@ -249,7 +249,8 @@ public class CleanerTooltips {
 
         ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         for (var enchantment : enchantments.entrySet()) {
-            if (enchantment.getKey().unwrapKey().isPresent() && enchantment.getKey().unwrapKey().get() == Enchantments.EFFICIENCY  && enchantment.getIntValue() > 0) {
+            var enchantmentKey = enchantment.getKey().unwrapKey();
+            if (enchantmentKey.isPresent() && enchantmentKey.get() == Enchantments.EFFICIENCY  && enchantment.getIntValue() > 0) {
                 speed += (float) (enchantment.getIntValue() * enchantment.getIntValue()) + 1;
                 break;
             }

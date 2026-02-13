@@ -16,6 +16,8 @@ import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 
 import java.util.HashMap;
@@ -64,6 +66,26 @@ public class CleanerTooltipsUtil {
             }
         }
         return insertIndex;
+    }
+
+    /**
+     * Calculates the additional attack damage from the sharpness enchantment.
+     * @param stack the item stack
+     * @return      the additional attack damage
+     */
+    public static double getSharpnessBonus(ItemStack stack) {
+        double sharpnessBonus = 0;
+        if (CleanerTooltips.config.sharpness) {
+            ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+            for (var enchantment : enchantments.entrySet()) {
+                var enchantmentKey = enchantment.getKey().unwrapKey();
+                if (enchantmentKey.isPresent() && enchantmentKey.get().equals(Enchantments.SHARPNESS) && enchantment.getIntValue() > 0) {
+                    sharpnessBonus = ((0.5 * enchantment.getIntValue()) + 0.5);
+                    break;
+                }
+            }
+        }
+        return sharpnessBonus;
     }
 
     /**

@@ -1,6 +1,7 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -27,7 +28,7 @@ public class GuiGraphicsMixin {
 
     @Unique
     private static boolean IsKeyNotDown() {
-        return !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue());
+        return !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), KeyBindingHelper.getBoundKeyOf(CleanerTooltips.hideTooltip).getValue());
     }
 
     @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;II)V",

@@ -2,15 +2,13 @@ package net.twentyytwo.cleanertooltips.mixin;
 
 import com.llamalad7.mixinextras.sugar.Local;
 import com.mojang.blaze3d.platform.InputConstants;
-import net.minecraft.core.component.DataComponents;
+import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import org.jetbrains.annotations.Nullable;
@@ -29,7 +27,7 @@ public abstract class ItemStackMixin {
     @Inject( method = "addAttributeTooltips", at = @At("HEAD"), cancellable = true)
     private void hideDefaultAttributes(Consumer<Component> tooltipAdder, @Nullable Player player, CallbackInfo ci) {
         if (CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers((ItemStack) (Object) this))
-                && !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), ((KeyMappingAccessor) CleanerTooltips.hideTooltip).getKey().getValue())) {
+                && !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), KeyBindingHelper.getBoundKeyOf(CleanerTooltips.hideTooltip).getValue())) {
             ci.cancel();
         }
     }
@@ -37,18 +35,8 @@ public abstract class ItemStackMixin {
     // Fixes MC-271840
     @ModifyVariable(method = "addModifierTooltip", at = @At(value = "STORE"), ordinal = 1)
     private double addAttackDamage(double value, @Local(argsOnly = true) AttributeModifier modifier) {
-        if (CleanerTooltips.config.sharpness && CleanerTooltips.MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) {
-            double modifierValue = modifier.amount() + CleanerTooltips.MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE);
-
-            ItemEnchantments enchantments = ((ItemStack)(Object)this).getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-            for (var entry : enchantments.entrySet()) {
-                if (entry.getKey().unwrapKey().get() == Enchantments.SHARPNESS  && entry.getIntValue() > 0) {
-                    modifierValue += (0.5 * entry.getIntValue()) + 0.5;
-                    break;
-                }
-            }
-            return modifierValue;
-        }
+        if (CleanerTooltips.MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID))
+            return modifier.amount() + CleanerTooltips.MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) + CleanerTooltipsUtil.getSharpnessBonus((ItemStack)(Object)this);
         return value;
     }
 }

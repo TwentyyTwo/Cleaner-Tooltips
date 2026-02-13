@@ -35,6 +35,7 @@ import org.lwjgl.glfw.GLFW;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class CleanerTooltips {
 
@@ -109,30 +110,36 @@ public class CleanerTooltips {
     private static double combineDuplicates(List<ItemAttributeModifiers.Entry> entries, boolean[] isDuplicate, boolean[] renderAsPercentage, int i, double value, double baseValue) {
         int size = entries.size();
         ItemAttributeModifiers.Entry entry = entries.get(i);
+        double totalAddValue = value + baseValue;
+        double totalMultiBase = 1;
+        double totalMultiplier = 1;
 
         for (int j = i + 1; j < size; j++) {
             if (isDuplicate[j]) continue;
-            double totalValue = value + baseValue;
             ItemAttributeModifiers.Entry comparedEntry = entries.get(j);
             if (!entry.attribute().equals(comparedEntry.attribute())) continue;
 
             double comparedValue = comparedEntry.modifier().amount();
             switch (comparedEntry.modifier().operation()) {
                 case ADD_VALUE -> {
-                    value += comparedValue;
+                    totalAddValue += comparedValue;
                     isDuplicate[j] = true;
                 }
                 case ADD_MULTIPLIED_TOTAL -> {
-                    value += totalValue * comparedValue;
+                    totalMultiplier *= (1 + comparedValue);
                     isDuplicate[j] = true;
                 }
                 case ADD_MULTIPLIED_BASE -> {
-                    System.out.println(comparedEntry);
-                    renderAsPercentage[j] = true;
+                    if (Set.of(4, 5, 6, 7).contains(comparedEntry.slot().ordinal()))
+                        renderAsPercentage[j] = true;
+                    else {
+                        totalMultiBase *= (1 + comparedValue);
+                        isDuplicate[j] = true;
+                    }
                 }
             }
         }
-        return value;
+        return ((totalAddValue * totalMultiBase) * totalMultiplier) - baseValue;
     }
 
     /**

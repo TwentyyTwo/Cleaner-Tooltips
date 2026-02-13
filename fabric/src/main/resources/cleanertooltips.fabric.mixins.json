@@ -6,9 +6,9 @@
   "mixins": [],
   "client": [
     "AbstractContainerScreenMixin",
-    "KeyMappingAccessor",
     "GuiGraphicsMixin",
-    "ItemStackMixin"
+    "ItemStackMixin",
+    "KeyMappingMixin"
   ],
   "injectors": {
     "defaultRequire": 1

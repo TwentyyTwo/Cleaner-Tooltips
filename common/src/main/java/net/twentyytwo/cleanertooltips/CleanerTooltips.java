@@ -18,6 +18,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
@@ -25,6 +26,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
+import net.twentyytwo.cleanertooltips.compat.BetterCombatCompat;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
@@ -35,6 +37,7 @@ import org.lwjgl.glfw.GLFW;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class CleanerTooltips {
@@ -169,7 +172,7 @@ public class CleanerTooltips {
             boolean[] isDuplicate = new boolean[size], renderAsPercentage = new boolean[size];
 
             for (int i = 0; i < size; i++) {
-                if (isDuplicate[i]) continue;
+                if (isDuplicate[i] || (BetterCombatCompat.shouldAdd(stack) && Objects.equals(entries.get(i).attribute(), Attributes.ENTITY_INTERACTION_RANGE))) continue;
 
                 ItemAttributeModifiers.Entry entry = entries.get(i);
                 AttributeDisplayType displayType = CleanerTooltipsUtil.ATTRIBUTE_DISPLAY_MAP
@@ -190,6 +193,10 @@ public class CleanerTooltips {
                     MutableComponent text = formatting(value, baseValue, displayType);
                     cachedEntries.add(new TooltipEntry(text, MC.font.width(text), getIcon(entry.attribute())));
                 }
+            }
+
+            if (BetterCombatCompat.shouldAdd(stack)) {
+                cachedEntries.add(BetterCombatCompat.attackRangeEntry(stack, modifiers));
             }
         }
 

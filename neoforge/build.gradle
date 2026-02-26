@@ -10,6 +10,7 @@ repositories {
 
 dependencies {
     api "me.shedaniel.cloth:cloth-config-neoforge:15.0.140"
+    compileOnly "maven.modrinth:better-combat:2.3.1+1.21.1-neoforge"
 }
 
 neoForge {

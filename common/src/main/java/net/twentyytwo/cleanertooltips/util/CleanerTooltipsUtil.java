@@ -19,6 +19,7 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
+import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.util.HashMap;
 import java.util.List;
@@ -106,8 +107,7 @@ public class CleanerTooltipsUtil {
     }
 
     /**
-     * Boolean to check whether the icon attributes should be added.<br>
-     * Note: the keybind is checked separately because of fabric and neoforge differences.
+     * Boolean to check whether the icon attributes should be added.
      * @param modifiers the {@code ItemAttributeModifiers} of the item stack
      * @return          whether the icon attributes should be added.
      */
@@ -117,6 +117,8 @@ public class CleanerTooltipsUtil {
         if (mc.player == null)
             return false;
         else if (!CleanerTooltips.config.enabled)
+            return false;
+        else if (Services.getInstance().isKeyDown())
             return false;
         else if (modifiers.modifiers().isEmpty())
             return false;

@@ -6,6 +6,12 @@ plugins {
 repositories {
     maven { url "https://maven.shedaniel.me/" }
     maven { url "https://maven.terraformersmc.com/releases/" }
+    maven {
+        url = uri("https://api.modrinth.com/maven")
+        content {
+            includeGroup("maven.modrinth")
+        }
+    }
 }
 
 neoForge {
@@ -31,6 +37,8 @@ dependencies {
         exclude group: "net.fabricmc.fabric-api"
         exclude group: "net.fabricmc", module: "fabric-loader"
     }
+
+    compileOnly "maven.modrinth:better-combat:2.3.1+1.21.1-neoforge"
 }
 
 configurations {

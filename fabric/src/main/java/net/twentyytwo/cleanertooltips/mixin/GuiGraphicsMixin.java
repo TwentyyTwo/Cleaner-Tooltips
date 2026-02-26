@@ -1,7 +1,5 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -14,7 +12,6 @@ import net.twentyytwo.cleanertooltips.api.IItemStackHolder;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
-import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
@@ -25,11 +22,6 @@ import java.util.Optional;
 
 @Mixin(GuiGraphics.class)
 public class GuiGraphicsMixin {
-
-    @Unique
-    private static boolean IsKeyNotDown() {
-        return !InputConstants.isKeyDown(CleanerTooltips.MC.getWindow().getWindow(), KeyBindingHelper.getBoundKeyOf(CleanerTooltips.hideTooltip).getValue());
-    }
 
     @Inject(method = "renderTooltip(Lnet/minecraft/client/gui/Font;Ljava/util/List;Ljava/util/Optional;II)V",
             at = @At(
@@ -43,7 +35,7 @@ public class GuiGraphicsMixin {
 
             int nameIndex = CleanerTooltipsUtil.getReplaceIndex(list);
 
-            boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers) && IsKeyNotDown();
+            boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers);
             if (shouldAdd) list.set(nameIndex, new CleanerTooltips.AttributeTooltip(stack, modifiers));
 
             if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {
@@ -66,7 +58,7 @@ public class GuiGraphicsMixin {
     private void onRenderTooltipHead(Font font, List<Component> tooltipLines, Optional<TooltipComponent> visualTooltipComponent, int mouseX, int mouseY, CallbackInfo ci) {
         if (CleanerTooltips.MC.screen instanceof IItemStackHolder holder) {
             ItemStack stack = holder.cleanerTooltips$getStack();
-            if ((CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(stack)) && IsKeyNotDown())
+            if ((CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(stack)))
                     || (CleanerTooltips.config.durability && stack.getMaxDamage() > 0)
                     && CleanerTooltips.config.durabilityPos != CleanerTooltipsConfig.posValues.BOTTOM) tooltipLines.add(1, Component.empty());
         }

@@ -51,6 +51,9 @@ public class CleanerTooltips {
             KeyMapping.CATEGORY_INVENTORY
     );
 
+    public static final int legendaryTooltipsIncreasedHeight = 1;
+    public static final boolean isLegendaryTooltipsLoaded = Services.getInstance().isModLoaded("legendarytooltips");
+
     public static CleanerTooltipsConfig config;
 
     private static final int GAP = 3; // The gap between the icon and the value

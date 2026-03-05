@@ -10,7 +10,7 @@ import org.spongepowered.asm.mixin.injection.At;
 import java.util.Map;
 
 @Mixin(KeyMapping.class)
-public class KeyMappingMixin {
+public abstract class KeyMappingMixin {
 
     @WrapOperation(method = "resetMapping", at = @At(value = "INVOKE", target = "Ljava/util/Map;put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;"))
     private static Object onResetMapping(Map<Object, Object> instance, Object k, Object v, Operation<Object> original) {

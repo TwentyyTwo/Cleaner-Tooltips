@@ -7,13 +7,14 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.AttributeUtil;
-import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
 import java.util.Objects;
+
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 @Mixin(AttributeUtil.class)
 public abstract class AttributeUtilMixin {
@@ -23,8 +24,8 @@ public abstract class AttributeUtilMixin {
             at = @At(value = "STORE"),
             name = "base")
     private static double modifyAttackDamage(double base, @Local(argsOnly = true) ItemStack stack, @Local(name = "attr") Holder<Attribute> attr, @Local(name = "entityBase") double entityBase) {
-        if (CleanerTooltips.MC.player != null && Objects.equals(attr.value().getBaseId(), Item.BASE_ATTACK_DAMAGE_ID))
-            return (base - entityBase) + CleanerTooltips.MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) + CleanerTooltipsUtil.getSharpnessBonus(stack);
+        if (MC.player != null && Objects.equals(attr.value().getBaseId(), Item.BASE_ATTACK_DAMAGE_ID))
+            return (base - entityBase) + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) + CleanerTooltipsUtil.getSharpnessBonus(stack);
         return base;
     }
 }

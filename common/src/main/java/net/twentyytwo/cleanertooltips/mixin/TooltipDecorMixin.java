@@ -11,7 +11,7 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.legendaryTooltipsIn
 
 @Pseudo
 @Mixin(TooltipDecor.class)
-public class TooltipDecorMixin {
+public abstract class TooltipDecorMixin {
 
     @ModifyVariable(method = "drawSeparator", at = @At("HEAD"), index = 2, argsOnly = true)
     private static int onDrawSeparator(int value) {

@@ -11,7 +11,7 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.legendaryTooltipsIn
 
 @Pseudo
 @Mixin(TitleBreakComponent.class)
-public class TitleBreakComponentMixin {
+public abstract class TitleBreakComponentMixin {
 
     @ModifyReturnValue(method = "getHeight", at = @At("RETURN"))
     private int onGetHeight(int original) {

@@ -1,17 +1,12 @@
 package net.twentyytwo.cleanertooltips.util;
 
 import com.mojang.datafixers.util.Either;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
@@ -21,14 +16,15 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.services.Services;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 /**
  * Collection of useful functions.
  */
 public class CleanerTooltipsUtil {
+
     /**
      * Gets the index of the item name and returns the index below it.
      * @param stack             the item stack whose name is used
@@ -112,50 +108,34 @@ public class CleanerTooltipsUtil {
      * @return          whether the icon attributes should be added.
      */
     public static boolean shouldAddTooltip(ItemAttributeModifiers modifiers) {
-        Minecraft mc = CleanerTooltips.MC;
+        if (MC.player == null) {
+            return false;
+        } else if (!CleanerTooltips.config.enabled) {
+            return false;
+        } else if (Services.getInstance().isKeyDown()) {
+            return false;
+        } else if (modifiers.modifiers().isEmpty()) {
+            return false;
+        }
 
-        if (mc.player == null)
-            return false;
-        else if (!CleanerTooltips.config.enabled)
-            return false;
-        else if (Services.getInstance().isKeyDown())
-            return false;
-        else if (modifiers.modifiers().isEmpty())
-            return false;
-
-        AttributeMap playerAttributes = mc.player.getAttributes();
-        Registry<Attribute> attributeRegistry = BuiltInRegistries.ATTRIBUTE;
+        AttributeMap playerAttributes = MC.player.getAttributes();
 
         for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-            double baseValue = mc.player != null && playerAttributes.hasAttribute(entry.attribute()) ? playerAttributes.getBaseValue(entry.attribute()) : 0;
-            switch (ATTRIBUTE_DISPLAY_MAP.get(attributeRegistry.getKey(entry.attribute().value()))) {
-                case DIFFERENCE -> {
-                    if (entry.modifier().amount() != 0) return true;
+            if (AttributeDisplayType.get(entry.attribute()).hasBaseValue()) {
+                double baseValue = MC.player != null && playerAttributes.hasAttribute(entry.attribute())
+                        ? playerAttributes.getBaseValue(entry.attribute())
+                        : 0;
+
+                if (entry.modifier().amount() + baseValue != 0) {
+                    return true;
                 }
-                case null, default -> {
-                    if (entry.modifier().amount() + baseValue != 0) return true;
+            } else {
+                if (entry.modifier().amount() != 0) {
+                    return true;
                 }
             }
         }
-        return false;
-    }
 
-    /**
-     * A map of attributes where each attribute is associated with a {@code AttributeDisplayType}.
-     */
-    public static final Map<ResourceLocation, AttributeDisplayType> ATTRIBUTE_DISPLAY_MAP = new HashMap<>();
-    static {
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor_toughness"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_damage"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_knockback"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), AttributeDisplayType.NUMBER);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.knockback_resistance"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.luck"), AttributeDisplayType.PERCENTAGE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"), AttributeDisplayType.DIFFERENCE);
-        ATTRIBUTE_DISPLAY_MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"), AttributeDisplayType.PERCENTAGE);
+        return false;
     }
 }

@@ -15,7 +15,7 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(AbstractContainerScreen.class)
-public class AbstractContainerScreenMixin<T extends AbstractContainerMenu> implements IItemStackHolder {
+public abstract class AbstractContainerScreenMixin<T extends AbstractContainerMenu> implements IItemStackHolder {
 
     @Final
     @Shadow

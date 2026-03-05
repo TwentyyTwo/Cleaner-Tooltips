@@ -17,7 +17,9 @@ import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import java.util.List;
 import java.util.Objects;
 
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.*;
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.MOD_ID;
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.formatting;
 
 public class BetterCombatCompat {
 
@@ -43,8 +45,9 @@ public class BetterCombatCompat {
         WeaponAttributes attributes = WeaponRegistry.getAttributes(stack);
         if (attributes != null) {
             return attributes.rangeBonus();
+        } else {
+            return 0;
         }
-        else return 0;
     }
 
     private static double calculateDuplicates(List<ItemAttributeModifiers.Entry> entries, double baseValue, double value) {

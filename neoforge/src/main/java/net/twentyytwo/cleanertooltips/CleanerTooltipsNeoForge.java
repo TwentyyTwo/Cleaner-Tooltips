@@ -1,6 +1,5 @@
 package net.twentyytwo.cleanertooltips;
 
-import com.mojang.blaze3d.platform.InputConstants;
 import com.mojang.datafixers.util.Either;
 import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.network.chat.FormattedText;
@@ -18,8 +17,9 @@ import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactori
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
-import net.twentyytwo.cleanertooltips.CleanerTooltips.*;
 
+import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeModifierTooltip;
+import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 
@@ -42,29 +42,33 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void registerTooltips(RegisterClientTooltipComponentFactoriesEvent event) {
-        event.register(AttributeTooltip.class, payload -> payload);
-        event.register(DurabilityTooltip.class, payload -> payload);
+        event.register(IconAttributeModifierTooltip.class, payload -> payload);
+        event.register(IconDurabilityTooltip.class, payload -> payload);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void addTooltip(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
+        List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
+
+        int insertIndex = CleanerTooltipsUtil.getInsertIndex(stack, tooltipElements);
         ItemAttributeModifiers modifiers = CleanerTooltipsUtil.getAttributeModifiers(stack);
 
-        List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
-        int insertIndex = CleanerTooltipsUtil.getInsertIndex(stack, tooltipElements);
-
         boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers);
-        if (shouldAdd) tooltipElements.add(insertIndex, Either.right(new AttributeTooltip(stack, modifiers)));
+        if (shouldAdd) {
+            tooltipElements.add(insertIndex, Either.right(new IconAttributeModifierTooltip(stack, modifiers)));
+        }
 
         if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {
             switch (CleanerTooltips.config.durabilityPos) {
                 case INLINE -> {
-                    if (shouldAdd) return;
-                    tooltipElements.add(insertIndex, Either.right(new DurabilityTooltip(stack)));
+                    if (shouldAdd) {
+                        return;
+                    }
+                    tooltipElements.add(insertIndex, Either.right(new IconDurabilityTooltip(stack)));
                 }
-                case BELOW -> tooltipElements.add(shouldAdd ? insertIndex + 1 : insertIndex, Either.right(new DurabilityTooltip(stack)));
-                case BOTTOM -> tooltipElements.addLast(Either.right(new DurabilityTooltip(stack)));
+                case BELOW -> tooltipElements.add(shouldAdd ? insertIndex + 1 : insertIndex, Either.right(new IconDurabilityTooltip(stack)));
+                case BOTTOM -> tooltipElements.addLast(Either.right(new IconDurabilityTooltip(stack)));
             }
         }
     }

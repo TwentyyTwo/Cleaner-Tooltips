@@ -10,7 +10,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.twentyytwo.cleanertooltips.TooltipEntry;
+import net.twentyytwo.cleanertooltips.AttributeFormattingData;
 import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 
@@ -23,13 +23,13 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.formatting;
 
 public class BetterCombatCompat {
 
-    private static final boolean isModLoaded = Services.getInstance().isModLoaded("bettercombat");
+    public static final boolean isModLoaded = Services.getInstance().isModLoaded("bettercombat");
 
-    public static boolean shouldAdd(ItemStack stack) {
-        return isModLoaded && (WeaponRegistry.getAttributes(stack) != null);
+    public static boolean hasAttributes(ItemStack stack) {
+        return (WeaponRegistry.getAttributes(stack) != null);
     }
 
-    public static TooltipEntry attackRangeEntry(ItemStack stack, ItemAttributeModifiers modifiers) {
+    public static AttributeFormattingData attackRangeEntry(ItemStack stack, ItemAttributeModifiers modifiers) {
         Holder<Attribute> interactionRange = Attributes.ENTITY_INTERACTION_RANGE;
         AttributeMap playerAttributes = Objects.requireNonNull(MC.player).getAttributes();
         ResourceLocation INTERACTION_RANGE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/entity_interaction_range.png");
@@ -38,7 +38,7 @@ public class BetterCombatCompat {
         double value = calculateDuplicates(modifiers.modifiers(), baseValue, getRangeBonus(stack));
 
         MutableComponent text = formatting(value, baseValue, AttributeDisplayType.NUMBER);
-        return new TooltipEntry(text, MC.font.width(text), INTERACTION_RANGE);
+        return new AttributeFormattingData(text, INTERACTION_RANGE);
     }
 
     private static double getRangeBonus(ItemStack stack) {

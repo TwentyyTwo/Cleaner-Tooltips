@@ -1,12 +1,13 @@
 package net.twentyytwo.cleanertooltips.util;
 
-import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public enum AttributeDisplayType {
     /**
@@ -48,23 +49,33 @@ public enum AttributeDisplayType {
     /**
      * A map of attributes where each attribute is associated with a corresponding {@code AttributeDisplayType}.
      */
-    public static final Map<ResourceLocation, AttributeDisplayType> MAP = new HashMap<>();
+    public static final Map<ResourceLocation, AttributeDisplayType[]> MAP = new HashMap<>();
     static {
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor"), NUMBER);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor_toughness"), NUMBER);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_damage"), NUMBER);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_knockback"), NUMBER);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), NUMBER);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), DIFFERENCE);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), DIFFERENCE);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), PERCENTAGE);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.knockback_resistance"), PERCENTAGE);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.luck"), PERCENTAGE);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"), DIFFERENCE);
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"), PERCENTAGE);
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor_toughness"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_damage"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_knockback"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.knockback_resistance"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.luck"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
+        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
     }
 
-    public static AttributeDisplayType get(Holder<Attribute> attribute) {
-        return MAP.getOrDefault(BuiltInRegistries.ATTRIBUTE.getKey(attribute.value()), NUMBER);
+    public static AttributeDisplayType get(ItemAttributeModifiers.Entry entry) {
+        if (!entry.modifier().operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
+            return PERCENTAGE;
+        }
+
+        ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value());
+        if (MAP.containsKey(key)) {
+            return Set.of(1, 4, 5, 6, 7).contains(entry.slot().ordinal())
+                    ? MAP.get(key)[0]
+                    : MAP.get(key)[1];
+        }
+        return NUMBER;
     }
 }

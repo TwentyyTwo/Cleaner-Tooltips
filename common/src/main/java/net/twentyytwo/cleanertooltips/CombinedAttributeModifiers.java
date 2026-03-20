@@ -7,6 +7,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeMap;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -17,14 +18,11 @@ import net.twentyytwo.cleanertooltips.util.Comparison;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
@@ -42,17 +40,18 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
  * it defaults to {@code  0}. Lastly, if both the value and the base player value equate to {@code 0}, the {@code Entry}
  * will be omitted.
  */
-public record CombinedAttributeModifiers(Map<EquipmentSlotGroup, List<Entry>> modifiers) {
+public record CombinedAttributeModifiers(LinkedHashMap<EquipmentSlotGroup, List<Entry>> modifiers) {
 
     public CombinedAttributeModifiers(ItemStack stack, ItemAttributeModifiers attributeModifiers) {
         this(getEntries(stack, attributeModifiers));
     }
 
-    private static Map<EquipmentSlotGroup, List<Entry>> getEntries(ItemStack stack, ItemAttributeModifiers modifiers) {
-        Map<EquipmentSlotGroup, List<Entry>> entryList = new HashMap<>();
+    private static LinkedHashMap<EquipmentSlotGroup, List<Entry>> getEntries(ItemStack stack, ItemAttributeModifiers modifiers) {
+        LinkedHashMap<EquipmentSlotGroup, List<Entry>> entryList = new LinkedHashMap<>();
 
         List<ItemAttributeModifiers.Entry> entries = modifiers.modifiers();
         AttributeMap playerAttributes = Objects.requireNonNull(MC.player).getAttributes();
+        EquipmentSlotGroup primaryGroup = getPrimaryGroup(stack);
 
         int size = entries.size();
         boolean[] hasBeenCombined = new boolean[size];
@@ -65,7 +64,7 @@ public record CombinedAttributeModifiers(Map<EquipmentSlotGroup, List<Entry>> mo
             }
 
             ItemAttributeModifiers.Entry entry = entries.get(i);
-            AttributeDisplayType displayType = AttributeDisplayType.get(entry.attribute());
+            AttributeDisplayType displayType = AttributeDisplayType.get(entry);
 
             double value = entry.modifier().amount() + (entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID) ? sharpnessBonus : 0);
             double baseValue = displayType.hasBaseValue() && playerAttributes.hasAttribute(entry.attribute())
@@ -76,24 +75,20 @@ public record CombinedAttributeModifiers(Map<EquipmentSlotGroup, List<Entry>> mo
             value = combineValues(entries, value, baseValue, i, hasBeenCombined);
 
             if (value + baseValue != 0) {
-                Entry entry1 = new Entry(
-                        entry.attribute(),
+                Entry newEntry = new Entry(entry.attribute(),
                         new AttributeModifier(entry.modifier().id(), value, entry.modifier().operation()),
-                        entry.slot(),
-                        entry.modifier().operation().equals(Operation.ADD_MULTIPLIED_BASE) ? AttributeDisplayType.PERCENTAGE : displayType,
-                        baseValue);
+                        entry.slot(), displayType, baseValue);
 
-                entryList.computeIfAbsent(entry.slot(), k -> new ArrayList<>()).add(entry1);
+                entryList.computeIfAbsent(entry.slot(), k -> new ArrayList<>()).add(newEntry);
             }
         }
 
-        Map<EquipmentSlotGroup, List<Entry>> sortedEntryList = new TreeMap<>(Comparator
-                        .comparingInt((EquipmentSlotGroup key) -> entryList.get(key).size())
-                        .thenComparing(key -> entryList.get(key).getFirst().slot())
-                        .reversed());
-        sortedEntryList.putAll(entryList);
+        // Ensures that the most relevant EquipmentSlotGroup is always first
+        if (!entryList.entrySet().iterator().next().getKey().equals(primaryGroup)) {
+            entryList.putFirst(primaryGroup, entryList.get(primaryGroup));
+        }
 
-        return sortedEntryList;
+        return entryList;
     }
 
     private static double combineValues(List<ItemAttributeModifiers.Entry> entries, double value, double baseValue, int i, boolean[] hasBeenCombined) {
@@ -147,6 +142,13 @@ public record CombinedAttributeModifiers(Map<EquipmentSlotGroup, List<Entry>> mo
         }
 
         return ((totalAddValue * totalMultiBase) * totalMultiplier) - baseValue;
+    }
+
+    private static EquipmentSlotGroup getPrimaryGroup(ItemStack stack) {
+        if (stack.getItem() instanceof ArmorItem armorItem) {
+            return EquipmentSlotGroup.bySlot(armorItem.getEquipmentSlot());
+        }
+        return EquipmentSlotGroup.MAINHAND;
     }
 
     public record Entry(Holder<Attribute> attribute, AttributeModifier modifier, EquipmentSlotGroup slot, AttributeDisplayType displayType, double baseValue) {

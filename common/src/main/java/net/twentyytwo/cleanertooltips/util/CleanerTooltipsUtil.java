@@ -121,7 +121,7 @@ public class CleanerTooltipsUtil {
         AttributeMap playerAttributes = MC.player.getAttributes();
 
         for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-            if (AttributeDisplayType.get(entry.attribute()).hasBaseValue()) {
+            if (AttributeDisplayType.get(entry).hasBaseValue()) {
                 double baseValue = MC.player != null && playerAttributes.hasAttribute(entry.attribute())
                         ? playerAttributes.getBaseValue(entry.attribute())
                         : 0;

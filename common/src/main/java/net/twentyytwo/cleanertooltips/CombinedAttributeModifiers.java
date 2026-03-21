@@ -151,7 +151,47 @@ public record CombinedAttributeModifiers(LinkedHashMap<EquipmentSlotGroup, List<
         return EquipmentSlotGroup.MAINHAND;
     }
 
+    /**
+     * For each {@link EquipmentSlotGroup} in {@code other}, any entry with an attribute not present in
+     * this object will get added to this objects {@link #modifiers()}, with a value of {@code 0}.
+     *
+     * @param other the object whose {@code modifiers} are merged into this object
+     */
+    public void merge(CombinedAttributeModifiers other) {
+        Map<EquipmentSlotGroup, Set<Holder<Attribute>>> existingAttributes = this.modifiers().entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().stream()
+                        .map(Entry::attribute)
+                        .collect(Collectors.toSet())));
+
+        other.modifiers().forEach((key, value) -> value.stream()
+                .filter(entry -> !existingAttributes.getOrDefault(key, Collections.emptySet()).contains(entry.attribute()))
+                .forEach(entry -> this.modifiers().computeIfAbsent(key, k -> new ArrayList<>())
+                        .add(new Entry(entry.attribute(), new AttributeModifier(entry.modifier().id(), 0, entry.modifier().operation()),
+                                entry.slot(), entry.displayType(), entry.baseValue()))));
+    }
+
     public record Entry(Holder<Attribute> attribute, AttributeModifier modifier, EquipmentSlotGroup slot, AttributeDisplayType displayType, double baseValue) {
 
+        public Comparison getComparison(Entry comparedEntry) {
+            return getComparison(comparedEntry.modifier().amount(), comparedEntry.baseValue());
+        }
+
+        public Comparison getComparison(double otherValue, double otherBaseValue) {
+            double value = this.modifier().amount();
+            double comparedValue = otherValue;
+
+            if (this.displayType().hasBaseValue()) {
+                value += this.baseValue();
+                comparedValue += otherBaseValue;
+            }
+
+            if (value > comparedValue) {
+                return Comparison.HIGHER;
+            } else if (value < comparedValue) {
+                return Comparison.LOWER;
+            } else {
+                return Comparison.NONE;
+            }
+        }
     }
 }

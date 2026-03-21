@@ -23,6 +23,12 @@ public class CleanerTooltipsConfig implements ConfigData {
     @ConfigEntry.Gui.Tooltip
     public boolean miningSpeed = false;
 
+    @ConfigEntry.Gui.Tooltip
+    public boolean compareAttributes = true;
+
+    @ConfigEntry.Gui.Tooltip
+    public boolean onlyCompareRelevant = true;
+
     @ConfigEntry.Gui.PrefixText
 
     // Whether durability should be displayed in the tooltip.

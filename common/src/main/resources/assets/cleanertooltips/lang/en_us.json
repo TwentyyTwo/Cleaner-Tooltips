@@ -9,6 +9,11 @@
   "text.autoconfig.cleanertooltips.option.hiddenAttributesHint.@Tooltip": "Whether hidden attributes should be hinted at.",
   "text.autoconfig.cleanertooltips.option.miningSpeed": "Display Mining Speed",
   "text.autoconfig.cleanertooltips.option.miningSpeed.@Tooltip": "Should the mining speed of tools be displayed?",
+  "text.autoconfig.cleanertooltips.option.compareAttributes": "Compare Attributes",
+  "text.autoconfig.cleanertooltips.option.compareAttributes.@Tooltip": "Show a comparison of attributes between the selected and equipped item.",
+  "text.autoconfig.cleanertooltips.option.onlyCompareRelevant": "Only Compare Relevant",
+  "text.autoconfig.cleanertooltips.option.onlyCompareRelevant.@Tooltip": "Only compare attributes the selected item has.",
+
   "text.autoconfig.cleanertooltips.option.durability": "Display Durability",
   "text.autoconfig.cleanertooltips.option.durability.@Tooltip": "Should the durability of items be displayed?",
   "text.autoconfig.cleanertooltips.option.durabilityPos": "Durability Position",

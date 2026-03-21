@@ -12,7 +12,10 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
@@ -23,12 +26,17 @@ import net.twentyytwo.cleanertooltips.compat.BetterCombatCompat;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.Comparison;
 import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 public class CleanerTooltips {
 
@@ -101,21 +109,15 @@ public class CleanerTooltips {
 
     public record IconAttributeModifierTooltip(
             ItemStack stack,
-            ItemAttributeModifiers modifiers,
-            List<AttributeFormattingData> attributeFormattingDataList,
+            List<AttributeFormattingData> formattingSlotLists,
             MutableComponent durabilityComponent,
             float miningSpeed) implements TooltipComponent, ClientTooltipComponent {
 
-        /**
-         * A custom tooltip object rendering the attribute modifiers of an itemstack as icons.
-         * @param stack     the item stack
-         * @param modifiers the {@code ItemAttributeModifiers} of the itemstack
-         */
         public IconAttributeModifierTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
-            this(stack, modifiers, gatherFormattingData(stack, modifiers), durabilityFormatting(stack), getMiningSpeed(stack));
+            this(stack, getFormattingSlotLists(stack, modifiers), durabilityFormatting(stack), getMiningSpeed(stack));
 
             if (BetterCombatCompat.isModLoaded && BetterCombatCompat.hasAttributes(stack)) {
-                attributeFormattingDataList.add(BetterCombatCompat.attackRangeEntry(stack, modifiers));
+                formattingSlotLists.add(BetterCombatCompat.attackRangeEntry(stack, modifiers));
             }
         }
 
@@ -137,18 +139,76 @@ public class CleanerTooltips {
             return 0;
         }
 
-        private static List<AttributeFormattingData> gatherFormattingData(ItemStack stack, ItemAttributeModifiers modifiers) {
-            List<AttributeFormattingData> tooltipEntries = new ArrayList<>();
-
+        private static List<AttributeFormattingData> getFormattingSlotLists(ItemStack stack, ItemAttributeModifiers modifiers) {
             CombinedAttributeModifiers combinedModifiers = new CombinedAttributeModifiers(stack, modifiers);
-            combinedModifiers.modifiers().forEach((equipmentSlotGroup, entries) -> {
+
+            List<AttributeFormattingData> comparisonFormattingSlotLists = getComparisonFormattingData(stack, combinedModifiers);
+            if (comparisonFormattingSlotLists != null) {
+                return comparisonFormattingSlotLists;
+            }
+
+            List<AttributeFormattingData> formattingSlotLists = new ArrayList<>();
+            combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
+                boolean isLastMapEntry = combinedModifiers.modifiers().lastEntry().getKey().equals(slotGroup);
                 for (int i = 0; i < entries.size(); i++) {
                     CombinedAttributeModifiers.Entry entry = entries.get(i);
                     MutableComponent text = formatting(entry.modifier().amount(), entry.baseValue(), entry.displayType());
-                    tooltipEntries.add(new AttributeFormattingData(text, entry.attribute(), (i == entries.size() - 1)));
+                    formattingSlotLists.add(new AttributeFormattingData(text, entry.attribute(), (i == entries.size() - 1) && !isLastMapEntry));
                 }
             });
 
+            return formattingSlotLists;
+        }
+
+        private static List<AttributeFormattingData> getComparisonFormattingData(ItemStack stack, CombinedAttributeModifiers combinedModifiers) {
+            if (!config.compareAttributes) {
+                return null;
+            }
+
+            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+            if (comparedStack.isEmpty() || comparedStack.equals(stack)) {
+                return null;
+            }
+
+            ItemAttributeModifiers comparedModifiers = CleanerTooltipsUtil.getAttributeModifiers(comparedStack);
+            if (comparedModifiers.modifiers().isEmpty()) {
+                return null;
+            }
+
+            CombinedAttributeModifiers combinedComparedModifiers = new CombinedAttributeModifiers(comparedStack, comparedModifiers);
+            Set<EquipmentSlotGroup> modifierGroups = combinedModifiers.modifiers().keySet();
+            Set<EquipmentSlotGroup> comparedGroups = combinedComparedModifiers.modifiers().keySet();
+            if (modifierGroups.stream().noneMatch(comparedGroups::contains)) {
+                return null;
+            }
+
+            if (!config.onlyCompareRelevant) {
+                combinedModifiers.merge(combinedComparedModifiers);
+            }
+
+            List<AttributeFormattingData> tooltipEntries = new ArrayList<>();
+            combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
+                boolean isLastMapEntry = combinedModifiers.modifiers().lastEntry().getKey().equals(slotGroup);
+                for (int i = 0; i < entries.size(); i++) {
+                    CombinedAttributeModifiers.Entry entry = entries.get(i);
+
+                    Comparison comparison = Comparison.NONE;
+                    if (comparedGroups.contains(slotGroup)) {
+                        Optional<CombinedAttributeModifiers.Entry> foundEntry = combinedComparedModifiers.modifiers().get(slotGroup).stream()
+                                .filter(comparedEntry -> comparedEntry.attribute().equals(entry.attribute()))
+                                .filter(comparedEntry -> !(entry.modifier().operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
+                                        || comparedEntry.modifier().operation().equals(entry.modifier().operation()))
+                                .findFirst();
+
+                        comparison = foundEntry.isPresent()
+                                ? entry.getComparison(foundEntry.get())
+                                : entry.getComparison(0, 0);
+                    }
+
+                    MutableComponent text = formatting(entry.modifier().amount(), entry.baseValue(), entry.displayType());
+                    tooltipEntries.add(new AttributeFormattingData(text, entry.attribute(), (i == entries.size() - 1) && !isLastMapEntry, comparison));
+                }
+            });
             return tooltipEntries;
         }
 
@@ -177,15 +237,14 @@ public class CleanerTooltips {
             int width = 0;
 
             boolean anyIconMissing = false;
-            for (int i = 0; i < entries.size(); i++) {
-                AttributeFormattingData entry = entries.get(i);
+            for (AttributeFormattingData entry : entries) {
                 if (entry.icon() == null) {
                     anyIconMissing = true;
                     continue;
                 }
 
                 width += entry.textWidth() + 9 + GAP + GROUP_GAP;
-                if (entry.isLastEntry() && i != entries.size() - 1) {
+                if (entry.isLastGroupElement()) {
                     width += font.width("|") + GROUP_GAP;
                 }
             }
@@ -202,7 +261,21 @@ public class CleanerTooltips {
             int groupX = renderAttributeModifiers(attributeFormattingDataList, font, guiGraphics, x, y);
 
             if (miningSpeed > 0) {
-                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1, miningSpeed);
+                Comparison comparison = Comparison.NONE;
+                if (config.compareAttributes) {
+                    ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+
+                    if (!comparedStack.isEmpty() && !comparedStack.equals(stack) && comparedStack.getItem() instanceof DiggerItem) {
+                        float comparedMiningSpeed = getMiningSpeed(comparedStack);
+                        if (miningSpeed > comparedMiningSpeed) {
+                            comparison = Comparison.HIGHER;
+                        } else if (miningSpeed < comparedMiningSpeed) {
+                            comparison = Comparison.LOWER;
+                        }
+                    }
+                }
+
+                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1, miningSpeed, comparison);
             }
 
             if (config.durability && stack.getMaxDamage() > 0 && config.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) {
@@ -215,15 +288,14 @@ public class CleanerTooltips {
             int groupX = x;
 
             boolean anyIconMissing = false;
-            for (int i = 0; i < entries.size(); i++) {
-                AttributeFormattingData entry = entries.get(i);
+            for (AttributeFormattingData entry : entries) {
                 if (entry.icon() == null) {
                     anyIconMissing = true;
                     continue;
                 }
 
                 groupX = renderAttributeIconPair(guiGraphics, entry, groupX, y - 1);
-                if (entry.isLastEntry() && i != entries.size() - 1) {
+                if (entry.isLastGroupElement()) {
                     guiGraphics.drawString(font, Component.literal("|"), groupX, y, -1);
                     groupX += font.width("|") + GROUP_GAP;
                 }
@@ -239,6 +311,17 @@ public class CleanerTooltips {
 
         // Renders the icon and value for the respective attribute, and returns the total width that is then used as the x position for the next attribute
         private static int renderAttributeIconPair(GuiGraphics guiGraphics, AttributeFormattingData entry, int x, int y) {
+            switch (entry.comparison()) {
+                case HIGHER -> entry.text().withStyle(ChatFormatting.GREEN);
+                case LOWER -> {
+                    if (entry.text().getStyle().getColor() == TextColor.fromLegacyFormat(ChatFormatting.RED)) {
+                        entry.text().withStyle(ChatFormatting.DARK_RED);
+                    } else {
+                        entry.text().withStyle(ChatFormatting.RED);
+                    }
+                }
+            }
+
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             guiGraphics.drawString(MC.font, entry.text(), x + 9 + GAP, y + 1, -1);
 
@@ -246,11 +329,16 @@ public class CleanerTooltips {
             return x;
         }
 
-        private static int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y, float miningSpeed) {
-            String miningSpeedStr = DecimalFormat.getInstance().format(miningSpeed);
+        private static int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y, float miningSpeed, Comparison comparison) {
+            MutableComponent miningSpeedComponent = Component.literal(DecimalFormat.getInstance().format(miningSpeed));
+            switch (comparison) {
+                case HIGHER -> miningSpeedComponent.withStyle(ChatFormatting.GREEN);
+                case LOWER -> miningSpeedComponent.withStyle(ChatFormatting.RED);
+            }
+
             guiGraphics.blit(DIGGING_SPEED, x, y, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, miningSpeedStr, x + 9 + GAP, y + 1, -1);
-            return x + MC.font.width(miningSpeedStr) + GROUP_GAP + GAP + 9;
+            guiGraphics.drawString(MC.font, miningSpeedComponent, x + 9 + GAP, y + 1, -1);
+            return x + MC.font.width(miningSpeedComponent) + GROUP_GAP + GAP + 9;
         }
     }
 

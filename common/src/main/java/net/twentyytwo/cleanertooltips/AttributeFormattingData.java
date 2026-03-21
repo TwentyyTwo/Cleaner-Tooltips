@@ -8,8 +8,6 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Set;
-
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 /**
@@ -17,17 +15,21 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
  * calculated in the constructor based on the provided {@code text} mutableComponent. The {@code icon} can be
  * either manually provided, or dynamically gathered based on the attribute.<p>
  *
- * The boolean {@code isLastEntry} represents if the current value-icon pair is the last entry in their
+ * The boolean {@code isLastGroupElement} represents if the current value-icon pair is the last entry in their
  * respective list.
  */
-public record AttributeFormattingData(MutableComponent text, int textWidth, ResourceLocation icon, boolean isLastEntry) {
+public record AttributeFormattingData(MutableComponent text, int textWidth, ResourceLocation icon, boolean isLastGroupElement, Comparison comparison) {
 
-    public AttributeFormattingData(MutableComponent text, ResourceLocation icon) {
-        this(text, MC.font.width(text), icon, false);
+    public AttributeFormattingData(MutableComponent text, ResourceLocation icon, Comparison comparison) {
+        this(text, MC.font.width(text), icon, false, comparison);
     }
 
-    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, boolean isLastEntry) {
-        this(text, MC.font.width(text), getIcon(attribute), isLastEntry);
+    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, boolean isLastGroupElement) {
+        this(text, MC.font.width(text), getIcon(attribute), isLastGroupElement, Comparison.NONE);
+    }
+
+    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, boolean isLastGroupElement, Comparison comparison) {
+        this(text, MC.font.width(text), getIcon(attribute), isLastGroupElement, comparison);
     }
 
     @Nullable

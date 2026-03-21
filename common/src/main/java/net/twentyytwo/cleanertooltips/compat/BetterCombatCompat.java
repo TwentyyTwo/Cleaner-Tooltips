@@ -13,12 +13,15 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.AttributeFormattingData;
 import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.Comparison;
 
 import java.util.List;
 import java.util.Objects;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MOD_ID;
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.formatting;
 
 public class BetterCombatCompat {
@@ -37,8 +40,10 @@ public class BetterCombatCompat {
         double baseValue = (playerAttributes.hasAttribute(interactionRange) ? playerAttributes.getBaseValue(interactionRange) : 0);
         double value = calculateDuplicates(modifiers.modifiers(), baseValue, getRangeBonus(stack));
 
+        Comparison comparison = getComparison(stack, baseValue, value);
+
         MutableComponent text = formatting(value, baseValue, AttributeDisplayType.NUMBER);
-        return new AttributeFormattingData(text, INTERACTION_RANGE);
+        return new AttributeFormattingData(text, INTERACTION_RANGE, comparison);
     }
 
     private static double getRangeBonus(ItemStack stack) {
@@ -70,5 +75,27 @@ public class BetterCombatCompat {
         }
 
         return ((totalAddValue * totalMultiBase) * totalMultiplier) - baseValue;
+    }
+
+    private static Comparison getComparison(ItemStack stack, double baseValue, double value) {
+        if (config.compareAttributes) {
+            ItemStack comparedStack = MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+
+            if (!comparedStack.isEmpty() && !comparedStack.equals(stack)) {
+                ItemAttributeModifiers comparedModifiers = CleanerTooltipsUtil.getAttributeModifiers(comparedStack);
+
+                if (!comparedModifiers.modifiers().isEmpty()) {
+                    double comparedValue = calculateDuplicates(comparedModifiers.modifiers(), baseValue, getRangeBonus(comparedStack));
+
+                    if (value > comparedValue) {
+                        return Comparison.HIGHER;
+                    } else if (value < comparedValue) {
+                        return Comparison.LOWER;
+                    }
+                    return Comparison.NONE;
+                }
+            }
+        }
+        return Comparison.NONE;
     }
 }

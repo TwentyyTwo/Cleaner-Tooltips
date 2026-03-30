@@ -18,18 +18,14 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
  * The boolean {@code isLastGroupElement} represents if the current value-icon pair is the last entry in their
  * respective list.
  */
-public record AttributeFormattingData(MutableComponent text, int textWidth, ResourceLocation icon, boolean isLastGroupElement, Comparison comparison) {
+public record AttributeFormattingData(MutableComponent text, int textWidth, ResourceLocation icon, Comparison comparison) {
 
     public AttributeFormattingData(MutableComponent text, ResourceLocation icon, Comparison comparison) {
-        this(text, MC.font.width(text), icon, false, comparison);
+        this(text, MC.font.width(text), icon, comparison);
     }
 
-    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, boolean isLastGroupElement) {
-        this(text, MC.font.width(text), getIcon(attribute), isLastGroupElement, Comparison.NONE);
-    }
-
-    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, boolean isLastGroupElement, Comparison comparison) {
-        this(text, MC.font.width(text), getIcon(attribute), isLastGroupElement, comparison);
+    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, Comparison comparison) {
+        this(text, MC.font.width(text), getIcon(attribute), comparison);
     }
 
     @Nullable

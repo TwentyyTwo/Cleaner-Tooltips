@@ -21,6 +21,10 @@ public class CleanerTooltipsConfig implements ConfigData {
     public boolean hiddenAttributesHint = true;
 
     @ConfigEntry.Gui.Tooltip
+    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+    public slotGroupDisplay slotDisplay = slotGroupDisplay.INLINE;
+
+    @ConfigEntry.Gui.Tooltip
     public boolean miningSpeed = false;
 
     @ConfigEntry.Gui.Tooltip
@@ -28,6 +32,12 @@ public class CleanerTooltipsConfig implements ConfigData {
 
     @ConfigEntry.Gui.Tooltip
     public boolean onlyCompareRelevant = true;
+
+    public enum slotGroupDisplay {
+        INLINE,
+        ROWS,
+        PRIMARY
+    }
 
     @ConfigEntry.Gui.PrefixText
 

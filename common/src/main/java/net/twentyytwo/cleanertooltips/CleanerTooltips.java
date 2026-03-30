@@ -107,9 +107,27 @@ public class CleanerTooltips {
                 .append(config.showMaximumDurability ? totalDurability : Component.empty());
     }
 
+    private record FormattingSlotList(List<AttributeFormattingData> formattingDataList, ResourceLocation slotIcon) {
+
+        public FormattingSlotList(List<AttributeFormattingData> formattingDataList, EquipmentSlotGroup slotGroup) {
+            this(formattingDataList, getSlotIcon(slotGroup));
+        }
+
+        private static ResourceLocation getSlotIcon(EquipmentSlotGroup slotGroup) {
+            String slotGroupKey = slotGroup.getSerializedName();
+
+            String texturePath = "textures/gui/slot/" + slotGroupKey + ".png";
+            ResourceLocation resourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, texturePath);
+            if (MC.getResourceManager().getResource(resourceLocation).isEmpty()) {
+                return ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/slot/any.png");
+            }
+            return resourceLocation;
+        }
+    }
+
     public record IconAttributeModifierTooltip(
             ItemStack stack,
-            List<AttributeFormattingData> formattingSlotLists,
+            List<FormattingSlotList> formattingSlotLists,
             MutableComponent durabilityComponent,
             float miningSpeed) implements TooltipComponent, ClientTooltipComponent {
 
@@ -117,7 +135,7 @@ public class CleanerTooltips {
             this(stack, getFormattingSlotLists(stack, modifiers), durabilityFormatting(stack), getMiningSpeed(stack));
 
             if (BetterCombatCompat.isModLoaded && BetterCombatCompat.hasAttributes(stack)) {
-                formattingSlotLists.add(BetterCombatCompat.attackRangeEntry(stack, modifiers));
+                formattingSlotLists.getFirst().formattingDataList().add(BetterCombatCompat.attackRangeEntry(stack, modifiers));
             }
         }
 
@@ -139,28 +157,27 @@ public class CleanerTooltips {
             return 0;
         }
 
-        private static List<AttributeFormattingData> getFormattingSlotLists(ItemStack stack, ItemAttributeModifiers modifiers) {
+        private static List<FormattingSlotList> getFormattingSlotLists(ItemStack stack, ItemAttributeModifiers modifiers) {
             CombinedAttributeModifiers combinedModifiers = new CombinedAttributeModifiers(stack, modifiers);
 
-            List<AttributeFormattingData> comparisonFormattingSlotLists = getComparisonFormattingData(stack, combinedModifiers);
+            List<FormattingSlotList> comparisonFormattingSlotLists = getComparisonFormattingData(stack, combinedModifiers);
             if (comparisonFormattingSlotLists != null) {
                 return comparisonFormattingSlotLists;
             }
 
-            List<AttributeFormattingData> formattingSlotLists = new ArrayList<>();
+            List<FormattingSlotList> formattingSlotLists = new ArrayList<>();
             combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
-                boolean isLastMapEntry = combinedModifiers.modifiers().lastEntry().getKey().equals(slotGroup);
-                for (int i = 0; i < entries.size(); i++) {
-                    CombinedAttributeModifiers.Entry entry = entries.get(i);
+                formattingSlotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
+                for (CombinedAttributeModifiers.Entry entry : entries) {
                     MutableComponent text = formatting(entry.modifier().amount(), entry.baseValue(), entry.displayType());
-                    formattingSlotLists.add(new AttributeFormattingData(text, entry.attribute(), (i == entries.size() - 1) && !isLastMapEntry));
+                    formattingSlotLists.getLast().formattingDataList().add(new AttributeFormattingData(text, entry.attribute(), Comparison.NONE));
                 }
             });
 
             return formattingSlotLists;
         }
 
-        private static List<AttributeFormattingData> getComparisonFormattingData(ItemStack stack, CombinedAttributeModifiers combinedModifiers) {
+        private static List<FormattingSlotList> getComparisonFormattingData(ItemStack stack, CombinedAttributeModifiers combinedModifiers) {
             if (!config.compareAttributes) {
                 return null;
             }
@@ -186,12 +203,10 @@ public class CleanerTooltips {
                 combinedModifiers.merge(combinedComparedModifiers);
             }
 
-            List<AttributeFormattingData> tooltipEntries = new ArrayList<>();
+            List<FormattingSlotList> slotLists = new ArrayList<>();
             combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
-                boolean isLastMapEntry = combinedModifiers.modifiers().lastEntry().getKey().equals(slotGroup);
-                for (int i = 0; i < entries.size(); i++) {
-                    CombinedAttributeModifiers.Entry entry = entries.get(i);
-
+                slotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
+                for (CombinedAttributeModifiers.Entry entry : entries) {
                     Comparison comparison = Comparison.NONE;
                     if (comparedGroups.contains(slotGroup)) {
                         Optional<CombinedAttributeModifiers.Entry> foundEntry = combinedComparedModifiers.modifiers().get(slotGroup).stream()
@@ -206,20 +221,35 @@ public class CleanerTooltips {
                     }
 
                     MutableComponent text = formatting(entry.modifier().amount(), entry.baseValue(), entry.displayType());
-                    tooltipEntries.add(new AttributeFormattingData(text, entry.attribute(), (i == entries.size() - 1) && !isLastMapEntry, comparison));
+                    slotLists.getLast().formattingDataList().add(new AttributeFormattingData(text, entry.attribute(), comparison));
                 }
             });
-            return tooltipEntries;
+            return slotLists;
         }
 
         @Override
         public int getHeight() {
+            if (config.slotDisplay.ordinal() == 1) {
+                int rowCounter = 1;
+
+                boolean firstIteration = true;
+                for (FormattingSlotList formattingSlotList : formattingSlotLists) {
+                    if (formattingSlotList.formattingDataList().stream().map(AttributeFormattingData::icon).anyMatch(Objects::nonNull)) {
+                        if (firstIteration) {
+                            firstIteration = false;
+                            continue;
+                        }
+                        rowCounter++;
+                    }
+                }
+                return rowCounter * 10;
+            }
             return 10;
         }
 
         @Override
         public int getWidth(@NotNull Font font) {
-            int width = calculateAttributeWidth(attributeFormattingDataList, font);
+            int width = 0;
 
             width += (miningSpeed > 0)
                     ? font.width(DecimalFormat.getInstance().format(miningSpeed)) + GROUP_GAP + GAP + 9
@@ -230,35 +260,68 @@ public class CleanerTooltips {
                     ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
                     : 0;
 
+            width = calculateAttributeWidth(formattingSlotLists, font, width);
+
             return width - GROUP_GAP;
         }
 
-        private static int calculateAttributeWidth(List<AttributeFormattingData> entries, Font font) {
-            int width = 0;
+        private static int calculateAttributeWidth(List<FormattingSlotList> formattingSlotLists, Font font, int width) {
+            int slotCounter = 0;
+            int firstRowWidth = width;
+            int biggestRowWidth = 0;
 
+            boolean firstIteration = true;
             boolean anyIconMissing = false;
-            for (AttributeFormattingData entry : entries) {
-                if (entry.icon() == null) {
+
+            for (FormattingSlotList formattingSlotList : formattingSlotLists) {
+                if (formattingSlotList.formattingDataList().stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
                     anyIconMissing = true;
                     continue;
                 }
 
-                width += entry.textWidth() + 9 + GAP + GROUP_GAP;
-                if (entry.isLastGroupElement()) {
-                    width += font.width("|") + GROUP_GAP;
+                for (AttributeFormattingData formattingData : formattingSlotList.formattingDataList()) {
+                    if (formattingData.icon() == null) {
+                        anyIconMissing = true;
+                        continue;
+                    }
+
+                    width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
                 }
+
+                if (config.slotDisplay.ordinal() == 2) break;
+                else if (config.slotDisplay.ordinal() == 1) {
+                    if (firstIteration) {
+                        firstIteration = false;
+                        firstRowWidth = width;
+                    } else {
+                        if (width > biggestRowWidth) biggestRowWidth = width;
+                    }
+                    width = 0;
+                }
+
+                slotCounter++;
             }
 
-            width += (anyIconMissing && config.hiddenAttributesHint)
-                    ? font.width("[+]") + GROUP_GAP
-                    : 0;
+            if (formattingSlotLists.size() > 1 && config.slotDisplay.ordinal() == 0) {
+                width += slotCounter * (9 + GROUP_GAP);
+            } else if (formattingSlotLists.size() > 1 && config.slotDisplay.ordinal() == 1) {
+                firstRowWidth += (9 + GROUP_GAP);
+                biggestRowWidth += (9 + GROUP_GAP);
+            }
+
+            if (anyIconMissing && config.hiddenAttributesHint) {
+                if (config.slotDisplay.ordinal() == 1) firstRowWidth += font.width("[+]") + GROUP_GAP;
+                else width += font.width("[+]") + GROUP_GAP;
+            }
+
+            if (config.slotDisplay.ordinal() == 1) width = Math.max(firstRowWidth, biggestRowWidth);
 
             return width;
         }
 
         @Override
         public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
-            int groupX = renderAttributeModifiers(attributeFormattingDataList, font, guiGraphics, x, y);
+            int groupX = renderAttributeModifiers(formattingSlotLists, font, guiGraphics, x, y);
 
             if (miningSpeed > 0) {
                 Comparison comparison = Comparison.NONE;
@@ -284,22 +347,45 @@ public class CleanerTooltips {
             }
         }
 
-        private static int renderAttributeModifiers(List<AttributeFormattingData> entries, Font font, GuiGraphics guiGraphics, int x, int y) {
+        private static int renderAttributeModifiers(List<FormattingSlotList> formattingSlotLists, Font font, GuiGraphics guiGraphics, int x, int y) {
             int groupX = x;
+            int groupY = y - 1;
+            int firstGroupX = x;
 
+            boolean shouldRenderSlotGroup = formattingSlotLists.size() > 1;
+            boolean firstIteration = true;
             boolean anyIconMissing = false;
-            for (AttributeFormattingData entry : entries) {
-                if (entry.icon() == null) {
+
+            for (FormattingSlotList formattingSlotList : formattingSlotLists) {
+                if (formattingSlotList.formattingDataList().stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
                     anyIconMissing = true;
                     continue;
                 }
 
-                groupX = renderAttributeIconPair(guiGraphics, entry, groupX, y - 1);
-                if (entry.isLastGroupElement()) {
-                    guiGraphics.drawString(font, Component.literal("|"), groupX, y, -1);
-                    groupX += font.width("|") + GROUP_GAP;
+                if (shouldRenderSlotGroup && config.slotDisplay.ordinal() != 2) groupX = renderSlotGroupIcon(guiGraphics, formattingSlotList.slotIcon(), groupX, groupY);
+                for (AttributeFormattingData formattingData : formattingSlotList.formattingDataList()) {
+                    if (formattingData.icon() == null) {
+                        anyIconMissing = true;
+                        continue;
+                    }
+
+                    groupX = renderAttributeIconPair(guiGraphics, formattingData, groupX, groupY);
+                }
+
+                if (firstIteration && config.slotDisplay.ordinal() == 2) {
+                    break;
+                } else if (firstIteration) {
+                    firstIteration = false;
+                    firstGroupX = groupX;
+                }
+
+                if (config.slotDisplay.ordinal() == 1) {
+                    groupX = x;
+                    groupY += 10;
                 }
             }
+
+            if (config.slotDisplay.ordinal() == 1) groupX = firstGroupX;
 
             if (anyIconMissing && config.hiddenAttributesHint) {
                 guiGraphics.drawString(font, Component.literal("[+]").withStyle(ChatFormatting.YELLOW), groupX, y, -1);
@@ -307,6 +393,11 @@ public class CleanerTooltips {
             }
 
             return groupX;
+        }
+
+        private static int renderSlotGroupIcon(GuiGraphics guiGraphics, ResourceLocation icon, int x, int y) {
+            guiGraphics.blit(icon, x, y, 0, 0, 9, 9, 9, 9);
+            return x + 9 + GROUP_GAP;
         }
 
         // Renders the icon and value for the respective attribute, and returns the total width that is then used as the x position for the next attribute
@@ -325,8 +416,7 @@ public class CleanerTooltips {
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             guiGraphics.drawString(MC.font, entry.text(), x + 9 + GAP, y + 1, -1);
 
-            x += entry.textWidth() + 9 + GAP + GROUP_GAP;
-            return x;
+            return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
         }
 
         private static int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y, float miningSpeed, Comparison comparison) {

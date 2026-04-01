@@ -44,8 +44,8 @@ public abstract class GuiGraphicsMixin {
                 list.set(nameIndex, new IconAttributeModifierTooltip(stack, modifiers));
             }
 
-            if (config.durability && stack.getMaxDamage() > 0) {
-                switch (config.durabilityPos) {
+            if (config.durability.durabilityEnabled && stack.getMaxDamage() > 0) {
+                switch (config.durability.durabilityPos) {
                     case INLINE -> {
                         if (shouldAdd) {
                             return;
@@ -70,8 +70,8 @@ public abstract class GuiGraphicsMixin {
         if (MC.screen instanceof IItemStackHolder holder) {
             ItemStack stack = holder.cleanerTooltips$getStack();
             if ((CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(stack)))
-                    || (config.durability && stack.getMaxDamage() > 0)
-                    && config.durabilityPos != CleanerTooltipsConfig.posValues.BOTTOM) {
+                    || (config.durability.durabilityEnabled && stack.getMaxDamage() > 0)
+                    && config.durability.durabilityPos != CleanerTooltipsConfig.posValues.BOTTOM) {
                 tooltipLines.add(1, Component.empty());
             }
         }

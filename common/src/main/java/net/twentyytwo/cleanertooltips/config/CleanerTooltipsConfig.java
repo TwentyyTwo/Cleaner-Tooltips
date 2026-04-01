@@ -7,54 +7,62 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips;
 
 @Config(name = CleanerTooltips.MOD_ID)
 public class CleanerTooltipsConfig implements ConfigData {
-    @ConfigEntry.Gui.PrefixText
 
-    // Whether icon attributes should be enabled.
-    @ConfigEntry.Gui.Tooltip
-    public boolean enabled = true;
+    @ConfigEntry.Gui.CollapsibleObject(startExpanded = true)
+    public General general = new General();
 
-    // Whether sharpness should change the damage value.
-    @ConfigEntry.Gui.Tooltip
-    public boolean sharpness = true;
+    @ConfigEntry.Gui.CollapsibleObject(startExpanded = true)
+    public Durability durability = new Durability();
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean hiddenAttributesHint = true;
+    @ConfigEntry.Gui.CollapsibleObject
+    public Advanced advanced = new Advanced();
 
-    @ConfigEntry.Gui.Tooltip
-    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-    public slotGroupDisplay slotDisplay = slotGroupDisplay.INLINE;
+    public static class General {
+        @ConfigEntry.Gui.Tooltip
+        public boolean enabled = true;
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean miningSpeed = false;
+        @ConfigEntry.Gui.Tooltip
+        public boolean compareAttributes = true;
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean compareAttributes = true;
+        @ConfigEntry.Gui.Tooltip
+        public boolean sharpness = true;
 
-    @ConfigEntry.Gui.Tooltip
-    public boolean onlyCompareRelevant = true;
+        @ConfigEntry.Gui.Tooltip
+        public boolean hiddenAttributesHint = true;
+
+        @ConfigEntry.Gui.Tooltip
+        public boolean miningSpeed = false;
+    }
+
+    public static class Durability {
+        @ConfigEntry.Gui.Tooltip
+        public boolean durabilityEnabled = false;
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+        public posValues durabilityPos = posValues.INLINE;
+
+        @ConfigEntry.Gui.Tooltip
+        public boolean showMaximumDurability = true;
+
+        @ConfigEntry.Gui.Tooltip
+        public boolean durabilityColor = true;
+    }
+
+    public static class Advanced {
+        @ConfigEntry.Gui.Tooltip
+        public boolean onlyCompareRelevant = true;
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+        public slotGroupDisplay slotDisplay = slotGroupDisplay.INLINE;
+    }
 
     public enum slotGroupDisplay {
         INLINE,
         ROWS,
         PRIMARY
     }
-
-    @ConfigEntry.Gui.PrefixText
-
-    // Whether durability should be displayed in the tooltip.
-    @ConfigEntry.Gui.Tooltip
-    public boolean durability = false;
-
-    // Set the position of the durability.
-    @ConfigEntry.Gui.Tooltip(count = 2)
-    @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-    public posValues durabilityPos = posValues.INLINE;
-
-    @ConfigEntry.Gui.Tooltip
-    public boolean showMaximumDurability = true;
-
-    @ConfigEntry.Gui.Tooltip
-    public boolean durabilityColor = true;
 
     public enum posValues {
         INLINE,

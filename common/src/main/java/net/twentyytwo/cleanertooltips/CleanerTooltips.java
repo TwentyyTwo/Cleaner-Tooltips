@@ -94,7 +94,7 @@ public class CleanerTooltips {
         int curDurability = maxDurability - stack.getDamageValue();
         float diff = (float) curDurability / maxDurability;
 
-        ChatFormatting durabilityColor = (!config.durabilityColor || curDurability == maxDurability) ? ChatFormatting.GRAY
+        ChatFormatting durabilityColor = (!config.durability.durabilityColor || curDurability == maxDurability) ? ChatFormatting.GRAY
                 : diff >= 0.5f ? ChatFormatting.GREEN
                 : diff >= 0.15f ? ChatFormatting.GOLD
                 : ChatFormatting.RED;
@@ -104,7 +104,7 @@ public class CleanerTooltips {
                 .withStyle(ChatFormatting.DARK_GRAY);
 
         return Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor)
-                .append(config.showMaximumDurability ? totalDurability : Component.empty());
+                .append(config.durability.showMaximumDurability ? totalDurability : Component.empty());
     }
 
     private record FormattingSlotList(List<AttributeFormattingData> formattingDataList, ResourceLocation slotIcon) {
@@ -140,7 +140,7 @@ public class CleanerTooltips {
         }
 
         private static float getMiningSpeed(ItemStack stack) {
-            if (config.miningSpeed && stack.getItem() instanceof DiggerItem item) {
+            if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem item) {
                 float speed = item.getTier().getSpeed();
 
                 ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
@@ -178,7 +178,7 @@ public class CleanerTooltips {
         }
 
         private static List<FormattingSlotList> getComparisonFormattingData(ItemStack stack, CombinedAttributeModifiers combinedModifiers) {
-            if (!config.compareAttributes) {
+            if (!config.general.compareAttributes) {
                 return null;
             }
 
@@ -199,7 +199,7 @@ public class CleanerTooltips {
                 return null;
             }
 
-            if (!config.onlyCompareRelevant) {
+            if (!config.advanced.onlyCompareRelevant) {
                 combinedModifiers.merge(combinedComparedModifiers);
             }
 
@@ -229,7 +229,7 @@ public class CleanerTooltips {
 
         @Override
         public int getHeight() {
-            if (config.slotDisplay.ordinal() == 1) {
+            if (config.advanced.slotDisplay.ordinal() == 1) {
                 int rowCounter = 1;
 
                 boolean firstIteration = true;
@@ -255,8 +255,8 @@ public class CleanerTooltips {
                     ? font.width(DecimalFormat.getInstance().format(miningSpeed)) + GROUP_GAP + GAP + 9
                     : 0;
 
-            width += (config.durability && stack.getMaxDamage() > 0
-                    && config.durabilityPos == CleanerTooltipsConfig.posValues.INLINE)
+            width += (config.durability.durabilityEnabled && stack.getMaxDamage() > 0
+                    && config.durability.durabilityPos == CleanerTooltipsConfig.posValues.INLINE)
                     ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
                     : 0;
 
@@ -288,8 +288,8 @@ public class CleanerTooltips {
                     width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
                 }
 
-                if (config.slotDisplay.ordinal() == 2) break;
-                else if (config.slotDisplay.ordinal() == 1) {
+                if (config.advanced.slotDisplay.ordinal() == 2) break;
+                else if (config.advanced.slotDisplay.ordinal() == 1) {
                     if (firstIteration) {
                         firstIteration = false;
                         firstRowWidth = width;
@@ -302,19 +302,19 @@ public class CleanerTooltips {
                 slotCounter++;
             }
 
-            if (formattingSlotLists.size() > 1 && config.slotDisplay.ordinal() == 0) {
+            if (formattingSlotLists.size() > 1 && config.advanced.slotDisplay.ordinal() == 0) {
                 width += slotCounter * (9 + GROUP_GAP);
-            } else if (formattingSlotLists.size() > 1 && config.slotDisplay.ordinal() == 1) {
+            } else if (formattingSlotLists.size() > 1 && config.advanced.slotDisplay.ordinal() == 1) {
                 firstRowWidth += (9 + GROUP_GAP);
                 biggestRowWidth += (9 + GROUP_GAP);
             }
 
-            if (anyIconMissing && config.hiddenAttributesHint) {
-                if (config.slotDisplay.ordinal() == 1) firstRowWidth += font.width("[+]") + GROUP_GAP;
+            if (anyIconMissing && config.general.hiddenAttributesHint) {
+                if (config.advanced.slotDisplay.ordinal() == 1) firstRowWidth += font.width("[+]") + GROUP_GAP;
                 else width += font.width("[+]") + GROUP_GAP;
             }
 
-            if (config.slotDisplay.ordinal() == 1) width = Math.max(firstRowWidth, biggestRowWidth);
+            if (config.advanced.slotDisplay.ordinal() == 1) width = Math.max(firstRowWidth, biggestRowWidth);
 
             return width;
         }
@@ -325,7 +325,7 @@ public class CleanerTooltips {
 
             if (miningSpeed > 0) {
                 Comparison comparison = Comparison.NONE;
-                if (config.compareAttributes) {
+                if (config.general.compareAttributes) {
                     ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
 
                     if (!comparedStack.isEmpty() && !comparedStack.equals(stack) && comparedStack.getItem() instanceof DiggerItem) {
@@ -341,7 +341,7 @@ public class CleanerTooltips {
                 groupX = renderMiningTooltip(guiGraphics, groupX, y - 1, miningSpeed, comparison);
             }
 
-            if (config.durability && stack.getMaxDamage() > 0 && config.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) {
+            if (config.durability.durabilityEnabled && stack.getMaxDamage() > 0 && config.durability.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) {
                 guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
@@ -362,7 +362,7 @@ public class CleanerTooltips {
                     continue;
                 }
 
-                if (shouldRenderSlotGroup && config.slotDisplay.ordinal() != 2) groupX = renderSlotGroupIcon(guiGraphics, formattingSlotList.slotIcon(), groupX, groupY);
+                if (shouldRenderSlotGroup && config.advanced.slotDisplay.ordinal() != 2) groupX = renderSlotGroupIcon(guiGraphics, formattingSlotList.slotIcon(), groupX, groupY);
                 for (AttributeFormattingData formattingData : formattingSlotList.formattingDataList()) {
                     if (formattingData.icon() == null) {
                         anyIconMissing = true;
@@ -372,22 +372,22 @@ public class CleanerTooltips {
                     groupX = renderAttributeIconPair(guiGraphics, formattingData, groupX, groupY);
                 }
 
-                if (firstIteration && config.slotDisplay.ordinal() == 2) {
+                if (firstIteration && config.advanced.slotDisplay.ordinal() == 2) {
                     break;
                 } else if (firstIteration) {
                     firstIteration = false;
                     firstGroupX = groupX;
                 }
 
-                if (config.slotDisplay.ordinal() == 1) {
+                if (config.advanced.slotDisplay.ordinal() == 1) {
                     groupX = x;
                     groupY += 10;
                 }
             }
 
-            if (config.slotDisplay.ordinal() == 1) groupX = firstGroupX;
+            if (config.advanced.slotDisplay.ordinal() == 1) groupX = firstGroupX;
 
-            if (anyIconMissing && config.hiddenAttributesHint) {
+            if (anyIconMissing && config.general.hiddenAttributesHint) {
                 guiGraphics.drawString(font, Component.literal("[+]").withStyle(ChatFormatting.YELLOW), groupX, y, -1);
                 groupX += font.width("[+]") + GROUP_GAP;
             }

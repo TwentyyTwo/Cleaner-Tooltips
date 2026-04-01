@@ -72,7 +72,7 @@ public class CleanerTooltipsUtil {
      */
     public static double getSharpnessBonus(ItemStack stack) {
         double sharpnessBonus = 0;
-        if (CleanerTooltips.config.sharpness) {
+        if (CleanerTooltips.config.general.sharpness) {
             ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
             for (var enchantment : enchantments.entrySet()) {
                 var enchantmentKey = enchantment.getKey().unwrapKey();
@@ -110,7 +110,7 @@ public class CleanerTooltipsUtil {
     public static boolean shouldAddTooltip(ItemAttributeModifiers modifiers) {
         if (MC.player == null) {
             return false;
-        } else if (!CleanerTooltips.config.enabled) {
+        } else if (!CleanerTooltips.config.general.enabled) {
             return false;
         } else if (Services.getInstance().isKeyDown()) {
             return false;

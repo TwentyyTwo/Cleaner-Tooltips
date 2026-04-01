@@ -59,8 +59,8 @@ public class CleanerTooltipsNeoForge {
             tooltipElements.add(insertIndex, Either.right(new IconAttributeModifierTooltip(stack, modifiers)));
         }
 
-        if (CleanerTooltips.config.durability && stack.getMaxDamage() > 0) {
-            switch (CleanerTooltips.config.durabilityPos) {
+        if (CleanerTooltips.config.durability.durabilityEnabled && stack.getMaxDamage() > 0) {
+            switch (CleanerTooltips.config.durability.durabilityPos) {
                 case INLINE -> {
                     if (shouldAdd) {
                         return;

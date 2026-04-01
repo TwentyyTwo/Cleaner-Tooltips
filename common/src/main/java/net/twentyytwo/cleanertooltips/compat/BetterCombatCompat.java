@@ -78,7 +78,7 @@ public class BetterCombatCompat {
     }
 
     private static Comparison getComparison(ItemStack stack, double baseValue, double value) {
-        if (config.compareAttributes) {
+        if (config.general.compareAttributes) {
             ItemStack comparedStack = MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
 
             if (!comparedStack.isEmpty() && !comparedStack.equals(stack)) {

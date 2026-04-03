@@ -12,7 +12,6 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -104,7 +103,7 @@ public class CleanerTooltips {
                 .withStyle(ChatFormatting.DARK_GRAY);
 
         return Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor)
-                .append(config.durability.showMaximumDurability ? totalDurability : Component.empty());
+                .append(config.durability.maximumDurability ? totalDurability : Component.empty());
     }
 
     private record FormattingSlotList(List<AttributeFormattingData> formattingDataList, ResourceLocation slotIcon) {
@@ -129,32 +128,51 @@ public class CleanerTooltips {
             ItemStack stack,
             List<FormattingSlotList> formattingSlotLists,
             MutableComponent durabilityComponent,
-            float miningSpeed) implements TooltipComponent, ClientTooltipComponent {
+            AttributeFormattingData miningSpeedData) implements TooltipComponent, ClientTooltipComponent {
 
         public IconAttributeModifierTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
-            this(stack, getFormattingSlotLists(stack, modifiers), durabilityFormatting(stack), getMiningSpeed(stack));
+            this(stack, getFormattingSlotLists(stack, modifiers), durabilityFormatting(stack), getMiningSpeedData(stack));
 
             if (BetterCombatCompat.isModLoaded && BetterCombatCompat.hasAttributes(stack)) {
                 formattingSlotLists.getFirst().formattingDataList().add(BetterCombatCompat.attackRangeEntry(stack, modifiers));
             }
         }
 
-        private static float getMiningSpeed(ItemStack stack) {
+        private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
             if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem item) {
-                float speed = item.getTier().getSpeed();
+                float miningSpeed = getMiningSpeed(stack, item);
 
-                ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-                for (var enchantment : enchantments.entrySet()) {
-                    var enchantmentKey = enchantment.getKey().unwrapKey();
-                    if (enchantmentKey.isPresent() && enchantmentKey.get() == Enchantments.EFFICIENCY  && enchantment.getIntValue() > 0) {
-                        speed += (float) (enchantment.getIntValue() * enchantment.getIntValue()) + 1;
-                        break;
-                    }
-                }
-                return speed;
+                MutableComponent miningSpeedComponent = Component.literal(DecimalFormat.getInstance().format(miningSpeed));
+                Comparison comparison = getMiningSpeedComparison(stack, miningSpeed);
+
+                return new AttributeFormattingData(miningSpeedComponent, DIGGING_SPEED, comparison);
+            }
+            return null;
+        }
+
+        private static Comparison getMiningSpeedComparison(ItemStack stack, float miningSpeed) {
+            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+            if (config.general.compareAttributes && !comparedStack.isEmpty() && !comparedStack.equals(stack) &&
+                    comparedStack.getItem() instanceof DiggerItem comparedItem && stack.getItem().getClass().equals(comparedItem.getClass())) {
+                float comparedMiningSpeed = getMiningSpeed(comparedStack, comparedItem);
+                return Comparison.getComparison(miningSpeed, comparedMiningSpeed);
             }
 
-            return 0;
+            return Comparison.NONE;
+        }
+
+        private static float getMiningSpeed(ItemStack stack, DiggerItem item) {
+            float miningSpeed = item.getTier().getSpeed();
+
+            ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+            for (var enchantment : enchantments.entrySet()) {
+                var enchantmentKey = enchantment.getKey().unwrapKey();
+                if (enchantmentKey.isPresent() && enchantmentKey.get() == Enchantments.EFFICIENCY  && enchantment.getIntValue() > 0) {
+                    miningSpeed += (float) (enchantment.getIntValue() * enchantment.getIntValue()) + 1;
+                    break;
+                }
+            }
+            return miningSpeed;
         }
 
         private static List<FormattingSlotList> getFormattingSlotLists(ItemStack stack, ItemAttributeModifiers modifiers) {
@@ -199,7 +217,7 @@ public class CleanerTooltips {
                 return null;
             }
 
-            if (!config.advanced.onlyCompareRelevant) {
+            if (!config.advanced.onlyCompareShared) {
                 combinedModifiers.merge(combinedComparedModifiers);
             }
 
@@ -229,7 +247,7 @@ public class CleanerTooltips {
 
         @Override
         public int getHeight() {
-            if (config.advanced.slotDisplay.ordinal() == 1) {
+            if (config.advanced.slotDisplay.ordinal() == 0) {
                 int rowCounter = 1;
 
                 boolean firstIteration = true;
@@ -251,8 +269,8 @@ public class CleanerTooltips {
         public int getWidth(@NotNull Font font) {
             int width = 0;
 
-            width += (miningSpeed > 0)
-                    ? font.width(DecimalFormat.getInstance().format(miningSpeed)) + GROUP_GAP + GAP + 9
+            width += miningSpeedData() != null
+                    ? miningSpeedData().textWidth() + GROUP_GAP + GAP + 9
                     : 0;
 
             width += (config.durability.durabilityEnabled && stack.getMaxDamage() > 0
@@ -288,33 +306,38 @@ public class CleanerTooltips {
                     width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
                 }
 
-                if (config.advanced.slotDisplay.ordinal() == 2) break;
-                else if (config.advanced.slotDisplay.ordinal() == 1) {
-                    if (firstIteration) {
+                if (config.advanced.slotDisplay.ordinal() == 2) {
+                    break;
+                } else if (config.advanced.slotDisplay.ordinal() == 0) {
+                    if (firstIteration) { // the first width includes durability, mining speed etc
                         firstIteration = false;
                         firstRowWidth = width;
-                    } else {
-                        if (width > biggestRowWidth) biggestRowWidth = width;
-                    }
+                    } else if (width > biggestRowWidth) biggestRowWidth = width;
                     width = 0;
                 }
 
                 slotCounter++;
             }
 
-            if (formattingSlotLists.size() > 1 && config.advanced.slotDisplay.ordinal() == 0) {
-                width += slotCounter * (9 + GROUP_GAP);
-            } else if (formattingSlotLists.size() > 1 && config.advanced.slotDisplay.ordinal() == 1) {
-                firstRowWidth += (9 + GROUP_GAP);
-                biggestRowWidth += (9 + GROUP_GAP);
+            if (formattingSlotLists.size() > 1) {
+                switch (config.advanced.slotDisplay) {
+                    case INLINE -> width += slotCounter * (9 + GROUP_GAP);
+                    case ROWS -> {
+                        firstRowWidth += (9 + GROUP_GAP);
+                        biggestRowWidth += (9 + GROUP_GAP);
+                    }
+                }
             }
 
             if (anyIconMissing && config.general.hiddenAttributesHint) {
-                if (config.advanced.slotDisplay.ordinal() == 1) firstRowWidth += font.width("[+]") + GROUP_GAP;
-                else width += font.width("[+]") + GROUP_GAP;
+                if (config.advanced.slotDisplay.ordinal() == 0) {
+                    firstRowWidth += font.width("[+]") + GROUP_GAP;
+                } else {
+                    width += font.width("[+]") + GROUP_GAP;
+                }
             }
 
-            if (config.advanced.slotDisplay.ordinal() == 1) width = Math.max(firstRowWidth, biggestRowWidth);
+            if (config.advanced.slotDisplay.ordinal() == 0) width = Math.max(firstRowWidth, biggestRowWidth);
 
             return width;
         }
@@ -323,22 +346,8 @@ public class CleanerTooltips {
         public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
             int groupX = renderAttributeModifiers(formattingSlotLists, font, guiGraphics, x, y);
 
-            if (miningSpeed > 0) {
-                Comparison comparison = Comparison.NONE;
-                if (config.general.compareAttributes) {
-                    ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
-
-                    if (!comparedStack.isEmpty() && !comparedStack.equals(stack) && comparedStack.getItem() instanceof DiggerItem) {
-                        float comparedMiningSpeed = getMiningSpeed(comparedStack);
-                        if (miningSpeed > comparedMiningSpeed) {
-                            comparison = Comparison.HIGHER;
-                        } else if (miningSpeed < comparedMiningSpeed) {
-                            comparison = Comparison.LOWER;
-                        }
-                    }
-                }
-
-                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1, miningSpeed, comparison);
+            if (miningSpeedData() != null) {
+                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1, miningSpeedData().text(), miningSpeedData().comparison());
             }
 
             if (config.durability.durabilityEnabled && stack.getMaxDamage() > 0 && config.durability.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) {
@@ -352,17 +361,19 @@ public class CleanerTooltips {
             int groupY = y - 1;
             int firstGroupX = x;
 
-            boolean shouldRenderSlotGroup = formattingSlotLists.size() > 1;
             boolean firstIteration = true;
             boolean anyIconMissing = false;
 
             for (FormattingSlotList formattingSlotList : formattingSlotLists) {
+                // Check if all icons in the current list are null, if so then continue
                 if (formattingSlotList.formattingDataList().stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
                     anyIconMissing = true;
                     continue;
                 }
 
-                if (shouldRenderSlotGroup && config.advanced.slotDisplay.ordinal() != 2) groupX = renderSlotGroupIcon(guiGraphics, formattingSlotList.slotIcon(), groupX, groupY);
+                if (formattingSlotLists.size() > 1 && config.advanced.slotDisplay.ordinal() != 2) {
+                    groupX = renderSlotGroupIcon(guiGraphics, formattingSlotList.slotIcon(), groupX, groupY);
+                }
                 for (AttributeFormattingData formattingData : formattingSlotList.formattingDataList()) {
                     if (formattingData.icon() == null) {
                         anyIconMissing = true;
@@ -372,20 +383,19 @@ public class CleanerTooltips {
                     groupX = renderAttributeIconPair(guiGraphics, formattingData, groupX, groupY);
                 }
 
-                if (firstIteration && config.advanced.slotDisplay.ordinal() == 2) {
+                if (config.advanced.slotDisplay.ordinal() == 2) {
                     break;
-                } else if (firstIteration) {
-                    firstIteration = false;
-                    firstGroupX = groupX;
-                }
-
-                if (config.advanced.slotDisplay.ordinal() == 1) {
+                } else if (config.advanced.slotDisplay.ordinal() == 0) {
+                    if (firstIteration) {
+                        firstIteration = false;
+                        firstGroupX = groupX;
+                    }
                     groupX = x;
                     groupY += 10;
                 }
             }
 
-            if (config.advanced.slotDisplay.ordinal() == 1) groupX = firstGroupX;
+            if (config.advanced.slotDisplay.ordinal() == 0) groupX = firstGroupX;
 
             if (anyIconMissing && config.general.hiddenAttributesHint) {
                 guiGraphics.drawString(font, Component.literal("[+]").withStyle(ChatFormatting.YELLOW), groupX, y, -1);
@@ -402,47 +412,30 @@ public class CleanerTooltips {
 
         // Renders the icon and value for the respective attribute, and returns the total width that is then used as the x position for the next attribute
         private static int renderAttributeIconPair(GuiGraphics guiGraphics, AttributeFormattingData entry, int x, int y) {
-            switch (entry.comparison()) {
-                case HIGHER -> entry.text().withStyle(ChatFormatting.GREEN);
-                case LOWER -> {
-                    if (entry.text().getStyle().getColor() == TextColor.fromLegacyFormat(ChatFormatting.RED)) {
-                        entry.text().withStyle(ChatFormatting.DARK_RED);
-                    } else {
-                        entry.text().withStyle(ChatFormatting.RED);
-                    }
-                }
-            }
-
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, entry.text(), x + 9 + GAP, y + 1, -1);
+            guiGraphics.drawString(MC.font, entry.text().withStyle(entry.comparison().getFormatting(entry.text())), x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
         }
 
-        private static int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y, float miningSpeed, Comparison comparison) {
-            MutableComponent miningSpeedComponent = Component.literal(DecimalFormat.getInstance().format(miningSpeed));
-            switch (comparison) {
-                case HIGHER -> miningSpeedComponent.withStyle(ChatFormatting.GREEN);
-                case LOWER -> miningSpeedComponent.withStyle(ChatFormatting.RED);
-            }
-
+        private static int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y, MutableComponent miningSpeedComponent, Comparison comparison) {
             guiGraphics.blit(DIGGING_SPEED, x, y, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, miningSpeedComponent, x + 9 + GAP, y + 1, -1);
+            guiGraphics.drawString(MC.font, miningSpeedComponent.withStyle(comparison.getFormatting(miningSpeedComponent)), x + 9 + GAP, y + 1, -1);
+
             return x + MC.font.width(miningSpeedComponent) + GROUP_GAP + GAP + 9;
         }
     }
 
-    public record IconDurabilityTooltip(ItemStack stack, MutableComponent text) implements TooltipComponent, ClientTooltipComponent {
+    /**
+     * A custom durability tooltip rendering the durability of an itemstack on the tooltip. <p>
+     *
+     * Only used when the config option {@code INLINE} isn't selected, otherwise the durability
+     * tooltip is handled by the {@link IconAttributeModifierTooltip} object.
+     */
+    public record IconDurabilityTooltip(MutableComponent text) implements TooltipComponent, ClientTooltipComponent {
 
-        /**
-         * A custom durability tooltip rendering the durability of an itemstack on the tooltip. <p>
-         *
-         * Only used when the config option {@code INLINE} isn't selected, otherwise the durability
-         * tooltip is handled by the {@link IconAttributeModifierTooltip} object.
-         * @param stack the item stack
-         */
         public IconDurabilityTooltip(ItemStack stack) {
-            this(stack, durabilityFormatting(stack));
+            this(durabilityFormatting(stack));
         }
 
         @Override

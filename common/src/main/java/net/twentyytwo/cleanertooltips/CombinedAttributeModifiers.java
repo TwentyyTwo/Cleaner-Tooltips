@@ -185,13 +185,7 @@ public record CombinedAttributeModifiers(LinkedHashMap<EquipmentSlotGroup, List<
                 comparedValue += otherBaseValue;
             }
 
-            if (value > comparedValue) {
-                return Comparison.HIGHER;
-            } else if (value < comparedValue) {
-                return Comparison.LOWER;
-            } else {
-                return Comparison.NONE;
-            }
+            return Comparison.getComparison(value, comparedValue);
         }
     }
 }

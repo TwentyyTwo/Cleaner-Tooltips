@@ -19,18 +19,18 @@
   "text.autoconfig.cleanertooltips.option.durability.durabilityEnabled": "Display Durability",
   "text.autoconfig.cleanertooltips.option.durability.durabilityEnabled.@Tooltip": "Whether the durability of items should be displayed.\nThis also works without using the icon attributes.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityPos": "Durability Position",
-  "text.autoconfig.cleanertooltips.option.durability.durabilityPos.@Tooltip": "Change the position of the durability.\n\nINLINE displays it in the same row as the attributes, BELOW directly under\nthe attributes and BOTTOM displays it at the bottom of the tooltip.\nNote that if icon attributes are disabled, both INLINE and BELOW do the same.",
-  "text.autoconfig.cleanertooltips.option.durability.showMaximumDurability": "Display Maximum Durability",
-  "text.autoconfig.cleanertooltips.option.durability.showMaximumDurability.@Tooltip": "Whether to include the maximum durability of an item.",
+  "text.autoconfig.cleanertooltips.option.durability.durabilityPos.@Tooltip": "Change the position of the durability.\n\nINLINE displays it in the same row as the attributes, BELOW directly under the\nattributes and BOTTOM displays it at the bottom of the tooltip.\nNote that if icon attributes are disabled, both INLINE and BELOW do the same.",
+  "text.autoconfig.cleanertooltips.option.durability.maximumDurability": "Maximum Durability",
+  "text.autoconfig.cleanertooltips.option.durability.maximumDurability.@Tooltip": "Whether to include the maximum durability of an item.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor": "Durability Color",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor.@Tooltip": "Whether the color of the durability should change based on the remaining durability.",
 
   "text.autoconfig.cleanertooltips.option.advanced": "Advanced",
 
-  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareRelevant": "Only Compare Relevant",
-  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareRelevant.@Tooltip": "Only compare attributes the hovered over item has.",
+  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareShared": "Only Compare Shared",
+  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareShared.@Tooltip": "Only compare attributes both items have.",
   "text.autoconfig.cleanertooltips.option.advanced.slotDisplay": "Slot Group Display",
-  "text.autoconfig.cleanertooltips.option.advanced.slotDisplay.@Tooltip": "Change the way multiple equipment slot groups are displayed.\n\nINLINE displays them in the same row, ROWS displays each slot group in a different row and\nPRIMARY only displays the slot group matching the item, e.g. mainhand for swords.\nNote: Usually items don't have multiple slot groups, in which case this setting is ignored.",
+  "text.autoconfig.cleanertooltips.option.advanced.slotDisplay.@Tooltip": "Change the way multiple equipment slot groups are displayed.\n\nROWS displays each slot group in a different row, INLINE displays them in the same row\nand PRIMARY only displays the slot group matching the item, e.g. mainhand for swords.\nNote: Usually items don't have multiple slot groups, in which case this setting is ignored.",
 
   "key.cleanertooltips.hide_tooltip": "Hide Attribute Tooltips"
 }

@@ -86,13 +86,7 @@ public class BetterCombatCompat {
 
                 if (!comparedModifiers.modifiers().isEmpty()) {
                     double comparedValue = calculateDuplicates(comparedModifiers.modifiers(), baseValue, getRangeBonus(comparedStack));
-
-                    if (value > comparedValue) {
-                        return Comparison.HIGHER;
-                    } else if (value < comparedValue) {
-                        return Comparison.LOWER;
-                    }
-                    return Comparison.NONE;
+                    return Comparison.getComparison(value, comparedValue);
                 }
             }
         }

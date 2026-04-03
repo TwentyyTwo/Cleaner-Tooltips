@@ -13,10 +13,7 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 /**
  * This object contains all necessary data to render a value-icon pair. The {@code textWidth} is automatically
  * calculated in the constructor based on the provided {@code text} mutableComponent. The {@code icon} can be
- * either manually provided, or dynamically gathered based on the attribute.<p>
- *
- * The boolean {@code isLastGroupElement} represents if the current value-icon pair is the last entry in their
- * respective list.
+ * either manually provided, or dynamically gathered based on the attribute.
  */
 public record AttributeFormattingData(MutableComponent text, int textWidth, ResourceLocation icon, Comparison comparison) {
 

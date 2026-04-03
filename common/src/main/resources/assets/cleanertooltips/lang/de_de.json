@@ -20,17 +20,17 @@
   "text.autoconfig.cleanertooltips.option.durability.durabilityEnabled.@Tooltip": "Ob die Haltbarkeit von Items angezeigt werden soll.\nDies funktioniert auch ohne Symbol Attribute.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityPos": "Haltbarkeit Position",
   "text.autoconfig.cleanertooltips.option.durability.durabilityPos.@Tooltip": "Ändere die Position von der Haltbarkeit.\n\nINLINE zeigt sie in der gleichen Reihe wie die Attribute an, BELOW zeigt sie direkt unter\nden Attributen und BOTTOM zeigt sie am ende des Tooltips an.\nBeachte das INLINE und BELOW das gleiche machen wenn Symbol Attribute deaktiviert sind.",
-  "text.autoconfig.cleanertooltips.option.durability.showMaximumDurability": "Maximale Haltbarkeit Anzeigen",
-  "text.autoconfig.cleanertooltips.option.durability.showMaximumDurability.@Tooltip": "Ob auch die maximale Haltbarkeit angezeigt werden soll.",
+  "text.autoconfig.cleanertooltips.option.durability.maximumDurability": "Maximale Haltbarkeit",
+  "text.autoconfig.cleanertooltips.option.durability.maximumDurability.@Tooltip": "Ob auch die maximale Haltbarkeit angezeigt werden soll.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor": "Haltbarkeit Farbe",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor.@Tooltip": "Ob sich die Farbe der Haltbarkeit je nach der übrigen Haltbarkeit ändern soll.",
 
   "text.autoconfig.cleanertooltips.option.advanced": "Erweitert",
 
-  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareRelevant": "Nur Relevante Vergleichen",
-  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareRelevant.@Tooltip": "Vergleiche nur die Attribute die das ausgewählte Item hat.",
+  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareShared": "Nur Gemeinsame Vergleichen",
+  "text.autoconfig.cleanertooltips.option.advanced.onlyCompareShared.@Tooltip": "Vergleiche nur die Attribute die beide Items haben.",
   "text.autoconfig.cleanertooltips.option.advanced.slotDisplay": "Slot Group Display",
-  "text.autoconfig.cleanertooltips.option.advanced.slotDisplay.@Tooltip": "Ändere wie mehrere Equipment Slot Groups angezeigt werden sollen.\n\nINLINE zeigt sie in einer Reihe an, ROWS zeigt sie in mehreren Reihen an und\nPRIMARY zeigt nur die Passende Slot Group an, z.B. \"mainhand\" für Schwerter.\nBeachte das Items normalerweise nur eine Slot Group haben, in dem Fall wird diese Einstellung ignoriert.",
+  "text.autoconfig.cleanertooltips.option.advanced.slotDisplay.@Tooltip": "Ändere wie mehrere Equipment Slot Groups angezeigt werden sollen.\n\nROWS zeigt sie in mehreren Reihen an, INLINE zeigt sie in einer Reihe an und\nPRIMARY zeigt nur die passende Slot Group an, z.B. \"mainhand\" für Schwerter.\nBeachte das Items normalerweise nur eine Slot Group haben, in dem Fall\nwird diese Einstellung ignoriert.",
 
   "key.cleanertooltips.hide_tooltip": "Attribut-Tooltips verstecken"
 }

@@ -1,6 +1,6 @@
 package net.twentyytwo.cleanertooltips.services;
 
-public interface ModLoadingHelper {
+public interface PlatformService {
 
     /**
      * Check if a mod is loaded.

@@ -6,7 +6,7 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
-public class NeoforgeModLoadingHelper implements ModLoadingHelper {
+public class NeoforgePlatformService implements PlatformService {
 
     @Override
     public boolean isModLoaded(String modid) {

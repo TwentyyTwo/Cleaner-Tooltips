@@ -7,6 +7,8 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.TooltipFlag;
+import net.twentyytwo.cleanertooltips.util.StackHolder;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
@@ -14,13 +16,22 @@ import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
+import java.util.List;
 import java.util.function.Consumer;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
+
+    @Inject(method = "getTooltipLines", at = @At("RETURN"))
+    private void onGetTooltipLines(Item.TooltipContext tooltipContext, Player player, TooltipFlag tooltipFlag, CallbackInfoReturnable<List<Component>> cir) {
+        // this method will always get called when a tooltip is rendered, this
+        // ensures compatibility with mods like JEI.
+        StackHolder.getInstance().setItemStack((ItemStack) (Object) this);
+    }
 
     // Hides the default attributes when the icon attributes are displayed
     @Inject( method = "addAttributeTooltips", at = @At("HEAD"), cancellable = true)

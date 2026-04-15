@@ -23,7 +23,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.compat.BetterCombatCompat;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
-import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
@@ -44,12 +43,9 @@ public class CleanerTooltips {
     public static final KeyMapping hideTooltip = new KeyMapping(
             "key.cleanertooltips.hide_tooltip",
             InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_LEFT_SHIFT,
+            GLFW.GLFW_KEY_V,
             KeyMapping.CATEGORY_INVENTORY
     );
-
-    public static final int legendaryTooltipsIncreasedHeight = 1;
-    public static final boolean isLegendaryTooltipsLoaded = Services.getInstance().isModLoaded("legendarytooltips");
 
     public static CleanerTooltipsConfig config;
 

@@ -51,7 +51,7 @@ public class CleanerTooltipsNeoForge {
         ItemStack stack = event.getItemStack();
         List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
 
-        int insertIndex = CleanerTooltipsUtil.getInsertIndex(stack, tooltipElements);
+        int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(stack, tooltipElements);
         ItemAttributeModifiers modifiers = CleanerTooltipsUtil.getAttributeModifiers(stack);
 
         boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers);

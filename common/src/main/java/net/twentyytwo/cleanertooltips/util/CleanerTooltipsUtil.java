@@ -14,6 +14,7 @@ import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
+import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsCompat;
 import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.util.List;
@@ -31,7 +32,7 @@ public class CleanerTooltipsUtil {
      * @param tooltipElements   the elements of the tooltip
      * @return                  the index at which the icon attributes should be added
      */
-    public static int getInsertIndex(ItemStack stack, List<Either<FormattedText, TooltipComponent>> tooltipElements) {
+    public static int getIndexNeoforge(ItemStack stack, List<Either<FormattedText, TooltipComponent>> tooltipElements) {
         Component itemName = stack.getHoverName();
         int nameIndex = 0;
         for (int i = 0; i < tooltipElements.size(); i++) {
@@ -45,24 +46,23 @@ public class CleanerTooltipsUtil {
     }
 
     /**
-     * Gets the index of the empty component which the icon attributes should replace.<br>
-     * Only for fabric, and should only be called after the empty component has been added.
-     * @param list  the {@code ClientTooltipComponent}s of the tooltip
-     * @return      the index of the second empty component
+     * Calculates the index of the first ClientTextTooltip and returns the index below it.
+     * @param components the list of {@code ClientTooltipComponent}s
+     * @return the index at which the icon attributes should be added
      */
-    public static int getReplaceIndex(List<ClientTooltipComponent> list) {
-        int insertIndex = 1;
-        int counter = 2;
-        for (int i = 0; i < list.size(); i++) {
-            if (list.get(i) instanceof ClientTextTooltip) {
-                counter--;
-                if (counter <= 0) {
-                    insertIndex = i;
-                    break;
-                }
+    public static int getIndexFabric(List<ClientTooltipComponent> components) {
+        int indexToReturn = 1;
+        for (int i = 0; i < components.size(); i++) {
+            var clientTooltipComponent = components.get(i);
+            if (clientTooltipComponent instanceof ClientTextTooltip) {
+                // Because this is called after LegendaryTooltips add their components, we'll have to check for them.
+                indexToReturn = LegendaryTooltipsCompat.isModLoaded && LegendaryTooltipsCompat.hasTitleBreak(components)
+                        ? i + 2
+                        : i + 1;
+                break;
             }
         }
-        return insertIndex;
+        return Math.min(indexToReturn, components.size());
     }
 
     /**

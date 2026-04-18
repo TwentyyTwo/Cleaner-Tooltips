@@ -23,6 +23,7 @@ dependencies {
     modCompileOnly "maven.modrinth:better-combat:2.3.1+1.21.1-fabric"
     modCompileOnly "maven.modrinth:legendary-tooltips:f4suO4vX"
     modCompileOnly "maven.modrinth:iceberg:7ITFAyW8"
+    modCompileOnly "maven.modrinth:equipment-compare:43MK9mq7"
 }
 
 loom {

@@ -1,5 +1,6 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
+import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -10,12 +11,10 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.twentyytwo.cleanertooltips.util.StackHolder;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
-import org.jetbrains.annotations.Nullable;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import java.util.List;
@@ -33,12 +32,9 @@ public abstract class ItemStackMixin {
         StackHolder.getInstance().setItemStack((ItemStack) (Object) this);
     }
 
-    // Hides the default attributes when the icon attributes are displayed
-    @Inject( method = "addAttributeTooltips", at = @At("HEAD"), cancellable = true)
-    private void hideDefaultAttributes(Consumer<Component> tooltipAdder, @Nullable Player player, CallbackInfo ci) {
-        if (CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers((ItemStack) (Object) this))) {
-            ci.cancel();
-        }
+    @WrapWithCondition(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;)V"))
+    private boolean hideDefaultAttributes(ItemStack instance, Consumer<Component> equipmentslotgroup, Player player) {
+        return !CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers((ItemStack) (Object) this));
     }
 
     // Fixes MC-271840

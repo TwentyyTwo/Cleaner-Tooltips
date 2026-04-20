@@ -13,13 +13,14 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsCompat;
 import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.util.List;
+import java.util.Objects;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 
 /**
  * Collection of useful functions.
@@ -72,7 +73,7 @@ public class CleanerTooltipsUtil {
      */
     public static double getSharpnessBonus(ItemStack stack) {
         double sharpnessBonus = 0;
-        if (CleanerTooltips.config.general.sharpness) {
+        if (config.general.sharpness) {
             ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
             for (var enchantment : enchantments.entrySet()) {
                 var enchantmentKey = enchantment.getKey().unwrapKey();
@@ -102,40 +103,39 @@ public class CleanerTooltipsUtil {
         return new ItemAttributeModifiers(builder.build().modifiers(), defaultModifiers.showInTooltip());
     }
 
+    public static boolean shouldAddAttributes() {
+        return MC.player != null && config.general.enabled && !Services.getInstance().isKeyDown();
+    }
+
+    public static boolean hasAttributes(ItemStack stack) {
+        return hasAttributes(getAttributeModifiers(stack));
+    }
+
     /**
-     * Boolean to check whether the icon attributes should be added.
+     * Check if at least one modifier has a value not equal to {@code 0}.
      * @param modifiers the {@code ItemAttributeModifiers} of the item stack
-     * @return          whether the icon attributes should be added.
+     * @return          whether any modifier has a value not equal to {@code 0}
      */
-    public static boolean shouldAddTooltip(ItemAttributeModifiers modifiers) {
-        if (MC.player == null) {
-            return false;
-        } else if (!CleanerTooltips.config.general.enabled) {
-            return false;
-        } else if (Services.getInstance().isKeyDown()) {
-            return false;
-        } else if (modifiers.modifiers().isEmpty()) {
-            return false;
-        }
+    public static boolean hasAttributes(ItemAttributeModifiers modifiers) {
+        if (!modifiers.modifiers().isEmpty()) {
+            AttributeMap playerAttributes = Objects.requireNonNull(MC.player).getAttributes();
 
-        AttributeMap playerAttributes = MC.player.getAttributes();
+            for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
+                if (AttributeDisplayType.get(entry).hasBaseValue()) {
+                    double baseValue = MC.player != null && playerAttributes.hasAttribute(entry.attribute())
+                            ? playerAttributes.getBaseValue(entry.attribute())
+                            : 0;
 
-        for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-            if (AttributeDisplayType.get(entry).hasBaseValue()) {
-                double baseValue = MC.player != null && playerAttributes.hasAttribute(entry.attribute())
-                        ? playerAttributes.getBaseValue(entry.attribute())
-                        : 0;
-
-                if (entry.modifier().amount() + baseValue != 0) {
-                    return true;
-                }
-            } else {
-                if (entry.modifier().amount() != 0) {
-                    return true;
+                    if (entry.modifier().amount() + baseValue != 0) {
+                        return true;
+                    }
+                } else {
+                    if (entry.modifier().amount() != 0) {
+                        return true;
+                    }
                 }
             }
         }
-
         return false;
     }
 }

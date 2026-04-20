@@ -34,7 +34,7 @@ public abstract class ItemStackMixin {
 
     @WrapWithCondition(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;)V"))
     private boolean hideDefaultAttributes(ItemStack instance, Consumer<Component> equipmentslotgroup, Player player) {
-        return !CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers((ItemStack) (Object) this));
+        return !(CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(instance));
     }
 
     // Fixes MC-271840

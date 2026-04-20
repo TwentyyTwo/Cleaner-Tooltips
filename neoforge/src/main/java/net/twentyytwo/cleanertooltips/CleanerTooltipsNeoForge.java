@@ -54,7 +54,7 @@ public class CleanerTooltipsNeoForge {
         int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(stack, tooltipElements);
         ItemAttributeModifiers modifiers = CleanerTooltipsUtil.getAttributeModifiers(stack);
 
-        boolean shouldAdd = CleanerTooltipsUtil.shouldAddTooltip(modifiers);
+        boolean shouldAdd = CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(modifiers);
         if (shouldAdd) {
             tooltipElements.add(insertIndex, Either.right(new IconAttributeModifierTooltip(stack, modifiers)));
         }
@@ -75,6 +75,6 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(CleanerTooltipsUtil.shouldAddTooltip(CleanerTooltipsUtil.getAttributeModifiers(event.getStack())));
+        event.setSkipAll(CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(event.getStack()));
     }
 }

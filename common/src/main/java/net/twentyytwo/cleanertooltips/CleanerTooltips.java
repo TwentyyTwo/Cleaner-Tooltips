@@ -14,7 +14,6 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
@@ -220,14 +219,12 @@ public class CleanerTooltips {
             List<FormattingSlotList> slotLists = new ArrayList<>();
             combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
                 slotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
+                boolean isOnlyWhenUsing = Set.of(1, 2, 9).contains(slotGroup.ordinal());
                 for (CombinedAttributeModifiers.Entry entry : entries) {
                     Comparison comparison = Comparison.NONE;
                     if (comparedGroups.contains(slotGroup)) {
                         Optional<CombinedAttributeModifiers.Entry> foundEntry = combinedComparedModifiers.modifiers().get(slotGroup).stream()
-                                .filter(comparedEntry -> comparedEntry.attribute().equals(entry.attribute()))
-                                .filter(comparedEntry -> !(entry.modifier().operation() == AttributeModifier.Operation.ADD_MULTIPLIED_BASE)
-                                        || comparedEntry.modifier().operation().equals(entry.modifier().operation()))
-                                .findFirst();
+                                .filter(comparedEntry -> entry.isComparable(comparedEntry, isOnlyWhenUsing)).findFirst();
 
                         comparison = foundEntry.isPresent()
                                 ? entry.getComparison(foundEntry.get())

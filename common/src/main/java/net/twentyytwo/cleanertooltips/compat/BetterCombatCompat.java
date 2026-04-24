@@ -57,7 +57,7 @@ public class BetterCombatCompat {
 
     private static double calculateDuplicates(List<ItemAttributeModifiers.Entry> entries, double baseValue, double value) {
         double totalAddValue = value + baseValue;
-        double totalMultiBase = 1;
+        double totalBaseMultiplier = 1;
         double totalMultiplier = 1;
 
         for (ItemAttributeModifiers.Entry entry : entries) {
@@ -65,16 +65,16 @@ public class BetterCombatCompat {
                 continue;
             }
 
-            double modifierValue = entry.modifier().amount();
+            double amount = entry.modifier().amount();
 
             switch (entry.modifier().operation()) {
-                case ADD_VALUE -> totalAddValue += modifierValue;
-                case ADD_MULTIPLIED_BASE -> totalMultiBase *= (1 + modifierValue);
-                case ADD_MULTIPLIED_TOTAL -> totalMultiplier *= (1 + modifierValue);
+                case ADD_VALUE -> totalAddValue += amount;
+                case ADD_MULTIPLIED_BASE -> totalBaseMultiplier += amount;
+                case ADD_MULTIPLIED_TOTAL -> totalMultiplier *= (1 + amount);
             }
         }
 
-        return ((totalAddValue * totalMultiBase) * totalMultiplier) - baseValue;
+        return ((totalAddValue * totalBaseMultiplier) * totalMultiplier) - baseValue;
     }
 
     private static Comparison getComparison(ItemStack stack, double baseValue, double value) {

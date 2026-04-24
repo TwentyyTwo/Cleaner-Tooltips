@@ -18,6 +18,7 @@ import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
@@ -121,7 +122,7 @@ public class CleanerTooltipsUtil {
             AttributeMap playerAttributes = Objects.requireNonNull(MC.player).getAttributes();
 
             for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-                if (AttributeDisplayType.get(entry).hasBaseValue()) {
+                if (AttributeDisplayType.get(entry, Set.of(1, 2, 9).contains(entry.slot().ordinal())).hasBaseValue()) {
                     double baseValue = MC.player != null && playerAttributes.hasAttribute(entry.attribute())
                             ? playerAttributes.getBaseValue(entry.attribute())
                             : 0;

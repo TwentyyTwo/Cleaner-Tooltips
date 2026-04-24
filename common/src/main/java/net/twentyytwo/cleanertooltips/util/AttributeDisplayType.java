@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import static net.minecraft.resources.ResourceLocation.fromNamespaceAndPath;
+
 public enum AttributeDisplayType {
     /**
      * Displays as either Enabled or Disabled.<br>
@@ -49,32 +51,32 @@ public enum AttributeDisplayType {
     /**
      * A map of attributes where each attribute is associated with a corresponding {@code AttributeDisplayType}.
      */
-    public static final Map<ResourceLocation, AttributeDisplayType[]> MAP = new HashMap<>();
+    private static final Map<ResourceLocation, AttributeDisplayType> MAP = new HashMap<>();
     static {
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.armor_toughness"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_damage"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_knockback"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.attack_speed"), new AttributeDisplayType[]{NUMBER, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.block_interaction_range"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "player.entity_interaction_range"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.gravity"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.knockback_resistance"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.luck"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.max_health"), new AttributeDisplayType[]{DIFFERENCE, DIFFERENCE});
-        MAP.put(ResourceLocation.fromNamespaceAndPath("minecraft", "generic.movement_speed"), new AttributeDisplayType[]{PERCENTAGE, PERCENTAGE});
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.armor"),                     NUMBER);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.armor_toughness"),           NUMBER);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.attack_damage"),             NUMBER);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.attack_knockback"),          DIFFERENCE);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.attack_speed"),              NUMBER);
+        MAP.put(fromNamespaceAndPath("minecraft", "player.block_interaction_range"),    DIFFERENCE);
+        MAP.put(fromNamespaceAndPath("minecraft", "player.entity_interaction_range"),   DIFFERENCE);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.gravity"),                   PERCENTAGE);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.knockback_resistance"),      PERCENTAGE);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.luck"),                      PERCENTAGE);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.max_health"),                DIFFERENCE);
+        MAP.put(fromNamespaceAndPath("minecraft", "generic.movement_speed"),            PERCENTAGE);
     }
 
-    public static AttributeDisplayType get(ItemAttributeModifiers.Entry entry) {
-        if (!entry.modifier().operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
+    public static AttributeDisplayType get(ItemAttributeModifiers.Entry entry, boolean isOnlyWhenUsing) {
+        if (!isOnlyWhenUsing && !entry.modifier().operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
             return PERCENTAGE;
         }
 
         ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value());
         if (MAP.containsKey(key)) {
             return Set.of(1, 4, 5, 6, 7).contains(entry.slot().ordinal())
-                    ? MAP.get(key)[0]
-                    : MAP.get(key)[1];
+                    ? MAP.get(key)
+                    : MAP.get(key).equals(NUMBER) ? DIFFERENCE : MAP.get(key);
         }
         return NUMBER;
     }

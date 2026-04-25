@@ -26,6 +26,7 @@ import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
@@ -112,10 +113,9 @@ public class CleanerTooltips {
 
             String texturePath = "textures/gui/slot/" + slotGroupKey + ".png";
             ResourceLocation resourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, texturePath);
-            if (MC.getResourceManager().getResource(resourceLocation).isEmpty()) {
-                return ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/slot/any.png");
-            }
-            return resourceLocation;
+            return MC.getResourceManager().getResource(resourceLocation).isEmpty()
+                    ? ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/slot/any.png")
+                    : resourceLocation;
         }
     }
 
@@ -133,6 +133,7 @@ public class CleanerTooltips {
             }
         }
 
+        @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
             if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem item) {
                 float miningSpeed = getMiningSpeed(stack, item);
@@ -262,8 +263,8 @@ public class CleanerTooltips {
         public int getWidth(@NotNull Font font) {
             int width = 0;
 
-            width += miningSpeedData() != null
-                    ? miningSpeedData().textWidth() + GROUP_GAP + GAP + 9
+            width += miningSpeedData != null
+                    ? miningSpeedData.textWidth() + GROUP_GAP + GAP + 9
                     : 0;
 
             width += (config.durability.durabilityEnabled && stack.getMaxDamage() > 0
@@ -271,12 +272,12 @@ public class CleanerTooltips {
                     ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
                     : 0;
 
-            width = calculateAttributeWidth(formattingSlotLists, font, width);
+            width = calculateAttributeWidth(font, width);
 
             return width - GROUP_GAP;
         }
 
-        private static int calculateAttributeWidth(List<FormattingSlotList> formattingSlotLists, Font font, int width) {
+        private int calculateAttributeWidth(Font font, int width) {
             int slotCounter = 0;
             int firstRowWidth = width;
             int biggestRowWidth = 0;
@@ -337,10 +338,10 @@ public class CleanerTooltips {
 
         @Override
         public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
-            int groupX = renderAttributeModifiers(formattingSlotLists, font, guiGraphics, x, y);
+            int groupX = renderAttributeModifiers(font, guiGraphics, x, y);
 
-            if (miningSpeedData() != null) {
-                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1, miningSpeedData().text(), miningSpeedData().comparison());
+            if (miningSpeedData != null) {
+                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1);
             }
 
             if (config.durability.durabilityEnabled && stack.getMaxDamage() > 0 && config.durability.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) {
@@ -349,7 +350,7 @@ public class CleanerTooltips {
             }
         }
 
-        private static int renderAttributeModifiers(List<FormattingSlotList> formattingSlotLists, Font font, GuiGraphics guiGraphics, int x, int y) {
+        private int renderAttributeModifiers(Font font, GuiGraphics guiGraphics, int x, int y) {
             int groupX = x;
             int groupY = y - 1;
             int firstGroupX = x;
@@ -398,24 +399,24 @@ public class CleanerTooltips {
             return groupX;
         }
 
-        private static int renderSlotGroupIcon(GuiGraphics guiGraphics, ResourceLocation icon, int x, int y) {
+        private int renderSlotGroupIcon(GuiGraphics guiGraphics, ResourceLocation icon, int x, int y) {
             guiGraphics.blit(icon, x, y, 0, 0, 9, 9, 9, 9);
             return x + 9 + GROUP_GAP;
         }
 
         // Renders the icon and value for the respective attribute, and returns the total width that is then used as the x position for the next attribute
-        private static int renderAttributeIconPair(GuiGraphics guiGraphics, AttributeFormattingData entry, int x, int y) {
+        private int renderAttributeIconPair(GuiGraphics guiGraphics, AttributeFormattingData entry, int x, int y) {
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, entry.text().withStyle(entry.comparison().getFormatting(entry.text())), x + 9 + GAP, y + 1, -1);
+            guiGraphics.drawString(MC.font, entry.text().withStyle(entry.getFormatting()), x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
         }
 
-        private static int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y, MutableComponent miningSpeedComponent, Comparison comparison) {
-            guiGraphics.blit(DIGGING_SPEED, x, y, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, miningSpeedComponent.withStyle(comparison.getFormatting(miningSpeedComponent)), x + 9 + GAP, y + 1, -1);
+        private int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y) {
+            guiGraphics.blit(miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            guiGraphics.drawString(MC.font, miningSpeedData.text().withStyle(miningSpeedData.getFormatting()), x + 9 + GAP, y + 1, -1);
 
-            return x + MC.font.width(miningSpeedComponent) + GROUP_GAP + GAP + 9;
+            return x + miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
         }
     }
 

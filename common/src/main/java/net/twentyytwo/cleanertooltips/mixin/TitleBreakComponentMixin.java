@@ -12,11 +12,7 @@ import org.spongepowered.asm.mixin.injection.At;
 public abstract class TitleBreakComponentMixin {
 
     @ModifyReturnValue(method = "getHeight", at = @At("RETURN"))
-    private int onGetHeight(int original) {
-        if (LegendaryTooltipsCompat.isModLoaded) {
-            return original + LegendaryTooltipsCompat.increasedHeight;
-        } else {
-            return original;
-        }
+    private int onGetHeight(int value) {
+        return LegendaryTooltipsCompat.isModLoaded ? (value + LegendaryTooltipsCompat.increasedHeight) : value;
     }
 }

@@ -7,8 +7,7 @@
   "client": [
     "ComparisonTooltipsMixin",
     "GuiGraphicsMixin",
-    "ItemStackMixin",
-    "KeyMappingMixin"
+    "ItemStackMixin"
   ],
   "injectors": {
     "defaultRequire": 1

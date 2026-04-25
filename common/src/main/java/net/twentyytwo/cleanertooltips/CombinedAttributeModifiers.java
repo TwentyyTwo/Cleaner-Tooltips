@@ -66,12 +66,12 @@ public record CombinedAttributeModifiers(LinkedHashMap<EquipmentSlotGroup, List<
 
                 double baseValue = displayType.hasBaseValue() && playerAttributes.hasAttribute(entry.attribute())
                         ? playerAttributes.getBaseValue(entry.attribute()) : 0;
-                double value = getTotalValue(entries, baseValue, i, isOnlyWhenUsing, hasBeenCombined) + (entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID) ? sharpnessBonus : 0);
+                double value = getTotalValue(entries, baseValue, i, isOnlyWhenUsing, hasBeenCombined)
+                        + (entry.modifier().is(Item.BASE_ATTACK_DAMAGE_ID) ? sharpnessBonus : 0);
 
                 if (value + baseValue != 0) {
-                    Entry newEntry = new Entry(entry.attribute(),
-                            new AttributeModifier(entry.modifier().id(), value, entry.modifier().operation()),
-                            entry.slot(), displayType, baseValue);
+                    AttributeModifier modifier = new AttributeModifier(entry.modifier().id(), value, entry.modifier().operation());
+                    Entry newEntry = new Entry(entry.attribute(), modifier, entry.slot(), displayType, baseValue);
 
                     entryList.computeIfAbsent(entry.slot(), k -> new ArrayList<>()).add(newEntry);
                 }
@@ -126,10 +126,9 @@ public record CombinedAttributeModifiers(LinkedHashMap<EquipmentSlotGroup, List<
     }
 
     private static EquipmentSlotGroup getPrimaryGroup(ItemStack stack) {
-        if (stack.getItem() instanceof ArmorItem armorItem) {
-            return EquipmentSlotGroup.bySlot(armorItem.getEquipmentSlot());
-        }
-        return EquipmentSlotGroup.MAINHAND;
+        return stack.getItem() instanceof ArmorItem armorItem
+                ? EquipmentSlotGroup.bySlot(armorItem.getEquipmentSlot())
+                : EquipmentSlotGroup.MAINHAND;
     }
 
     /**

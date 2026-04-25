@@ -34,8 +34,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
 
             if (LegendaryTooltipsCompat.isModLoaded && !LegendaryTooltipsCompat.hasTitleBreak(newComponents) && (shouldAddAttributes || shouldAddDurability)) {
                 for (int i = 0; i < newComponents.size(); i++) {
-                    ClientTooltipComponent component = newComponents.get(i);
-                    if (component instanceof ClientTextTooltip) {
+                    if (newComponents.get(i) instanceof ClientTextTooltip) {
                         newComponents.add(i + 1, new TitleBreakComponent());
                         break;
                     }

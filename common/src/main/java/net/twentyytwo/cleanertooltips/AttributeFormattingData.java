@@ -1,8 +1,10 @@
 package net.twentyytwo.cleanertooltips;
 
+import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.twentyytwo.cleanertooltips.util.Comparison;
@@ -32,8 +34,14 @@ public record AttributeFormattingData(MutableComponent text, int textWidth, Reso
         if (attributeKey == null) return null;
         String texturePath = "textures/gui/attribute/" + attributeKey.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
         ResourceLocation resourceLocation =  ResourceLocation.fromNamespaceAndPath(CleanerTooltips.MOD_ID, texturePath);
-        if (MC.getResourceManager().getResource(resourceLocation).isEmpty())
-            return null;
-        return resourceLocation;
+        return MC.getResourceManager().getResource(resourceLocation).isEmpty() ? null : resourceLocation;
+    }
+
+    public ChatFormatting getFormatting() {
+        return switch (this.comparison()) {
+            case HIGHER -> ChatFormatting.GREEN;
+            case LOWER -> this.text().getStyle().getColor() == TextColor.fromLegacyFormat(ChatFormatting.RED) ? ChatFormatting.DARK_RED : ChatFormatting.RED;
+            default -> ChatFormatting.WHITE;
+        };
     }
 }

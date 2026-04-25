@@ -24,8 +24,8 @@ public abstract class AttributeUtilMixin {
             at = @At(value = "STORE"),
             name = "base")
     private static double modifyAttackDamage(double base, @Local(argsOnly = true) ItemStack stack, @Local(name = "attr") Holder<Attribute> attr, @Local(name = "entityBase") double entityBase) {
-        if (MC.player != null && Objects.equals(attr.value().getBaseId(), Item.BASE_ATTACK_DAMAGE_ID))
-            return (base - entityBase) + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) + CleanerTooltipsUtil.getSharpnessBonus(stack);
-        return base;
+        return MC.player != null && Objects.equals(attr.value().getBaseId(), Item.BASE_ATTACK_DAMAGE_ID)
+                ? base - entityBase + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) + CleanerTooltipsUtil.getSharpnessBonus(stack)
+                : base;
     }
 }

@@ -13,10 +13,6 @@ public abstract class TooltipDecorMixin {
 
     @ModifyVariable(method = "drawSeparator", at = @At("HEAD"), index = 2, argsOnly = true)
     private static int onDrawSeparator(int value) {
-        if (LegendaryTooltipsCompat.isModLoaded) {
-            return value - LegendaryTooltipsCompat.increasedHeight;
-        } else {
-            return value;
-        }
+        return LegendaryTooltipsCompat.isModLoaded ? (value - LegendaryTooltipsCompat.increasedHeight) : value;
     }
 }

@@ -48,11 +48,7 @@ public class BetterCombatCompat {
 
     private static double getRangeBonus(ItemStack stack) {
         WeaponAttributes attributes = WeaponRegistry.getAttributes(stack);
-        if (attributes != null) {
-            return attributes.rangeBonus();
-        } else {
-            return 0;
-        }
+        return attributes != null ? attributes.rangeBonus() : 0;
     }
 
     private static double calculateDuplicates(List<ItemAttributeModifiers.Entry> entries, double baseValue, double value) {

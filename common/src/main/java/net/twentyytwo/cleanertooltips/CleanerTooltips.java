@@ -54,6 +54,8 @@ public class CleanerTooltips {
 
     private static final ResourceLocation DURABILITY_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/durability.png");
     private static final ResourceLocation DIGGING_SPEED = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/digging_speed.png");
+    private static final ResourceLocation HIGHER = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/higher.png");
+    private static final ResourceLocation LOWER = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/lower.png");
 
     public static void init() {
         AutoConfig.register(CleanerTooltipsConfig.class, JanksonConfigSerializer::new);
@@ -407,6 +409,7 @@ public class CleanerTooltips {
         // Renders the icon and value for the respective attribute, and returns the total width that is then used as the x position for the next attribute
         private int renderAttributeIconPair(GuiGraphics guiGraphics, AttributeFormattingData entry, int x, int y) {
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
             guiGraphics.drawString(MC.font, entry.text().withStyle(entry.getFormatting()), x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
@@ -414,9 +417,17 @@ public class CleanerTooltips {
 
         private int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y) {
             guiGraphics.blit(miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            renderComparisonArrow(guiGraphics, miningSpeedData.comparison(), x, y);
             guiGraphics.drawString(MC.font, miningSpeedData.text().withStyle(miningSpeedData.getFormatting()), x + 9 + GAP, y + 1, -1);
 
             return x + miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
+        }
+
+        private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison, int x, int y) {
+            if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
+                ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
+                guiGraphics.blit(arrow, x + 7, CleanerTooltipsUtil.getTickToggle() ? y : y - 1, 0, 0, 3, 3, 3, 3);
+            }
         }
     }
 

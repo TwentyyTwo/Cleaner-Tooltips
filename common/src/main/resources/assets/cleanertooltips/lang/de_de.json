@@ -7,6 +7,8 @@
   "text.autoconfig.cleanertooltips.option.general.enabled.@Tooltip": "Ob Attribute als Symbol angezeigt werden sollen.",
   "text.autoconfig.cleanertooltips.option.general.compareAttributes": "Attribute Vergleichen",
   "text.autoconfig.cleanertooltips.option.general.compareAttributes.@Tooltip": "Zeige einen Vergleich der Attribute zwischen dem ausgewählten und dem ausgerüsteten Gegenstand an.",
+  "text.autoconfig.cleanertooltips.option.general.comparisonArrow": "Vergleichs Pfeil",
+  "text.autoconfig.cleanertooltips.option.general.comparisonArrow.@Tooltip": "Ob der Vergleich zusätzlich mit einem Pfeil angegeben werden soll.",
   "text.autoconfig.cleanertooltips.option.general.sharpness": "Schärfe Berechnen",
   "text.autoconfig.cleanertooltips.option.general.sharpness.@Tooltip": "Ob Schärfe den Schaden verändern soll.\nDies behebt MC-271840.",
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint": "Versteckte Attribute Hinweis",

@@ -27,6 +27,20 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
  * Collection of useful functions.
  */
 public class CleanerTooltipsUtil {
+    private static int tick = 0;
+    private static boolean tickToggle = false;
+
+    public static void onTick() {
+        tick++;
+        if (tick >= 20) {
+            tickToggle = !tickToggle;
+            tick = 0;
+        }
+    }
+
+    public static boolean getTickToggle() {
+        return tickToggle;
+    }
 
     /**
      * Gets the index of the item name and returns the index below it.

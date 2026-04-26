@@ -2,6 +2,7 @@ package net.twentyytwo.cleanertooltips;
 
 import com.anthonyhilyard.iceberg.component.TitleBreakComponent;
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
@@ -23,6 +24,8 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
     public void onInitializeClient() {
         CleanerTooltips.init();
         KeyBindingHelper.registerKeyBinding(CleanerTooltips.hideTooltip);
+
+        ClientTickEvents.START_CLIENT_TICK.register(client -> CleanerTooltipsUtil.onTick());
     }
 
     public static List<ClientTooltipComponent> getNewComponents(ItemStack stack, List<ClientTooltipComponent> components) {

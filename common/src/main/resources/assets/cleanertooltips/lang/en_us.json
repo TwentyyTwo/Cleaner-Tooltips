@@ -7,6 +7,8 @@
   "text.autoconfig.cleanertooltips.option.general.enabled.@Tooltip": "Whether attributes should be displayed as icons.",
   "text.autoconfig.cleanertooltips.option.general.compareAttributes": "Compare Attributes",
   "text.autoconfig.cleanertooltips.option.general.compareAttributes.@Tooltip": "Show a comparison of attributes between the hovered over and equipped item.",
+  "text.autoconfig.cleanertooltips.option.general.comparisonArrow": "Comparison Arrow",
+  "text.autoconfig.cleanertooltips.option.general.comparisonArrow.@Tooltip": "Whether an arrow should additionally indicate the comparison.",
   "text.autoconfig.cleanertooltips.option.general.sharpness": "Calculate Sharpness",
   "text.autoconfig.cleanertooltips.option.general.sharpness.@Tooltip": "Whether sharpness should change the attack damage.\nThis fixes MC-271840.",
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint": "Hidden Attributes Hint",

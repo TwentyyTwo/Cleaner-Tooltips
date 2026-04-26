@@ -12,6 +12,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.GatherSkippedAttributeTooltipsEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -38,6 +39,11 @@ public class CleanerTooltipsNeoForge {
     @SubscribeEvent()
     public static void registerKeybind(RegisterKeyMappingsEvent event) {
         event.register(CleanerTooltips.hideTooltip);
+    }
+
+    @SubscribeEvent()
+    public static void onTick(ClientTickEvent.Pre event) {
+        CleanerTooltipsUtil.onTick();
     }
 
     @SubscribeEvent()

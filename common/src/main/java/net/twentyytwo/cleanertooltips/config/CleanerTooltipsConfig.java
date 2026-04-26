@@ -25,6 +25,9 @@ public class CleanerTooltipsConfig implements ConfigData {
         public boolean compareAttributes = true;
 
         @ConfigEntry.Gui.Tooltip
+        public boolean comparisonArrow = true;
+
+        @ConfigEntry.Gui.Tooltip
         public boolean sharpness = true;
 
         @ConfigEntry.Gui.Tooltip
@@ -51,7 +54,7 @@ public class CleanerTooltipsConfig implements ConfigData {
 
     public static class Advanced {
         @ConfigEntry.Gui.Tooltip
-        public boolean onlyCompareShared = true;
+        public boolean onlyCompareShared = false;
 
         @ConfigEntry.Gui.Tooltip
         @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)

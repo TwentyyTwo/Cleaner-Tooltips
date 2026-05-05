@@ -1,15 +1,7 @@
 package net.twentyytwo.cleanertooltips.util;
 
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
-
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import static net.minecraft.resources.ResourceLocation.fromNamespaceAndPath;
+import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 
 public enum AttributeDisplayType {
     /**
@@ -48,36 +40,11 @@ public enum AttributeDisplayType {
         return this == NUMBER || this == MULTIPLIER;
     }
 
-    /**
-     * A map of attributes where each attribute is associated with a corresponding {@code AttributeDisplayType}.
-     */
-    private static final Map<ResourceLocation, AttributeDisplayType> MAP = new HashMap<>();
-    static {
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.armor"),                     NUMBER);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.armor_toughness"),           NUMBER);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.attack_damage"),             NUMBER);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.attack_knockback"),          DIFFERENCE);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.attack_speed"),              NUMBER);
-        MAP.put(fromNamespaceAndPath("minecraft", "player.block_interaction_range"),    DIFFERENCE);
-        MAP.put(fromNamespaceAndPath("minecraft", "player.entity_interaction_range"),   DIFFERENCE);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.gravity"),                   PERCENTAGE);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.knockback_resistance"),      PERCENTAGE);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.luck"),                      PERCENTAGE);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.max_health"),                DIFFERENCE);
-        MAP.put(fromNamespaceAndPath("minecraft", "generic.movement_speed"),            PERCENTAGE);
-    }
-
-    public static AttributeDisplayType get(ItemAttributeModifiers.Entry entry, boolean isOnlyWhenUsing) {
-        if (!isOnlyWhenUsing && !entry.modifier().operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
-            return PERCENTAGE;
+    public static final Codec<AttributeDisplayType> CODEC = Codec.STRING.comapFlatMap(s -> {
+        try {
+            return DataResult.success(AttributeDisplayType.valueOf(s.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            return DataResult.success(NUMBER);
         }
-
-        ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value());
-        if (MAP.containsKey(key)) {
-            return Set.of(1, 4, 5, 6, 7).contains(entry.slot().ordinal())
-                    ? MAP.get(key)
-                    : MAP.get(key).equals(NUMBER) ? DIFFERENCE : MAP.get(key);
-        }
-        return NUMBER;
-    }
+    }, AttributeDisplayType::toString);
 }

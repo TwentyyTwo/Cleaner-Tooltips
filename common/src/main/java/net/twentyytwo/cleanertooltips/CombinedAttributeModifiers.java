@@ -12,6 +12,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.compat.BetterCombatCompat;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 
@@ -62,7 +63,7 @@ public record CombinedAttributeModifiers(LinkedHashMap<EquipmentSlotGroup, List<
                 ItemAttributeModifiers.Entry entry = entries.get(i);
 
                 boolean isOnlyWhenUsing = Set.of(1, 2, 9).contains(entries.get(i).slot().ordinal());
-                AttributeDisplayType displayType = AttributeDisplayType.get(entry, isOnlyWhenUsing);
+                AttributeDisplayType displayType = AttributeManager.getDisplayType(entry, isOnlyWhenUsing);
 
                 double baseValue = displayType.hasBaseValue() && playerAttributes.hasAttribute(entry.attribute())
                         ? playerAttributes.getBaseValue(entry.attribute()) : 0;

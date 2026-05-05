@@ -52,14 +52,18 @@ public class CleanerTooltips {
     private static final int GAP = 3; // The gap between the icon and the value
     private static final int GROUP_GAP = 8; // The gap between attributes
 
-    private static final ResourceLocation DURABILITY_ICON = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/durability.png");
-    private static final ResourceLocation DIGGING_SPEED = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/digging_speed.png");
-    private static final ResourceLocation HIGHER = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/higher.png");
-    private static final ResourceLocation LOWER = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/lower.png");
+    private static final ResourceLocation DURABILITY_ICON = location("textures/gui/attribute/durability.png");
+    private static final ResourceLocation DIGGING_SPEED = location("textures/gui/attribute/digging_speed.png");
+    private static final ResourceLocation HIGHER = location("textures/gui/attribute/higher.png");
+    private static final ResourceLocation LOWER = location("textures/gui/attribute/lower.png");
 
     public static void init() {
         AutoConfig.register(CleanerTooltipsConfig.class, JanksonConfigSerializer::new);
         config = AutoConfig.getConfigHolder(CleanerTooltipsConfig.class).getConfig();
+    }
+
+    public static ResourceLocation location(String path) {
+        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public static MutableComponent formatting(double value, double baseValue, AttributeDisplayType displayType) {
@@ -114,9 +118,9 @@ public class CleanerTooltips {
             String slotGroupKey = slotGroup.getSerializedName();
 
             String texturePath = "textures/gui/slot/" + slotGroupKey + ".png";
-            ResourceLocation resourceLocation = ResourceLocation.fromNamespaceAndPath(MOD_ID, texturePath);
+            ResourceLocation resourceLocation = location(texturePath);
             return MC.getResourceManager().getResource(resourceLocation).isEmpty()
-                    ? ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/slot/any.png")
+                    ? location("textures/gui/slot/any.png")
                     : resourceLocation;
         }
     }

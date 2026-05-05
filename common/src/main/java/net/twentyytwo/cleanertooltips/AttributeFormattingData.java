@@ -2,13 +2,12 @@ package net.twentyytwo.cleanertooltips;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
-import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.Comparison;
-import org.jetbrains.annotations.Nullable;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
@@ -24,17 +23,7 @@ public record AttributeFormattingData(MutableComponent text, int textWidth, Reso
     }
 
     public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, Comparison comparison) {
-        this(text, MC.font.width(text), getIcon(attribute), comparison);
-    }
-
-    @Nullable
-    private static ResourceLocation getIcon(Holder<Attribute> attribute) {
-        ResourceLocation attributeKey = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
-
-        if (attributeKey == null) return null;
-        String texturePath = "textures/gui/attribute/" + attributeKey.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
-        ResourceLocation resourceLocation =  ResourceLocation.fromNamespaceAndPath(CleanerTooltips.MOD_ID, texturePath);
-        return MC.getResourceManager().getResource(resourceLocation).isEmpty() ? null : resourceLocation;
+        this(text, MC.font.width(text), AttributeManager.getTexture(attribute), comparison);
     }
 
     public ChatFormatting getFormatting() {

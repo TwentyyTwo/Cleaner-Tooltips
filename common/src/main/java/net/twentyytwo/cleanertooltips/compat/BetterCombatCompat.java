@@ -11,6 +11,7 @@ import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.AttributeFormattingData;
+import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.MOD_ID;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.formatting;
 
@@ -35,7 +35,7 @@ public class BetterCombatCompat {
     public static AttributeFormattingData attackRangeEntry(ItemStack stack, ItemAttributeModifiers modifiers) {
         Holder<Attribute> interactionRange = Attributes.ENTITY_INTERACTION_RANGE;
         AttributeMap playerAttributes = Objects.requireNonNull(MC.player).getAttributes();
-        ResourceLocation INTERACTION_RANGE = ResourceLocation.fromNamespaceAndPath(MOD_ID, "textures/gui/attribute/entity_interaction_range.png");
+        ResourceLocation INTERACTION_RANGE = CleanerTooltips.location("textures/gui/attribute/entity_interaction_range.png");
 
         double baseValue = (playerAttributes.hasAttribute(interactionRange) ? playerAttributes.getBaseValue(interactionRange) : 0);
         double value = calculateDuplicates(modifiers.modifiers(), baseValue, getRangeBonus(stack));

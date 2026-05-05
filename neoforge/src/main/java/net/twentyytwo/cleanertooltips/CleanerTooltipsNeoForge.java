@@ -14,6 +14,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.GatherSkippedAttributeTooltipsEvent;
+import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
@@ -23,6 +24,7 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeModifierToolt
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.AttributeManager;
 
 import java.util.List;
 import java.util.function.Supplier;
@@ -44,6 +46,11 @@ public class CleanerTooltipsNeoForge {
     @SubscribeEvent()
     public static void onTick(ClientTickEvent.Pre event) {
         CleanerTooltipsUtil.onTick();
+    }
+
+    @SubscribeEvent()
+    public static void onResourceReload(RegisterClientReloadListenersEvent event) {
+        event.registerReloadListener(new AttributeManager());
     }
 
     @SubscribeEvent()

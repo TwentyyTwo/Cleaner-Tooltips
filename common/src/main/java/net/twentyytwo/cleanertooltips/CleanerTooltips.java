@@ -178,18 +178,18 @@ public class CleanerTooltips {
         }
 
         private static List<FormattingSlotList> getFormattingSlotLists(ItemStack stack, ItemAttributeModifiers modifiers) {
-            CombinedAttributeModifiers combinedModifiers = new CombinedAttributeModifiers(stack, modifiers);
+            CombinedAttributeModifiers combinedModifiers = CombinedAttributeModifiers.fromStack(stack);
 
-            List<FormattingSlotList> comparisonFormattingSlotLists = getComparisonFormattingData(stack, combinedModifiers);
-            if (comparisonFormattingSlotLists != null) {
-                return comparisonFormattingSlotLists;
-            }
+//            List<FormattingSlotList> comparisonFormattingSlotLists = getComparisonFormattingData(stack, combinedModifiers);
+//            if (comparisonFormattingSlotLists != null) {
+//                return comparisonFormattingSlotLists;
+//            }
 
             List<FormattingSlotList> formattingSlotLists = new ArrayList<>();
-            combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
+            combinedModifiers.modifiers().asMap().forEach((slotGroup, entries) -> {
                 formattingSlotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
                 for (CombinedAttributeModifiers.Entry entry : entries) {
-                    MutableComponent text = formatting(entry.modifier().amount(), entry.baseValue(), entry.displayType());
+                    MutableComponent text = formatting(entry.modifier().amount(), CleanerTooltipsUtil.getBaseValue(entry.attribute()), entry.displayType());
                     formattingSlotLists.getLast().formattingDataList().add(new AttributeFormattingData(text, entry.attribute(), Comparison.NONE));
                 }
             });
@@ -197,53 +197,53 @@ public class CleanerTooltips {
             return formattingSlotLists;
         }
 
-        private static List<FormattingSlotList> getComparisonFormattingData(ItemStack stack, CombinedAttributeModifiers combinedModifiers) {
-            if (!config.general.compareAttributes) {
-                return null;
-            }
-
-            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
-            if (comparedStack.isEmpty() || comparedStack.equals(stack)) {
-                return null;
-            }
-
-            ItemAttributeModifiers comparedModifiers = CleanerTooltipsUtil.getAttributeModifiers(comparedStack);
-            if (comparedModifiers.modifiers().isEmpty()) {
-                return null;
-            }
-
-            CombinedAttributeModifiers combinedComparedModifiers = new CombinedAttributeModifiers(comparedStack, comparedModifiers);
-            Set<EquipmentSlotGroup> modifierGroups = combinedModifiers.modifiers().keySet();
-            Set<EquipmentSlotGroup> comparedGroups = combinedComparedModifiers.modifiers().keySet();
-            if (modifierGroups.stream().noneMatch(comparedGroups::contains)) {
-                return null;
-            }
-
-            if (!config.advanced.onlyCompareShared) {
-                combinedModifiers.merge(combinedComparedModifiers);
-            }
-
-            List<FormattingSlotList> slotLists = new ArrayList<>();
-            combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
-                slotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
-                boolean isOnlyWhenUsing = Set.of(1, 2, 9).contains(slotGroup.ordinal());
-                for (CombinedAttributeModifiers.Entry entry : entries) {
-                    Comparison comparison = Comparison.NONE;
-                    if (comparedGroups.contains(slotGroup)) {
-                        Optional<CombinedAttributeModifiers.Entry> foundEntry = combinedComparedModifiers.modifiers().get(slotGroup).stream()
-                                .filter(comparedEntry -> entry.isComparable(comparedEntry, isOnlyWhenUsing)).findFirst();
-
-                        comparison = foundEntry.isPresent()
-                                ? entry.getComparison(foundEntry.get())
-                                : entry.getComparison(0, 0);
-                    }
-
-                    MutableComponent text = formatting(entry.modifier().amount(), entry.baseValue(), entry.displayType());
-                    slotLists.getLast().formattingDataList().add(new AttributeFormattingData(text, entry.attribute(), comparison));
-                }
-            });
-            return slotLists;
-        }
+//        private static List<FormattingSlotList> getComparisonFormattingData(ItemStack stack, CombinedAttributeModifiers combinedModifiers) {
+//            if (!config.general.compareAttributes) {
+//                return null;
+//            }
+//
+//            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+//            if (comparedStack.isEmpty() || comparedStack.equals(stack)) {
+//                return null;
+//            }
+//
+//            ItemAttributeModifiers comparedModifiers = CleanerTooltipsUtil.getAttributeModifiers(comparedStack);
+//            if (comparedModifiers.modifiers().isEmpty()) {
+//                return null;
+//            }
+//
+//            CombinedAttributeModifiers combinedComparedModifiers = new CombinedAttributeModifiers(comparedStack, comparedModifiers);
+//            Set<EquipmentSlotGroup> modifierGroups = combinedModifiers.modifiers().keySet();
+//            Set<EquipmentSlotGroup> comparedGroups = combinedComparedModifiers.modifiers().keySet();
+//            if (modifierGroups.stream().noneMatch(comparedGroups::contains)) {
+//                return null;
+//            }
+//
+//            if (!config.advanced.onlyCompareShared) {
+//                combinedModifiers.merge(combinedComparedModifiers);
+//            }
+//
+//            List<FormattingSlotList> slotLists = new ArrayList<>();
+//            combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
+//                slotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
+//                boolean isOnlyWhenUsing = Set.of(1, 2, 9).contains(slotGroup.ordinal());
+//                for (CombinedAttributeModifiers.Entry entry : entries) {
+//                    Comparison comparison = Comparison.NONE;
+//                    if (comparedGroups.contains(slotGroup)) {
+//                        Optional<CombinedAttributeModifiers.Entry> foundEntry = combinedComparedModifiers.modifiers().get(slotGroup).stream()
+//                                .filter(comparedEntry -> entry.isComparable(comparedEntry, isOnlyWhenUsing)).findFirst();
+//
+//                        comparison = foundEntry.isPresent()
+//                                ? entry.getComparison(foundEntry.get())
+//                                : entry.getComparison(0, 0);
+//                    }
+//
+//                    MutableComponent text = formatting(entry.modifier().amount(), CombinedAttributeModifiers.getBaseValue(entry.attribute()), entry.displayType());
+//                    slotLists.getLast().formattingDataList().add(new AttributeFormattingData(text, entry.attribute(), comparison));
+//                }
+//            });
+//            return slotLists;
+//        }
 
         @Override
         public int getHeight() {

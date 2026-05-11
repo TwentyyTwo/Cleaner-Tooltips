@@ -101,6 +101,10 @@ public class CleanerTooltipsUtil {
         return sharpnessBonus;
     }
 
+    public static double getBaseValue(Holder<Attribute> attribute) {
+        return MC.player != null ? MC.player.getAttributeBaseValue(attribute) : 0;
+    }
+
     /**
      * Calculates the attribute modifiers of all equipment slots.<br>
      * Works for every type of equipment.
@@ -152,5 +156,12 @@ public class CleanerTooltipsUtil {
             }
         }
         return false;
+    }
+
+    public static boolean shouldSeparateOperations(EquipmentSlotGroup slotGroup) {
+        return switch (slotGroup) {
+            case MAINHAND, OFFHAND, BODY -> false;
+            case null, default -> true;
+        };
     }
 }

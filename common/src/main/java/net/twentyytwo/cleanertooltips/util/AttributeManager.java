@@ -4,12 +4,14 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.JsonOps;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
+import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -23,14 +25,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class AttributeManager extends SimplePreparableReloadListener<Map<ResourceLocation, AttributeDisplayType>> {
-    private static final Codec<Map<ResourceLocation, AttributeDisplayType>> CODEC = Codec.unboundedMap(ResourceLocation.CODEC, AttributeDisplayType.CODEC);
+public class AttributeManager extends SimplePreparableReloadListener<Map<ResourceLocation, AttributeManager.IntermediateHolder>> {
+    private static final Codec<Map<ResourceLocation, IntermediateHolder>> CODEC = Codec.unboundedMap(ResourceLocation.CODEC, IntermediateHolder.CODEC);
     private static final ResourceLocation ATTRIBUTE_DISPLAY_LOCATION = CleanerTooltips.location("attribute_display.json");
     private static final Map<ResourceLocation, DisplayTextureHolder> HOLDER_MAP = new HashMap<>();
 
     @Override
-    protected @NotNull Map<ResourceLocation, AttributeDisplayType> prepare(@NotNull ResourceManager manager, @NotNull ProfilerFiller profiler) {
-        Map<ResourceLocation, AttributeDisplayType> holderMap = new HashMap<>();
+    protected @NotNull Map<ResourceLocation, IntermediateHolder> prepare(@NotNull ResourceManager manager, @NotNull ProfilerFiller profiler) {
+        Map<ResourceLocation, IntermediateHolder> holderMap = new HashMap<>();
         profiler.startTick();
 
         try (Reader reader = manager.openAsReader(ATTRIBUTE_DISPLAY_LOCATION)) {
@@ -45,23 +47,44 @@ public class AttributeManager extends SimplePreparableReloadListener<Map<Resourc
     }
 
     @Override
-    protected void apply(@NotNull Map<ResourceLocation, AttributeDisplayType> map, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profilerFiller) {
+    protected void apply(@NotNull Map<ResourceLocation, IntermediateHolder> map, @NotNull ResourceManager resourceManager, @NotNull ProfilerFiller profilerFiller) {
         HOLDER_MAP.clear();
         map.forEach(AttributeManager::accept);
     }
 
-    private static void accept(ResourceLocation k, AttributeDisplayType v) {
+    private static void accept(ResourceLocation k, IntermediateHolder v) {
         String path = "textures/gui/attribute/" + k.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
         ResourceLocation location = ResourceLocation.fromNamespaceAndPath(CleanerTooltips.MOD_ID, path);
         if (CleanerTooltips.MC.getResourceManager().getResource(location).isPresent()) {
-            HOLDER_MAP.put(k, new DisplayTextureHolder(v, location));
+            HOLDER_MAP.put(k, new DisplayTextureHolder(location, v.displayType(), v.priority()));
         }
     }
 
-    private record DisplayTextureHolder(AttributeDisplayType displayType, ResourceLocation texture) {}
+    protected record IntermediateHolder(AttributeDisplayType displayType, int priority) {
+        public static final Codec<IntermediateHolder> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+                AttributeDisplayType.CODEC.fieldOf("display_type").forGetter(IntermediateHolder::displayType),
+                Codec.INT.fieldOf("priority").forGetter(IntermediateHolder::priority)
+        ).apply(instance, IntermediateHolder::new));
+    }
 
-    public static AttributeDisplayType getDisplayType(ItemAttributeModifiers.Entry entry, boolean isOnlyWhenUsing) {
-        if (!isOnlyWhenUsing && !entry.modifier().operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
+    private record DisplayTextureHolder(ResourceLocation texture, AttributeDisplayType displayType, int priority) {}
+
+    public static AttributeDisplayType getDisplayType(Holder<Attribute> attribute, AttributeModifier modifier, EquipmentSlotGroup slot, boolean keepOperationsSeparate) {
+        if (keepOperationsSeparate && !modifier.operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
+            return AttributeDisplayType.PERCENTAGE;
+        }
+
+        ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
+        if (HOLDER_MAP.containsKey(key)) {
+            AttributeDisplayType displayType = HOLDER_MAP.get(key).displayType();
+            return Set.of(1, 4, 5, 6, 7).contains(slot.ordinal())
+                    ? displayType : displayType.equals(AttributeDisplayType.NUMBER) ? AttributeDisplayType.DIFFERENCE : displayType;
+        }
+        return AttributeDisplayType.NUMBER;
+    }
+
+    public static AttributeDisplayType getDisplayType(ItemAttributeModifiers.Entry entry, boolean keepOperationsSeparate) {
+        if (keepOperationsSeparate && !entry.modifier().operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
             return AttributeDisplayType.PERCENTAGE;
         }
 
@@ -79,5 +102,10 @@ public class AttributeManager extends SimplePreparableReloadListener<Map<Resourc
     public static ResourceLocation getTexture(Holder<Attribute> attribute) {
         ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
         return HOLDER_MAP.containsKey(key) ? HOLDER_MAP.get(key).texture() : null;
+    }
+
+    public static int getPriority(Holder<Attribute> attribute) {
+        ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
+        return HOLDER_MAP.containsKey(key) ? HOLDER_MAP.get(key).priority() : 99;
     }
 }

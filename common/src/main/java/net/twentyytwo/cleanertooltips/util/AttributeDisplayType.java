@@ -2,6 +2,10 @@ package net.twentyytwo.cleanertooltips.util;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import io.netty.buffer.ByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.util.ByIdMap;
 
 public enum AttributeDisplayType {
     /**
@@ -47,4 +51,6 @@ public enum AttributeDisplayType {
             return DataResult.success(NUMBER);
         }
     }, AttributeDisplayType::toString);
+
+    public static final StreamCodec<ByteBuf, AttributeDisplayType> STREAM_CODEC = ByteBufCodecs.idMapper(ByIdMap.continuous(Enum::ordinal, values(), ByIdMap.OutOfBoundsStrategy.ZERO), Enum::ordinal);
 }

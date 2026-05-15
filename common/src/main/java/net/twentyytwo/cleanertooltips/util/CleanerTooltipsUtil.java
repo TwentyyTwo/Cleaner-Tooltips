@@ -3,11 +3,12 @@ package net.twentyytwo.cleanertooltips.util;
 import com.mojang.datafixers.util.Either;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.AttributeMap;
+import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -15,10 +16,9 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsCompat;
 import net.twentyytwo.cleanertooltips.services.Services;
+import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
@@ -114,12 +114,10 @@ public class CleanerTooltipsUtil {
     public static ItemAttributeModifiers getAttributeModifiers(ItemStack stack) {
         ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
         ItemAttributeModifiers defaultModifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
-        if (defaultModifiers.showInTooltip()) {
-            for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
-                stack.forEachModifier(slot, (attribute, modifier) -> builder.add(attribute, modifier, slot));
-            }
+        if (defaultModifiers.showInTooltip()) for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
+            stack.forEachModifier(slot, (attribute, modifier) -> builder.add(attribute, modifier, slot));
         }
-        return new ItemAttributeModifiers(builder.build().modifiers(), defaultModifiers.showInTooltip());
+        return builder.build();
     }
 
     public static boolean shouldAddAttributes() {
@@ -127,35 +125,18 @@ public class CleanerTooltipsUtil {
     }
 
     public static boolean hasAttributes(ItemStack stack) {
-        return hasAttributes(getAttributeModifiers(stack));
-    }
-
-    /**
-     * Check if at least one modifier has a value not equal to {@code 0}.
-     * @param modifiers the {@code ItemAttributeModifiers} of the item stack
-     * @return          whether any modifier has a value not equal to {@code 0}
-     */
-    public static boolean hasAttributes(ItemAttributeModifiers modifiers) {
-        if (!modifiers.modifiers().isEmpty()) {
-            AttributeMap playerAttributes = Objects.requireNonNull(MC.player).getAttributes();
-
-            for (ItemAttributeModifiers.Entry entry : modifiers.modifiers()) {
-                if (AttributeManager.getDisplayType(entry, Set.of(1, 2, 9).contains(entry.slot().ordinal())).hasBaseValue()) {
-                    double baseValue = MC.player != null && playerAttributes.hasAttribute(entry.attribute())
-                            ? playerAttributes.getBaseValue(entry.attribute())
-                            : 0;
-
-                    if (entry.modifier().amount() + baseValue != 0) {
-                        return true;
+        MutableBoolean hasAttributes = new MutableBoolean(false);
+        if (!stack.isEmpty()) {
+            for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
+                stack.forEachModifier(slot, (attribute, modifier) -> {
+                    if ((AttributeManager.getDisplayType(attribute, modifier, slot, shouldSeparateOperations(slot)).hasBaseValue()
+                            && modifier.amount() + getBaseValue(attribute) != 0 || modifier.amount() != 0) && AttributeManager.getTexture(attribute) != null) {
+                        hasAttributes.setTrue();
                     }
-                } else {
-                    if (entry.modifier().amount() != 0) {
-                        return true;
-                    }
-                }
+                });
             }
         }
-        return false;
+        return hasAttributes.booleanValue();
     }
 
     public static boolean shouldSeparateOperations(EquipmentSlotGroup slotGroup) {

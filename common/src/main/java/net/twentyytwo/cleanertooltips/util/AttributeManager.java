@@ -11,10 +11,8 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
-import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -23,7 +21,6 @@ import java.io.IOException;
 import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 public class AttributeManager extends SimplePreparableReloadListener<Map<ResourceLocation, AttributeManager.IntermediateHolder>> {
     private static final Codec<Map<ResourceLocation, IntermediateHolder>> CODEC = Codec.unboundedMap(ResourceLocation.CODEC, IntermediateHolder.CODEC);
@@ -69,31 +66,14 @@ public class AttributeManager extends SimplePreparableReloadListener<Map<Resourc
 
     private record DisplayTextureHolder(ResourceLocation texture, AttributeDisplayType displayType, int priority) {}
 
-    public static AttributeDisplayType getDisplayType(Holder<Attribute> attribute, AttributeModifier modifier, EquipmentSlotGroup slot, boolean keepOperationsSeparate) {
+    public static AttributeDisplayType getDisplayType(Holder<Attribute> attribute, AttributeModifier modifier, boolean keepOperationsSeparate) {
         if (keepOperationsSeparate && !modifier.operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
             return AttributeDisplayType.PERCENTAGE;
         }
 
         ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(attribute.value());
         if (HOLDER_MAP.containsKey(key)) {
-            AttributeDisplayType displayType = HOLDER_MAP.get(key).displayType();
-            return Set.of(1, 4, 5, 6, 7).contains(slot.ordinal())
-                    ? displayType : displayType.equals(AttributeDisplayType.NUMBER) ? AttributeDisplayType.DIFFERENCE : displayType;
-        }
-        return AttributeDisplayType.NUMBER;
-    }
-
-    public static AttributeDisplayType getDisplayType(ItemAttributeModifiers.Entry entry, boolean keepOperationsSeparate) {
-        if (keepOperationsSeparate && !entry.modifier().operation().equals(AttributeModifier.Operation.ADD_VALUE)) {
-            return AttributeDisplayType.PERCENTAGE;
-        }
-
-        ResourceLocation key = BuiltInRegistries.ATTRIBUTE.getKey(entry.attribute().value());
-        if (HOLDER_MAP.containsKey(key)) {
-            AttributeDisplayType displayType = HOLDER_MAP.get(key).displayType();
-            return Set.of(1, 4, 5, 6, 7).contains(entry.slot().ordinal())
-                    ? displayType
-                    : displayType.equals(AttributeDisplayType.NUMBER) ? AttributeDisplayType.DIFFERENCE : displayType;
+            return HOLDER_MAP.get(key).displayType();
         }
         return AttributeDisplayType.NUMBER;
     }

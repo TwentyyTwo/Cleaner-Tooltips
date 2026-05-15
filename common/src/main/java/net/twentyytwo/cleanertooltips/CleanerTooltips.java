@@ -1,5 +1,7 @@
 package net.twentyytwo.cleanertooltips;
 
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.mojang.blaze3d.platform.InputConstants;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
@@ -30,11 +32,8 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 
 public class CleanerTooltips {
 
@@ -108,35 +107,56 @@ public class CleanerTooltips {
                 .append(config.durability.maximumDurability ? totalDurability : Component.empty());
     }
 
-    private record FormattingSlotList(List<AttributeFormattingData> formattingDataList, ResourceLocation slotIcon) {
-
-        public FormattingSlotList(List<AttributeFormattingData> formattingDataList, EquipmentSlotGroup slotGroup) {
-            this(formattingDataList, getSlotIcon(slotGroup));
-        }
-
-        private static ResourceLocation getSlotIcon(EquipmentSlotGroup slotGroup) {
-            String slotGroupKey = slotGroup.getSerializedName();
-
-            String texturePath = "textures/gui/slot/" + slotGroupKey + ".png";
-            ResourceLocation resourceLocation = location(texturePath);
-            return MC.getResourceManager().getResource(resourceLocation).isEmpty()
-                    ? location("textures/gui/slot/any.png")
-                    : resourceLocation;
-        }
-    }
-
     public record IconAttributeModifierTooltip(
             ItemStack stack,
-            List<FormattingSlotList> formattingSlotLists,
+            ListMultimap<EquipmentSlotGroup, AttributeFormattingData> formattingDataMap,
             MutableComponent durabilityComponent,
             AttributeFormattingData miningSpeedData) implements TooltipComponent, ClientTooltipComponent {
 
-        public IconAttributeModifierTooltip(ItemStack stack, ItemAttributeModifiers modifiers) {
-            this(stack, getFormattingSlotLists(stack, modifiers), durabilityFormatting(stack), getMiningSpeedData(stack));
+        public static IconAttributeModifierTooltip get(ItemStack stack) {
+            CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack);
+            CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
+
+            if (!config.advanced.onlyCompareShared) {
+                modifiers = modifiers.merge(comparedModifiers, false);
+            }
+
+            ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder = ImmutableListMultimap.builder();
+            modifiers.modifiers().forEach((slot, entry) -> {
+                Comparison comparison = Comparison.NONE;
+                if (comparedModifiers.modifiers().containsKey(slot)) {
+                    boolean keepOperationsSeparate = CleanerTooltipsUtil.shouldSeparateOperations(slot);
+                    comparison = comparedModifiers.modifiers().get(slot).stream()
+                            .filter(e -> entry.isComparable(e, keepOperationsSeparate))
+                            .findFirst()
+                            .map(entry::getComparison)
+                            .orElseGet(() -> entry.getComparison(0, 0));
+                }
+
+                MutableComponent text = formatting(entry.modifier().amount(), CleanerTooltipsUtil.getBaseValue(entry.attribute()), entry.displayType());
+                builder.put(slot, new AttributeFormattingData(text, entry.attribute(), comparison));
+            });
 
             if (BetterCombatCompat.isModLoaded && BetterCombatCompat.hasAttributes(stack)) {
-                formattingSlotLists.getFirst().formattingDataList().add(BetterCombatCompat.attackRangeEntry(stack, modifiers));
+                if (modifiers.modifiers().containsKey(EquipmentSlotGroup.MAINHAND)) {
+                    builder.put(EquipmentSlotGroup.MAINHAND, BetterCombatCompat.attackRangeEntry(stack));
+                }
             }
+
+            return new IconAttributeModifierTooltip(stack, builder.build(), durabilityFormatting(stack), getMiningSpeedData(stack));
+        }
+
+        private static CombinedAttributeModifiers getComparedModifiers(ItemStack stack) {
+            if (!config.general.compareAttributes) {
+                return CombinedAttributeModifiers.EMPTY;
+            }
+
+            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+            if (comparedStack.isEmpty() || comparedStack.equals(stack) || !CleanerTooltipsUtil.hasAttributes(comparedStack)) {
+                return CombinedAttributeModifiers.EMPTY;
+            }
+
+            return CombinedAttributeModifiers.fromStack(comparedStack);
         }
 
         @Nullable
@@ -177,82 +197,14 @@ public class CleanerTooltips {
             return miningSpeed;
         }
 
-        private static List<FormattingSlotList> getFormattingSlotLists(ItemStack stack, ItemAttributeModifiers modifiers) {
-            CombinedAttributeModifiers combinedModifiers = CombinedAttributeModifiers.fromStack(stack);
-
-//            List<FormattingSlotList> comparisonFormattingSlotLists = getComparisonFormattingData(stack, combinedModifiers);
-//            if (comparisonFormattingSlotLists != null) {
-//                return comparisonFormattingSlotLists;
-//            }
-
-            List<FormattingSlotList> formattingSlotLists = new ArrayList<>();
-            combinedModifiers.modifiers().asMap().forEach((slotGroup, entries) -> {
-                formattingSlotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
-                for (CombinedAttributeModifiers.Entry entry : entries) {
-                    MutableComponent text = formatting(entry.modifier().amount(), CleanerTooltipsUtil.getBaseValue(entry.attribute()), entry.displayType());
-                    formattingSlotLists.getLast().formattingDataList().add(new AttributeFormattingData(text, entry.attribute(), Comparison.NONE));
-                }
-            });
-
-            return formattingSlotLists;
-        }
-
-//        private static List<FormattingSlotList> getComparisonFormattingData(ItemStack stack, CombinedAttributeModifiers combinedModifiers) {
-//            if (!config.general.compareAttributes) {
-//                return null;
-//            }
-//
-//            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
-//            if (comparedStack.isEmpty() || comparedStack.equals(stack)) {
-//                return null;
-//            }
-//
-//            ItemAttributeModifiers comparedModifiers = CleanerTooltipsUtil.getAttributeModifiers(comparedStack);
-//            if (comparedModifiers.modifiers().isEmpty()) {
-//                return null;
-//            }
-//
-//            CombinedAttributeModifiers combinedComparedModifiers = new CombinedAttributeModifiers(comparedStack, comparedModifiers);
-//            Set<EquipmentSlotGroup> modifierGroups = combinedModifiers.modifiers().keySet();
-//            Set<EquipmentSlotGroup> comparedGroups = combinedComparedModifiers.modifiers().keySet();
-//            if (modifierGroups.stream().noneMatch(comparedGroups::contains)) {
-//                return null;
-//            }
-//
-//            if (!config.advanced.onlyCompareShared) {
-//                combinedModifiers.merge(combinedComparedModifiers);
-//            }
-//
-//            List<FormattingSlotList> slotLists = new ArrayList<>();
-//            combinedModifiers.modifiers().forEach((slotGroup, entries) -> {
-//                slotLists.add(new FormattingSlotList(new ArrayList<>(), slotGroup));
-//                boolean isOnlyWhenUsing = Set.of(1, 2, 9).contains(slotGroup.ordinal());
-//                for (CombinedAttributeModifiers.Entry entry : entries) {
-//                    Comparison comparison = Comparison.NONE;
-//                    if (comparedGroups.contains(slotGroup)) {
-//                        Optional<CombinedAttributeModifiers.Entry> foundEntry = combinedComparedModifiers.modifiers().get(slotGroup).stream()
-//                                .filter(comparedEntry -> entry.isComparable(comparedEntry, isOnlyWhenUsing)).findFirst();
-//
-//                        comparison = foundEntry.isPresent()
-//                                ? entry.getComparison(foundEntry.get())
-//                                : entry.getComparison(0, 0);
-//                    }
-//
-//                    MutableComponent text = formatting(entry.modifier().amount(), CombinedAttributeModifiers.getBaseValue(entry.attribute()), entry.displayType());
-//                    slotLists.getLast().formattingDataList().add(new AttributeFormattingData(text, entry.attribute(), comparison));
-//                }
-//            });
-//            return slotLists;
-//        }
-
         @Override
         public int getHeight() {
             if (config.advanced.slotDisplay.ordinal() == 0) {
                 int rowCounter = 1;
 
                 boolean firstIteration = true;
-                for (FormattingSlotList formattingSlotList : formattingSlotLists) {
-                    if (formattingSlotList.formattingDataList().stream().map(AttributeFormattingData::icon).anyMatch(Objects::nonNull)) {
+                for (Collection<AttributeFormattingData> formattingDataList : formattingDataMap.asMap().values()) {
+                    if (formattingDataList.stream().map(AttributeFormattingData::icon).anyMatch(Objects::nonNull)) {
                         if (firstIteration) {
                             firstIteration = false;
                             continue;
@@ -291,13 +243,13 @@ public class CleanerTooltips {
             boolean firstIteration = true;
             boolean anyIconMissing = false;
 
-            for (FormattingSlotList formattingSlotList : formattingSlotLists) {
-                if (formattingSlotList.formattingDataList().stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
+            for (Collection<AttributeFormattingData> formattingDataList : formattingDataMap.asMap().values()) {
+                if (formattingDataList.stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
                     anyIconMissing = true;
                     continue;
                 }
 
-                for (AttributeFormattingData formattingData : formattingSlotList.formattingDataList()) {
+                for (AttributeFormattingData formattingData : formattingDataList) {
                     if (formattingData.icon() == null) {
                         anyIconMissing = true;
                         continue;
@@ -319,7 +271,7 @@ public class CleanerTooltips {
                 slotCounter++;
             }
 
-            if (formattingSlotLists.size() > 1) {
+            if (formattingDataMap.keySet().size() > 1) {
                 switch (config.advanced.slotDisplay) {
                     case INLINE -> width += slotCounter * (9 + GROUP_GAP);
                     case ROWS -> {
@@ -364,17 +316,17 @@ public class CleanerTooltips {
             boolean firstIteration = true;
             boolean anyIconMissing = false;
 
-            for (FormattingSlotList formattingSlotList : formattingSlotLists) {
+            for (EquipmentSlotGroup slot : formattingDataMap.keySet()) {
                 // Check if all icons in the current list are null, if so then continue
-                if (formattingSlotList.formattingDataList().stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
+                if (formattingDataMap.get(slot).stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
                     anyIconMissing = true;
                     continue;
                 }
 
-                if (formattingSlotLists.size() > 1 && config.advanced.slotDisplay.ordinal() != 2) {
-                    groupX = renderSlotGroupIcon(guiGraphics, formattingSlotList.slotIcon(), groupX, groupY);
+                if (formattingDataMap.keySet().size() > 1 && config.advanced.slotDisplay.ordinal() != 2) {
+                    groupX = renderSlotGroupIcon(guiGraphics, getSlotIcon(slot), groupX, groupY);
                 }
-                for (AttributeFormattingData formattingData : formattingSlotList.formattingDataList()) {
+                for (AttributeFormattingData formattingData : formattingDataMap.get(slot)) {
                     if (formattingData.icon() == null) {
                         anyIconMissing = true;
                         continue;
@@ -432,6 +384,14 @@ public class CleanerTooltips {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
                 guiGraphics.blit(arrow, x + 7, CleanerTooltipsUtil.getTickToggle() ? y : y - 1, 0, 0, 3, 3, 3, 3);
             }
+        }
+
+        private ResourceLocation getSlotIcon(EquipmentSlotGroup slotGroup) {
+            String texturePath = "textures/gui/slot/" + slotGroup.getSerializedName() + ".png";
+            ResourceLocation resourceLocation = location(texturePath);
+            return MC.getResourceManager().getResource(resourceLocation).isEmpty()
+                    ? location("textures/gui/slot/any.png")
+                    : resourceLocation;
         }
     }
 

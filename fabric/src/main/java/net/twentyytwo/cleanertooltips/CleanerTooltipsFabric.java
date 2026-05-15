@@ -9,7 +9,6 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.server.packs.PackType;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeModifierTooltip;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsCompat;
@@ -35,8 +34,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
     public static List<ClientTooltipComponent> getNewComponents(ItemStack stack, List<ClientTooltipComponent> components) {
         List<ClientTooltipComponent> newComponents = new ArrayList<>(components);
         if (stack != null && !stack.isEmpty()) {
-            ItemAttributeModifiers modifiers = CleanerTooltipsUtil.getAttributeModifiers(stack);
-            boolean shouldAddAttributes = CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(modifiers);
+            boolean shouldAddAttributes = CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(stack);
             boolean shouldAddDurability = config.durability.durabilityEnabled && stack.getMaxDamage() > 0;
 
             if (LegendaryTooltipsCompat.isModLoaded && !LegendaryTooltipsCompat.hasTitleBreak(newComponents) && (shouldAddAttributes || shouldAddDurability)) {
@@ -50,7 +48,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
 
             int nameIndex = CleanerTooltipsUtil.getIndexFabric(newComponents);
             if (shouldAddAttributes) {
-                newComponents.add(nameIndex, new IconAttributeModifierTooltip(stack, modifiers));
+                newComponents.add(nameIndex, IconAttributeModifierTooltip.get(stack));
             }
 
             if (shouldAddDurability) {

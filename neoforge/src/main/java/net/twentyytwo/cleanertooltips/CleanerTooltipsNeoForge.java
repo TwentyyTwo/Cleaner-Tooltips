@@ -5,7 +5,6 @@ import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -32,6 +31,7 @@ import java.util.function.Supplier;
 @Mod(value = CleanerTooltips.MOD_ID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = CleanerTooltips.MOD_ID, value = Dist.CLIENT)
 public class CleanerTooltipsNeoForge {
+
     public CleanerTooltipsNeoForge(ModContainer container) {
         CleanerTooltips.init();
         container.registerExtensionPoint(IConfigScreenFactory.class, (Supplier<IConfigScreenFactory>) () ->
@@ -65,11 +65,10 @@ public class CleanerTooltipsNeoForge {
         List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
 
         int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(stack, tooltipElements);
-        ItemAttributeModifiers modifiers = CleanerTooltipsUtil.getAttributeModifiers(stack);
 
-        boolean shouldAdd = CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(modifiers);
+        boolean shouldAdd = CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(stack);
         if (shouldAdd) {
-            tooltipElements.add(insertIndex, Either.right(new IconAttributeModifierTooltip(stack, modifiers)));
+            tooltipElements.add(insertIndex, Either.right(IconAttributeModifierTooltip.get(stack)));
         }
 
         if (CleanerTooltips.config.durability.durabilityEnabled && stack.getMaxDamage() > 0) {

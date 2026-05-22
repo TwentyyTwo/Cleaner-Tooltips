@@ -127,7 +127,10 @@ public class CleanerTooltips {
                 if (comparedModifiers.modifiers().containsKey(slot)) {
                     boolean keepOperationsSeparate = CleanerTooltipsUtil.shouldSeparateOperations(slot);
                     comparison = comparedModifiers.modifiers().get(slot).stream()
-                            .filter(e -> entry.isComparable(e, keepOperationsSeparate))
+                            .filter(e -> {
+                                boolean baseCheck = entry.matchesAttribute(e.attribute());
+                                return keepOperationsSeparate ? baseCheck && entry.matchesOperation(e.modifier()) : baseCheck;
+                            })
                             .findFirst()
                             .map(entry::getComparison)
                             .orElseGet(() -> entry.getComparison(0, 0));

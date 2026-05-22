@@ -5,7 +5,6 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
@@ -16,7 +15,6 @@ import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsCompat;
 import net.twentyytwo.cleanertooltips.services.Services;
-import org.apache.commons.lang3.mutable.MutableBoolean;
 
 import java.util.List;
 
@@ -44,21 +42,18 @@ public class CleanerTooltipsUtil {
 
     /**
      * Gets the index of the item name and returns the index below it.
-     * @param stack             the item stack whose name is used
      * @param tooltipElements   the elements of the tooltip
      * @return                  the index at which the icon attributes should be added
      */
-    public static int getIndexNeoforge(ItemStack stack, List<Either<FormattedText, TooltipComponent>> tooltipElements) {
-        Component itemName = stack.getHoverName();
-        int nameIndex = 0;
+    public static int getIndexNeoforge(List<Either<FormattedText, TooltipComponent>> tooltipElements) {
+        int indexToReturn = 1;
         for (int i = 0; i < tooltipElements.size(); i++) {
-            var component = tooltipElements.get(i);
-            if (component.left().isPresent() && component.left().get().getString().equals(itemName.getString())) {
-                nameIndex = i;
+            if (tooltipElements.get(i).left().isPresent()) {
+                indexToReturn = i + 1;
                 break;
             }
         }
-        return nameIndex + 1;
+        return indexToReturn;
     }
 
     /**
@@ -125,24 +120,29 @@ public class CleanerTooltipsUtil {
     }
 
     public static boolean hasAttributes(ItemStack stack) {
-        MutableBoolean hasAttributes = new MutableBoolean(false);
-        if (!stack.isEmpty()) {
-            for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
-                stack.forEachModifier(slot, (attribute, modifier) -> {
-                    if ((AttributeManager.getDisplayType(attribute, modifier, slot, shouldSeparateOperations(slot)).hasBaseValue()
-                            && modifier.amount() + getBaseValue(attribute) != 0 || modifier.amount() != 0) && AttributeManager.getTexture(attribute) != null) {
-                        hasAttributes.setTrue();
-                    }
-                });
-            }
+        if (stack.isEmpty()) return false;
+
+        boolean[] found = new boolean[]{false};
+        for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
+            if (found[0]) break;
+            boolean separateOps = shouldSeparateOperations(slot);
+            stack.forEachModifier(slot, (attribute, modifier) -> {
+                if (found[0]) return;
+                if (AttributeManager.getTexture(attribute) == null) return;
+                if (modifier.amount() != 0) {
+                    found[0] = true;
+                } else if (AttributeManager.getDisplayType(attribute, modifier, separateOps).hasBaseValue()
+                        && modifier.amount() + getBaseValue(attribute) != 0) {
+                    found[0] = true;
+                }
+            });
         }
-        return hasAttributes.booleanValue();
+        return found[0];
     }
 
     public static boolean shouldSeparateOperations(EquipmentSlotGroup slotGroup) {
-        return switch (slotGroup) {
-            case MAINHAND, OFFHAND, BODY -> false;
-            case null, default -> true;
-        };
+        return slotGroup != EquipmentSlotGroup.MAINHAND
+                && slotGroup != EquipmentSlotGroup.OFFHAND
+                && slotGroup != EquipmentSlotGroup.BODY;
     }
 }

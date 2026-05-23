@@ -43,7 +43,7 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
     public static final CombinedAttributeModifiers EMPTY = new CombinedAttributeModifiers(ImmutableListMultimap.of());
 
     public static CombinedAttributeModifiers fromStack(ItemStack stack) {
-        Builder builder = builder().orderValues();
+        Builder builder = builder().orderValues(stack.getItem() instanceof ArmorItem);
         EquipmentSlotGroup primaryGroup = getPrimaryGroup(stack);
         ListMultimap<Holder<Attribute>, AttributeModifier> sourceEntries = ArrayListMultimap.create();
         double sharpnessBonus = CleanerTooltipsUtil.getSharpnessBonus(stack);
@@ -69,13 +69,13 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
                 : EquipmentSlotGroup.MAINHAND;
     }
 
-    public CombinedAttributeModifiers merge(CombinedAttributeModifiers other, boolean copyValues) {
+    public CombinedAttributeModifiers combine(CombinedAttributeModifiers other, boolean isArmor, boolean copyValues) {
         ListMultimap<EquipmentSlotGroup, Entry> otherModifiers = other.modifiers();
         if (otherModifiers.isEmpty() || Collections.disjoint(this.modifiers.keySet(), otherModifiers.keySet())) {
             return this;
         }
 
-        Builder builder = builder().orderValues().putAll(this.modifiers);
+        Builder builder = builder().orderValues(isArmor).putAll(this.modifiers);
         for (Map.Entry<EquipmentSlotGroup, Collection<Entry>> entry : otherModifiers.asMap().entrySet()) {
             EquipmentSlotGroup slot = entry.getKey();
             Collection<Entry> otherEntries = entry.getValue();
@@ -114,8 +114,11 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
 
         Builder() {}
 
-        public Builder orderValues() {
-            this.entries.orderValuesBy(Entry.comparator);
+        public Builder orderValues(boolean isArmor) {
+            this.entries.orderValuesBy(Comparator
+                    .comparing((Entry e) -> AttributeManager.getFullPriority(e.attribute(), isArmor))
+                    .thenComparing((Entry e) -> e.attribute().toString(),
+                            String.CASE_INSENSITIVE_ORDER));
             return this;
         }
 
@@ -270,10 +273,6 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
                      boolean keepOperationsSeparate) {
             this(attribute, modifier, AttributeManager.getDisplayType(attribute, modifier, keepOperationsSeparate));
         }
-
-        public static Comparator<Entry> comparator = Comparator
-                .comparing((Entry entry) -> AttributeManager.getPriority(entry.attribute()))
-                .thenComparing((Entry entry) -> entry.attribute().toString(), String.CASE_INSENSITIVE_ORDER);
 
         public boolean matchesAttribute(Holder<Attribute> otherAttribute) {
             return this.attribute.equals(otherAttribute);

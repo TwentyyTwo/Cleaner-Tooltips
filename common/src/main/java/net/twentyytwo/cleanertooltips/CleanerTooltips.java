@@ -17,6 +17,7 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -118,7 +119,7 @@ public class CleanerTooltips {
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
             if (!config.advanced.onlyCompareShared) {
-                modifiers = modifiers.merge(comparedModifiers, false);
+                modifiers = modifiers.combine(comparedModifiers, stack.getItem() instanceof ArmorItem, false);
             }
 
             ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder = ImmutableListMultimap.builder();

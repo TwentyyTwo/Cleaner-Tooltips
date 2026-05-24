@@ -52,9 +52,10 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
         for (int i = 0, length = values.length; i < length; i++) {
             EquipmentSlotGroup slot = values[(i + primaryGroup.ordinal()) % length]; // start at the "primary" group, i.e. the group we want rendered first
 
-            stack.forEachModifier(slot, (attribute, modifier) -> {
-                if (modifier.amount() != 0) sourceEntries.put(attribute, modifier);
-            });
+            stack.forEachModifier(slot, sourceEntries::put);
+            if (BetterCombatCompat.isModLoaded && BetterCombatCompat.hasAttributes(stack)) {
+                sourceEntries.removeAll(Attributes.ENTITY_INTERACTION_RANGE);
+            }
 
             boolean keepOperationsSeparate = CleanerTooltipsUtil.shouldSeparateOperations(slot);
             builder.putAll(slot, Merger.merge(sourceEntries, keepOperationsSeparate, sharpnessBonus));
@@ -180,8 +181,6 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
         public static Collection<Entry> merge(ListMultimap<Holder<Attribute>, AttributeModifier> source,
                                               boolean keepOperationsSeparate,
                                               double sharpnessBonus) {
-            if (BetterCombatCompat.isModLoaded) source.removeAll(Attributes.ENTITY_INTERACTION_RANGE);
-
             return keepOperationsSeparate
                     ? mergeSeparate(source)
                     : mergeCombined(source, sharpnessBonus);
@@ -192,17 +191,23 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
             for (Map.Entry<Holder<Attribute>, Collection<AttributeModifier>> entry : source.asMap().entrySet()) {
                 Holder<Attribute> attribute = entry.getKey();
                 Collection<AttributeModifier> modifiers = entry.getValue();
+                AttributeDisplayType displayType = AttributeManager.getDisplayType(attribute);
 
                 if (modifiers.size() > 1) {
                     double[] mergedAmounts = new double[3];
                     for (AttributeModifier modifier : modifiers) mergedAmounts[modifier.operation().id()] += modifier.amount();
                     for (int i = 0; i < 3; i++) if (mergedAmounts[i] > 0.0) {
-                        AttributeModifier mergedModifier = new AttributeModifier(mergedId, mergedAmounts[i], Operation.values()[i]);
-                        entries.add(new Entry(attribute, mergedModifier, true));
+                        var mergedModifier = new AttributeModifier(mergedId, mergedAmounts[i], Operation.values()[i]);
+                        entries.add(new Entry(attribute, mergedModifier, i == 0 ? displayType : AttributeDisplayType.PERCENTAGE));
                     }
                 } else {
-                    AttributeModifier modifier = modifiers.iterator().next();
-                    entries.add(new Entry(attribute, modifier, true));
+                    var modifier = modifiers.iterator().next();
+                    displayType = !modifier.operation().equals(Operation.ADD_VALUE)
+                            ? AttributeDisplayType.PERCENTAGE
+                            : displayType;
+                    if (modifier.amount() != 0) {
+                        entries.add(new Entry(attribute, modifier, displayType));
+                    }
                 }
             }
             return entries;
@@ -214,26 +219,28 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
             for (Map.Entry<Holder<Attribute>, Collection<AttributeModifier>> entry : source.asMap().entrySet()) {
                 Holder<Attribute> attribute = entry.getKey();
                 Collection<AttributeModifier> modifiers = entry.getValue();
+                AttributeDisplayType displayType = AttributeManager.getDisplayType(attribute);
 
-                if (modifiers.size() > 1) {
-                    double mergedAmount = getMergedValue(modifiers, getBaseValue(attribute));
-                    if (shouldAddSharpness(attribute, modifiers)) mergedAmount += sharpnessBonus;
-                    AttributeModifier mergedModifier = new AttributeModifier(mergedId, mergedAmount, Operation.ADD_VALUE);
-                    entries.add(new Entry(attribute, mergedModifier, false));
-                } else {
-                    AttributeModifier modifier = modifiers.iterator().next();
-                    entries.add(new Entry(attribute, modifier, false));
+                double baseValue = getBaseValue(attribute);
+                double mergedAmount = getMergedValue(modifiers, baseValue, sharpnessBonus);
+                if (displayType.hasBaseValue() ? baseValue + mergedAmount != 0 : mergedAmount != 0) {
+                    var mergedModifier = new AttributeModifier(mergedId, mergedAmount, Operation.ADD_VALUE);
+                    entries.add(new Entry(attribute, mergedModifier, displayType));
                 }
             }
             return entries;
         }
 
-        private static double getMergedValue(Collection<AttributeModifier> modifiers, double baseValue) {
+        private static double getMergedValue(Collection<AttributeModifier> modifiers,
+                                             double baseValue,
+                                             double sharpnessAmount) {
             double totalAddValue = baseValue;
             double totalBaseMultiplier = 1;
             double totalMultiplier = 1;
 
+            boolean shouldAddSharpness = false;
             for (AttributeModifier modifier : modifiers) {
+                if (modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) shouldAddSharpness = true;
                 switch (modifier.operation()) {
                     case ADD_VALUE -> totalAddValue += modifier.amount();
                     case ADD_MULTIPLIED_BASE -> totalBaseMultiplier += modifier.amount();
@@ -241,16 +248,8 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
                 }
             }
 
-            return ((totalAddValue * totalBaseMultiplier) * totalMultiplier) - baseValue;
-        }
-
-        private static boolean shouldAddSharpness(Holder<Attribute> attribute, Collection<AttributeModifier> modifiers) {
-            if (attribute.equals(Attributes.ATTACK_DAMAGE)) {
-                for (AttributeModifier modifier : modifiers) {
-                    if (modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) return true;
-                }
-            }
-            return false;
+            double sum = ((totalAddValue * totalBaseMultiplier) * totalMultiplier) - baseValue;
+            return shouldAddSharpness ? sum + sharpnessAmount : sum;
         }
     }
 
@@ -267,12 +266,6 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
                 AttributeDisplayType.STREAM_CODEC, Entry::displayType,
                 Entry::new
         );
-
-        public Entry(Holder<Attribute> attribute,
-                     AttributeModifier modifier,
-                     boolean keepOperationsSeparate) {
-            this(attribute, modifier, AttributeManager.getDisplayType(attribute, modifier, keepOperationsSeparate));
-        }
 
         public boolean matchesAttribute(Holder<Attribute> otherAttribute) {
             return this.attribute.equals(otherAttribute);

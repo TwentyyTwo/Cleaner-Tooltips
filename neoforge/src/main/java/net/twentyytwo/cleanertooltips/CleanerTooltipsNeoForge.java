@@ -31,6 +31,7 @@ import java.util.function.Supplier;
 @Mod(value = CleanerTooltips.MOD_ID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = CleanerTooltips.MOD_ID, value = Dist.CLIENT)
 public class CleanerTooltipsNeoForge {
+    private static ItemStack stackBackup = ItemStack.EMPTY;
 
     public CleanerTooltipsNeoForge(ModContainer container) {
         CleanerTooltips.init();
@@ -62,6 +63,7 @@ public class CleanerTooltipsNeoForge {
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void addTooltip(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
+        if (stack.isEmpty()) stack = stackBackup; // Backup if the gui container doesn't provide the stack
         List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
 
         int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(tooltipElements);
@@ -87,6 +89,7 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(event.getStack()));
+        stackBackup = event.getStack();
+        event.setSkipAll(CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(stackBackup));
     }
 }

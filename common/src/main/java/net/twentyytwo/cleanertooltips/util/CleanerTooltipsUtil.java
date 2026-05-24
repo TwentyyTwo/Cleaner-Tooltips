@@ -125,13 +125,12 @@ public class CleanerTooltipsUtil {
         boolean[] found = new boolean[]{false};
         for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
             if (found[0]) break;
-            boolean separateOps = shouldSeparateOperations(slot);
             stack.forEachModifier(slot, (attribute, modifier) -> {
                 if (found[0]) return;
                 if (AttributeManager.getTexture(attribute) == null) return;
                 if (modifier.amount() != 0) {
                     found[0] = true;
-                } else if (AttributeManager.getDisplayType(attribute, modifier, separateOps).hasBaseValue()
+                } else if (AttributeManager.getDisplayType(attribute).hasBaseValue()
                         && modifier.amount() + getBaseValue(attribute) != 0) {
                     found[0] = true;
                 }

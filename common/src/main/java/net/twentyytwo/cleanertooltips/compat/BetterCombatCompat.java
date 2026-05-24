@@ -63,7 +63,8 @@ public class BetterCombatCompat {
         if (config.general.compareAttributes) {
             ItemStack comparedStack = MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
 
-            if (!comparedStack.isEmpty() && !comparedStack.equals(stack) && CleanerTooltipsUtil.hasAttributes(comparedStack)) {
+            if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
+                    && hasAttributes(comparedStack)) {
                 double comparedValue = getTotalRange(comparedStack, baseValue);
                 return Comparison.getComparison(value, comparedValue);
             }

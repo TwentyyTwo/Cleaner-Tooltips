@@ -12,8 +12,6 @@ import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
 import net.twentyytwo.cleanertooltips.util.AttributeManager.IntermediateHolder;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -94,13 +92,7 @@ public class AttributeManager
             boolean isPriorityArmor
     ) {}
 
-    public static AttributeDisplayType getDisplayType(Holder<Attribute> attribute,
-                                                      AttributeModifier modifier,
-                                                      boolean keepOperationsSeparate) {
-        if (keepOperationsSeparate && !modifier.operation().equals(Operation.ADD_VALUE)) {
-            return AttributeDisplayType.PERCENTAGE;
-        }
-
+    public static AttributeDisplayType getDisplayType(Holder<Attribute> attribute) {
         DisplayTextureHolder holder = HOLDER_MAP.get(attribute);
         return holder != null ? holder.displayType() : AttributeDisplayType.NUMBER;
     }

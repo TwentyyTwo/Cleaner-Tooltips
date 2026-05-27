@@ -26,13 +26,17 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 public abstract class ItemStackMixin {
 
     @Inject(method = "getTooltipLines", at = @At("RETURN"))
-    private void onGetTooltipLines(Item.TooltipContext tooltipContext, Player player, TooltipFlag tooltipFlag, CallbackInfoReturnable<List<Component>> cir) {
-        // this method will always get called when a tooltip is rendered, this
-        // ensures compatibility with mods like JEI.
+    private void onGetTooltipLines(Item.TooltipContext tooltipContext,
+                                   Player player, TooltipFlag tooltipFlag,
+                                   CallbackInfoReturnable<List<Component>> cir) {
+        // this method will always get called when a tooltip is rendered, this ensures
+        // compatibility with item & recipe viewer mods like JEI, and most screen containers.
         StackHolder.getInstance().setItemStack((ItemStack) (Object) this);
     }
 
-    @WrapWithCondition(method = "getTooltipLines", at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;)V"))
+    @WrapWithCondition(method = "getTooltipLines",
+                       at = @At(value = "INVOKE",
+                                target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;)V"))
     private boolean hideDefaultAttributes(ItemStack instance, Consumer<Component> equipmentslotgroup, Player player) {
         return !(CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(instance));
     }
@@ -41,7 +45,8 @@ public abstract class ItemStackMixin {
     @ModifyVariable(method = "addModifierTooltip", at = @At(value = "STORE"), ordinal = 1)
     private double addAttackDamage(double value, @Local(argsOnly = true) AttributeModifier modifier) {
         return MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)
-                ? modifier.amount() + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) + CleanerTooltipsUtil.getSharpnessBonus((ItemStack) (Object) this)
+                ? modifier.amount() + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
+                + CleanerTooltipsUtil.getSharpnessBonus((ItemStack) (Object) this)
                 : value;
     }
 }

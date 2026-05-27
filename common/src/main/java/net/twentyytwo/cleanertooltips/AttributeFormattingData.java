@@ -12,25 +12,39 @@ import net.twentyytwo.cleanertooltips.util.Comparison;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 /**
- * This object contains all necessary data to render a value-icon pair. The {@code textWidth} is automatically
- * calculated in the constructor based on the provided {@code text} mutableComponent. The {@code icon} can be
- * either manually provided, or dynamically gathered based on the attribute.
+ * A record holding data to help with rendering.
+ *
+ * @param text          a component of the numerical value of the attribute
+ * @param textWidth     the {@code int} width of the text
+ * @param icon          the resource location of the attribute
+ * @param comparison    a comparison of this attribute to another
  */
-public record AttributeFormattingData(MutableComponent text, int textWidth, ResourceLocation icon, Comparison comparison) {
+public record AttributeFormattingData(
+        MutableComponent text,
+        int textWidth,
+        ResourceLocation icon,
+        Comparison comparison
+) {
 
-    public AttributeFormattingData(MutableComponent text, ResourceLocation icon, Comparison comparison) {
+    public AttributeFormattingData(MutableComponent text, ResourceLocation icon,
+                                   Comparison comparison) {
         this(text, MC.font.width(text), icon, comparison);
     }
 
-    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute, Comparison comparison) {
+    public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute,
+                                   Comparison comparison) {
         this(text, MC.font.width(text), AttributeManager.getTexture(attribute), comparison);
     }
 
     public ChatFormatting getFormatting() {
         return switch (this.comparison()) {
             case HIGHER -> ChatFormatting.GREEN;
-            case LOWER -> this.text().getStyle().getColor() == TextColor.fromLegacyFormat(ChatFormatting.RED) ? ChatFormatting.DARK_RED : ChatFormatting.RED;
+            case LOWER -> isAlreadyRed() ? ChatFormatting.DARK_RED : ChatFormatting.RED;
             default -> ChatFormatting.WHITE;
         };
+    }
+
+    private boolean isAlreadyRed() {
+        return this.text.getStyle().getColor() == TextColor.fromLegacyFormat(ChatFormatting.RED);
     }
 }

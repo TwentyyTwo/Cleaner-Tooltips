@@ -31,8 +31,8 @@
 
   "text.autoconfig.cleanertooltips.option.advanced.onlyCompareShared": "Only Compare Shared",
   "text.autoconfig.cleanertooltips.option.advanced.onlyCompareShared.@Tooltip": "Only compare attributes both items have.",
-  "text.autoconfig.cleanertooltips.option.advanced.slotDisplay": "Slot Group Display",
-  "text.autoconfig.cleanertooltips.option.advanced.slotDisplay.@Tooltip": "Change the way multiple equipment slot groups are displayed.\n\nROWS displays each slot group in a different row, INLINE displays them in the same row\nand PRIMARY only displays the slot group matching the item, e.g. mainhand for swords.\nNote: Usually items don't have multiple slot groups, in which case this setting is ignored.",
+  "text.autoconfig.cleanertooltips.option.advanced.groupDisplay": "Slot Group Display",
+  "text.autoconfig.cleanertooltips.option.advanced.groupDisplay.@Tooltip": "Change the way multiple equipment slot groups are displayed.\n\nROWS displays each slot group in a different row, INLINE displays them in the same row\nand PRIMARY only displays the slot group matching the item, e.g. mainhand for swords.\nNote: Usually items don't have multiple slot groups, in which case this setting is ignored.",
 
   "key.cleanertooltips.hide_tooltip": "Hide Attribute Tooltips"
 }

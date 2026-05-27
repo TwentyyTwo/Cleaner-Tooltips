@@ -12,8 +12,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
 
-import java.util.Objects;
-
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 @Mixin(AttributeUtil.class)
@@ -23,9 +21,13 @@ public abstract class AttributeUtilMixin {
     @ModifyVariable(method = "applyTextFor",
             at = @At(value = "STORE"),
             name = "base")
-    private static double modifyAttackDamage(double base, @Local(argsOnly = true) ItemStack stack, @Local(name = "attr") Holder<Attribute> attr, @Local(name = "entityBase") double entityBase) {
-        return MC.player != null && Objects.equals(attr.value().getBaseId(), Item.BASE_ATTACK_DAMAGE_ID)
-                ? base - entityBase + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE) + CleanerTooltipsUtil.getSharpnessBonus(stack)
+    private static double modifyAttackDamage(double base,
+                                             @Local(argsOnly = true) ItemStack stack,
+                                             @Local(name = "attr") Holder<Attribute> attr,
+                                             @Local(name = "entityBase") double entityBase) {
+        return MC.player != null && attr.value().getBaseId() == Item.BASE_ATTACK_DAMAGE_ID
+                ? base - entityBase + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
+                + CleanerTooltipsUtil.getSharpnessBonus(stack)
                 : base;
     }
 }

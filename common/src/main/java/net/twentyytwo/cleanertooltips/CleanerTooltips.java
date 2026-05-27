@@ -23,8 +23,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.twentyytwo.cleanertooltips.compat.BetterCombatCompat;
+import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
+import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
@@ -33,7 +34,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
-import java.util.Collection;
 import java.util.Objects;
 
 public class CleanerTooltips {
@@ -52,10 +52,11 @@ public class CleanerTooltips {
     private static final int GAP = 3; // The gap between the icon and the value
     private static final int GROUP_GAP = 8; // The gap between attributes
 
-    private static final ResourceLocation DURABILITY_ICON = location("textures/gui/attribute/durability.png");
-    private static final ResourceLocation DIGGING_SPEED = location("textures/gui/attribute/digging_speed.png");
-    private static final ResourceLocation HIGHER = location("textures/gui/attribute/higher.png");
-    private static final ResourceLocation LOWER = location("textures/gui/attribute/lower.png");
+    private static final String PATH = "textures/gui/attribute/";
+    private static final ResourceLocation DURABILITY_ICON = location(PATH + "durability.png");
+    private static final ResourceLocation DIGGING_SPEED = location(PATH + "digging_speed.png");
+    private static final ResourceLocation HIGHER = location(PATH + "higher.png");
+    private static final ResourceLocation LOWER = location(PATH + "lower.png");
 
     public static void init() {
         AutoConfig.register(CleanerTooltipsConfig.class, JanksonConfigSerializer::new);
@@ -66,28 +67,24 @@ public class CleanerTooltips {
         return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
     }
 
-    public static MutableComponent formatting(double value, double baseValue, AttributeDisplayType displayType) {
-        switch (displayType) {
-            case BOOLEAN -> {
-                return Component.literal(value > (double) 0.0F ? "Enabled" : "Disabled").withStyle(ChatFormatting.WHITE);
-            }
-            case DIFFERENCE -> {
-                return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value))
-                                .withStyle(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
-            }
-            case MULTIPLIER -> {
-                return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format((value + baseValue) / baseValue) + "x")
-                                .withStyle(ChatFormatting.WHITE);
-            }
-            case PERCENTAGE -> {
-                return Component.literal((value > 0 ? "+" : "") + ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value * 100)
-                                .formatted(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE) + "%");
-            }
-            default -> {
-                return Component.literal(ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value + baseValue))
-                                .withStyle((value + baseValue) < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
-            }
-        }
+    public static MutableComponent formatting(double value, double baseValue,
+                                              AttributeDisplayType displayType) {
+        return switch (displayType) {
+            case BOOLEAN -> Component.literal(value > 0.0 ? "Enabled" : "Disabled")
+                    .withStyle(ChatFormatting.WHITE);
+            case DIFFERENCE -> Component.literal((value > 0 ? "+" : "") + format(value))
+                    .withStyle(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
+            case MULTIPLIER -> Component.literal(format((value + baseValue) / baseValue) + "x")
+                    .withStyle(ChatFormatting.WHITE);
+            case PERCENTAGE -> Component.literal((value > 0 ? "+" : "") + format(value * 100)
+                    .formatted(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE) + "%");
+            case null, default -> Component.literal(format(value + baseValue))
+                    .withStyle((value + baseValue) < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
+        };
+    }
+
+    private static String format(double value) {
+        return ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT.format(value);
     }
 
     private static MutableComponent durabilityFormatting(ItemStack stack) {
@@ -95,7 +92,8 @@ public class CleanerTooltips {
         int curDurability = maxDurability - stack.getDamageValue();
         float diff = (float) curDurability / maxDurability;
 
-        ChatFormatting durabilityColor = (!config.durability.durabilityColor || curDurability == maxDurability) ? ChatFormatting.GRAY
+        ChatFormatting durabilityColor = !config.durability.durabilityColor
+                || curDurability == maxDurability ? ChatFormatting.GRAY
                 : diff >= 0.5f ? ChatFormatting.GREEN
                 : diff >= 0.15f ? ChatFormatting.GOLD
                 : ChatFormatting.RED;
@@ -108,46 +106,54 @@ public class CleanerTooltips {
                 .append(config.durability.maximumDurability ? totalDurability : Component.empty());
     }
 
-    public record IconAttributeModifierTooltip(
-            ItemStack stack,
-            ListMultimap<EquipmentSlotGroup, AttributeFormattingData> formattingDataMap,
-            MutableComponent durabilityComponent,
-            AttributeFormattingData miningSpeedData) implements TooltipComponent, ClientTooltipComponent {
+    public record IconAttributeModifierTooltip(ItemStack stack,
+            ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap,
+            MutableComponent durabilityComponent, AttributeFormattingData miningSpeedData)
+            implements TooltipComponent, ClientTooltipComponent {
 
         public static IconAttributeModifierTooltip get(ItemStack stack) {
             CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
             if (!config.advanced.onlyCompareShared) {
-                modifiers = modifiers.combine(comparedModifiers, stack.getItem() instanceof ArmorItem, false);
+                boolean isArmor = stack.getItem() instanceof ArmorItem;
+                modifiers = modifiers.combine(comparedModifiers, isArmor, false);
             }
 
-            ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder = ImmutableListMultimap.builder();
+            ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder =
+                    ImmutableListMultimap.builder();
             modifiers.modifiers().forEach((slot, entry) -> {
                 Comparison comparison = Comparison.NONE;
                 if (comparedModifiers.modifiers().containsKey(slot)) {
-                    boolean keepOperationsSeparate = CleanerTooltipsUtil.shouldSeparateOperations(slot);
+                    boolean keepOperationsSeparate = CleanerTooltipsUtil.separateOperations(slot);
                     comparison = comparedModifiers.modifiers().get(slot).stream()
                             .filter(e -> {
                                 boolean baseCheck = entry.matchesAttribute(e.attribute());
-                                return keepOperationsSeparate ? baseCheck && entry.matchesOperation(e.modifier()) : baseCheck;
+                                return keepOperationsSeparate
+                                        ? baseCheck && entry.matchesOperation(e.modifier())
+                                        : baseCheck;
                             })
                             .findFirst()
                             .map(entry::getComparison)
                             .orElseGet(() -> entry.getComparison(0, 0));
                 }
 
-                MutableComponent text = formatting(entry.modifier().amount(), CleanerTooltipsUtil.getBaseValue(entry.attribute()), entry.displayType());
-                builder.put(slot, new AttributeFormattingData(text, entry.attribute(), comparison));
+                var attribute = entry.attribute();
+                MutableComponent text = formatting(entry.modifier().amount(),
+                        CleanerTooltipsUtil.getBaseValue(attribute), entry.displayType());
+                builder.put(slot, new AttributeFormattingData(text, attribute, comparison));
             });
 
-            if (BetterCombatCompat.isModLoaded && BetterCombatCompat.hasAttributes(stack)) {
-                if (modifiers.modifiers().containsKey(EquipmentSlotGroup.MAINHAND)) {
-                    builder.put(EquipmentSlotGroup.MAINHAND, BetterCombatCompat.attackRangeEntry(stack));
-                }
+            EquipmentSlotGroup mainhand = EquipmentSlotGroup.MAINHAND;
+            if (BetterCombatHandler.isModLoaded && BetterCombatHandler.hasAttributes(stack)
+                    && modifiers.modifiers().containsKey(mainhand)) {
+                builder.put(mainhand, BetterCombatHandler.getRangeData(stack));
             }
 
-            return new IconAttributeModifierTooltip(stack, builder.build(), durabilityFormatting(stack), getMiningSpeedData(stack));
+            return new IconAttributeModifierTooltip(stack,
+                    builder.build(),
+                    durabilityFormatting(stack),
+                    getMiningSpeedData(stack));
         }
 
         private static CombinedAttributeModifiers getComparedModifiers(ItemStack stack) {
@@ -155,8 +161,9 @@ public class CleanerTooltips {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
-            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
-            if (comparedStack.isEmpty() || comparedStack.equals(stack) || !CleanerTooltipsUtil.hasAttributes(comparedStack)) {
+            var comparedStack = CleanerTooltipsUtil.getEquippedStack(stack);
+            if (comparedStack.isEmpty() || comparedStack.equals(stack)
+                    || !CleanerTooltipsUtil.hasAttributes(comparedStack)) {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
@@ -166,57 +173,59 @@ public class CleanerTooltips {
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
             if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem item) {
-                float miningSpeed = getMiningSpeed(stack, item);
+                float speed = getMiningSpeed(stack, item.getTier().getSpeed());
 
-                MutableComponent miningSpeedComponent = Component.literal(DecimalFormat.getInstance().format(miningSpeed));
-                Comparison comparison = getMiningSpeedComparison(stack, miningSpeed);
+                var component = Component.literal(DecimalFormat.getInstance().format(speed));
+                Comparison comparison = getMiningSpeedComparison(stack, speed);
 
-                return new AttributeFormattingData(miningSpeedComponent, DIGGING_SPEED, comparison);
+                return new AttributeFormattingData(component, DIGGING_SPEED, comparison);
             }
             return null;
         }
 
-        private static Comparison getMiningSpeedComparison(ItemStack stack, float miningSpeed) {
-            ItemStack comparedStack = Objects.requireNonNull(MC.player).getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
-            if (config.general.compareAttributes && !comparedStack.isEmpty() && !comparedStack.equals(stack) &&
-                    comparedStack.getItem() instanceof DiggerItem comparedItem && stack.getItem().getClass().equals(comparedItem.getClass())) {
-                float comparedMiningSpeed = getMiningSpeed(comparedStack, comparedItem);
-                return Comparison.getComparison(miningSpeed, comparedMiningSpeed);
+        private static Comparison getMiningSpeedComparison(ItemStack stack, float speed) {
+            if (config.general.compareAttributes) {
+                var comparedStack = CleanerTooltipsUtil.getEquippedStack(stack);
+
+                if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
+                        && comparedStack.getItem() instanceof DiggerItem item
+                        && stack.getItem().getClass().equals(item.getClass())) {
+                    float comparedSpeed = item.getTier().getSpeed();
+                    comparedSpeed = getMiningSpeed(comparedStack, comparedSpeed);
+                    return Comparison.getComparison(speed, comparedSpeed);
+                }
             }
 
             return Comparison.NONE;
         }
 
-        private static float getMiningSpeed(ItemStack stack, DiggerItem item) {
-            float miningSpeed = item.getTier().getSpeed();
-
-            ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        private static float getMiningSpeed(ItemStack stack, float speed) {
+            ItemEnchantments enchantments =
+                    stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
             for (var enchantment : enchantments.entrySet()) {
-                var enchantmentKey = enchantment.getKey().unwrapKey();
-                if (enchantmentKey.isPresent() && enchantmentKey.get() == Enchantments.EFFICIENCY  && enchantment.getIntValue() > 0) {
-                    miningSpeed += (float) (enchantment.getIntValue() * enchantment.getIntValue()) + 1;
+                var key = enchantment.getKey().unwrapKey();
+                if (key.isPresent() && key.get() == Enchantments.EFFICIENCY
+                        && enchantment.getIntValue() > 0) {
+                    speed += (float) (enchantment.getIntValue() * enchantment.getIntValue()) + 1;
                     break;
                 }
             }
-            return miningSpeed;
+            return speed;
         }
 
         @Override
         public int getHeight() {
-            if (config.advanced.slotDisplay.ordinal() == 0) {
-                int rowCounter = 1;
+            if (config.advanced.groupDisplay == CleanerTooltipsConfig.GroupDisplay.ROWS) {
+                int rowCounter = 0;
 
-                boolean firstIteration = true;
-                for (Collection<AttributeFormattingData> formattingDataList : formattingDataMap.asMap().values()) {
-                    if (formattingDataList.stream().map(AttributeFormattingData::icon).anyMatch(Objects::nonNull)) {
-                        if (firstIteration) {
-                            firstIteration = false;
-                            continue;
-                        }
+                for (var formattingData : groupFormattingDataMap.asMap().values()) {
+                    if (formattingData.stream()
+                            .map(AttributeFormattingData::icon)
+                            .anyMatch(Objects::nonNull)) {
                         rowCounter++;
                     }
                 }
-                return rowCounter * 10;
+                return Math.max(10, rowCounter * 10);
             }
             return 10;
         }
@@ -230,7 +239,7 @@ public class CleanerTooltips {
                     : 0;
 
             width += (config.durability.durabilityEnabled && stack.getMaxDamage() > 0
-                    && config.durability.durabilityPos == CleanerTooltipsConfig.posValues.INLINE)
+                    && config.durability.durabilityPos == PosValues.INLINE)
                     ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
                     : 0;
 
@@ -240,20 +249,23 @@ public class CleanerTooltips {
         }
 
         private int calculateAttributeWidth(Font font, int width) {
-            int slotCounter = 0;
+            return switch (config.advanced.groupDisplay) {
+                case ROWS -> getWidthRows(font, width);
+                case INLINE -> getWidthInline(font, width);
+                case PRIMARY -> getWidthPrimary(font, width);
+            };
+        }
+
+        private int getWidthRows(Font font, int width) {
             int firstRowWidth = width;
             int biggestRowWidth = 0;
 
             boolean firstIteration = true;
             boolean anyIconMissing = false;
 
-            for (Collection<AttributeFormattingData> formattingDataList : formattingDataMap.asMap().values()) {
-                if (formattingDataList.stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
-                    anyIconMissing = true;
-                    continue;
-                }
-
-                for (AttributeFormattingData formattingData : formattingDataList) {
+            var dataMap = groupFormattingDataMap.asMap();
+            for (var collection : dataMap.values()) {
+                for (var formattingData : collection) {
                     if (formattingData.icon() == null) {
                         anyIconMissing = true;
                         continue;
@@ -262,57 +274,102 @@ public class CleanerTooltips {
                     width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
                 }
 
-                if (config.advanced.slotDisplay.ordinal() == 2) {
-                    break;
-                } else if (config.advanced.slotDisplay.ordinal() == 0) {
-                    if (firstIteration) { // the first width includes durability, mining speed etc
-                        firstIteration = false;
-                        firstRowWidth = width;
-                    } else if (width > biggestRowWidth) biggestRowWidth = width;
-                    width = 0;
+                if (firstIteration) {
+                    firstIteration = false;
+                    firstRowWidth = width;
+                } else if (width > biggestRowWidth) {
+                    biggestRowWidth = width;
                 }
-
-                slotCounter++;
+                width = 0;
             }
 
-            if (formattingDataMap.keySet().size() > 1) {
-                switch (config.advanced.slotDisplay) {
-                    case INLINE -> width += slotCounter * (9 + GROUP_GAP);
-                    case ROWS -> {
-                        firstRowWidth += (9 + GROUP_GAP);
-                        biggestRowWidth += (9 + GROUP_GAP);
-                    }
-                }
+            if (dataMap.size() > 1) {
+                firstRowWidth += (9 + GROUP_GAP);
+                biggestRowWidth += (9 + GROUP_GAP);
             }
 
             if (anyIconMissing && config.general.hiddenAttributesHint) {
-                if (config.advanced.slotDisplay.ordinal() == 0) {
-                    firstRowWidth += font.width("[+]") + GROUP_GAP;
-                } else {
-                    width += font.width("[+]") + GROUP_GAP;
-                }
+                firstRowWidth += font.width("[+]") + GROUP_GAP;
             }
 
-            if (config.advanced.slotDisplay.ordinal() == 0) width = Math.max(firstRowWidth, biggestRowWidth);
+            return Math.max(firstRowWidth, biggestRowWidth);
+        }
+
+        private int getWidthInline(Font font, int width) {
+            int slotCounter = 0;
+            boolean anyIconMissing = false;
+
+            var dataMap = groupFormattingDataMap.asMap();
+            for (var collection : dataMap.values()) {
+                boolean groupHasIcons = false;
+                for (var formattingData : collection) {
+                    if (formattingData.icon() == null) {
+                        anyIconMissing = true;
+                        continue;
+                    }
+
+                    groupHasIcons = true;
+                    width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
+                }
+
+                if (groupHasIcons) slotCounter++;
+            }
+
+            if (dataMap.size() > 1) {
+                width += slotCounter * (9 + GROUP_GAP);
+            }
+
+            if (anyIconMissing && config.general.hiddenAttributesHint) {
+                width += font.width("[+]") + GROUP_GAP;
+            }
+
+            return width;
+        }
+
+        private int getWidthPrimary(Font font, int width) {
+            boolean anyIconMissing = false;
+
+            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
+                if (formattingData.icon() == null) {
+                    anyIconMissing = true;
+                    continue;
+                }
+
+                width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
+            }
+
+            if (anyIconMissing && config.general.hiddenAttributesHint) {
+                width += font.width("[+]") + GROUP_GAP;
+            }
 
             return width;
         }
 
         @Override
-        public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
+        public void renderImage(@NotNull Font font, int x, int y,
+                                @NotNull GuiGraphics guiGraphics) {
             int groupX = renderAttributeModifiers(font, guiGraphics, x, y);
 
             if (miningSpeedData != null) {
                 groupX = renderMiningTooltip(guiGraphics, groupX, y - 1);
             }
 
-            if (config.durability.durabilityEnabled && stack.getMaxDamage() > 0 && config.durability.durabilityPos == CleanerTooltipsConfig.posValues.INLINE) {
+            if (config.durability.durabilityEnabled && stack.getMaxDamage() > 0
+                    && config.durability.durabilityPos == PosValues.INLINE) {
                 guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
 
         private int renderAttributeModifiers(Font font, GuiGraphics guiGraphics, int x, int y) {
+            return switch (config.advanced.groupDisplay) {
+                case ROWS -> renderRows(font, guiGraphics, x, y);
+                case INLINE -> renderInline(font, guiGraphics, x, y);
+                case PRIMARY -> renderPrimary(font, guiGraphics, x, y);
+            };
+        }
+
+        private int renderRows(Font font, GuiGraphics guiGraphics, int x, int y) {
             int groupX = x;
             int groupY = y - 1;
             int firstGroupX = x;
@@ -320,73 +377,123 @@ public class CleanerTooltips {
             boolean firstIteration = true;
             boolean anyIconMissing = false;
 
-            for (EquipmentSlotGroup slot : formattingDataMap.keySet()) {
-                // Check if all icons in the current list are null, if so then continue
-                if (formattingDataMap.get(slot).stream().map(AttributeFormattingData::icon).allMatch(Objects::isNull)) {
-                    anyIconMissing = true;
-                    continue;
-                }
+            var dataMap = groupFormattingDataMap.asMap();
+            for (var entry : dataMap.entrySet()) {
+                var collection = entry.getValue();
 
-                if (formattingDataMap.keySet().size() > 1 && config.advanced.slotDisplay.ordinal() != 2) {
-                    groupX = renderSlotGroupIcon(guiGraphics, getSlotIcon(slot), groupX, groupY);
-                }
-                for (AttributeFormattingData formattingData : formattingDataMap.get(slot)) {
+                boolean groupHasIcons = false;
+                for (var formattingData : collection) {
                     if (formattingData.icon() == null) {
                         anyIconMissing = true;
                         continue;
                     }
 
+                    if (dataMap.size() > 1 && !groupHasIcons) {
+                        var icon = getSlotIcon(entry.getKey());
+                        groupX = renderSlotGroupIcon(guiGraphics, icon, groupX, groupY);
+                        groupHasIcons = true;
+                    }
+
                     groupX = renderAttributeIconPair(guiGraphics, formattingData, groupX, groupY);
                 }
 
-                if (config.advanced.slotDisplay.ordinal() == 2) {
-                    break;
-                } else if (config.advanced.slotDisplay.ordinal() == 0) {
-                    if (firstIteration) {
-                        firstIteration = false;
-                        firstGroupX = groupX;
+                if (firstIteration) {
+                    firstIteration = false;
+                    firstGroupX = groupX;
+                }
+                groupX = x;
+                groupY += 10;
+            }
+
+            return anyIconMissing
+                    ? renderHiddenHint(font, guiGraphics, firstGroupX, y)
+                    : firstGroupX;
+        }
+
+        private int renderInline(Font font, GuiGraphics guiGraphics, int x, int y) {
+            boolean anyIconMissing = false;
+
+            var dataMap = groupFormattingDataMap.asMap();
+            for (var entry : dataMap.entrySet()) {
+                var collection = entry.getValue();
+
+                boolean groupHasIcons = false;
+                for (var formattingData : collection) {
+                    if (formattingData.icon() == null) {
+                        anyIconMissing = true;
+                        continue;
                     }
-                    groupX = x;
-                    groupY += 10;
+
+                    if (dataMap.size() > 1 && !groupHasIcons) {
+                        var icon = getSlotIcon(entry.getKey());
+                        x = renderSlotGroupIcon(guiGraphics, icon, x, y - 1);
+                        groupHasIcons = true;
+                    }
+
+                    x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
                 }
             }
 
-            if (config.advanced.slotDisplay.ordinal() == 0) groupX = firstGroupX;
-
-            if (anyIconMissing && config.general.hiddenAttributesHint) {
-                guiGraphics.drawString(font, Component.literal("[+]").withStyle(ChatFormatting.YELLOW), groupX, y, -1);
-                groupX += font.width("[+]") + GROUP_GAP;
-            }
-
-            return groupX;
+            return anyIconMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
         }
 
-        private int renderSlotGroupIcon(GuiGraphics guiGraphics, ResourceLocation icon, int x, int y) {
+        private int renderPrimary(Font font, GuiGraphics guiGraphics, int x, int y) {
+            boolean anyIconMissing = false;
+
+            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
+                if (formattingData.icon() == null) {
+                    anyIconMissing = true;
+                    continue;
+                }
+
+                x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
+            }
+
+            return anyIconMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
+        }
+
+        private int renderSlotGroupIcon(GuiGraphics guiGraphics,
+                                        ResourceLocation icon,
+                                        int x, int y) {
             guiGraphics.blit(icon, x, y, 0, 0, 9, 9, 9, 9);
             return x + 9 + GROUP_GAP;
         }
 
-        // Renders the icon and value for the respective attribute, and returns the total width that is then used as the x position for the next attribute
-        private int renderAttributeIconPair(GuiGraphics guiGraphics, AttributeFormattingData entry, int x, int y) {
+        private int renderAttributeIconPair(GuiGraphics guiGraphics,
+                                            AttributeFormattingData entry,
+                                            int x, int y) {
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
-            guiGraphics.drawString(MC.font, entry.text().withStyle(entry.getFormatting()), x + 9 + GAP, y + 1, -1);
+            var component = entry.text().withStyle(entry.getFormatting());
+            guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
+        }
+
+        private int renderHiddenHint(Font font, GuiGraphics guiGraphics, int x, int y) {
+            if (config.general.hiddenAttributesHint) {
+                var component = Component.literal("[+]").withStyle(ChatFormatting.YELLOW);
+                guiGraphics.drawString(font, component, x, y, -1);
+                x += font.width("[+]") + GROUP_GAP;
+            }
+            return x;
         }
 
         private int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y) {
             guiGraphics.blit(miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, miningSpeedData.comparison(), x, y);
-            guiGraphics.drawString(MC.font, miningSpeedData.text().withStyle(miningSpeedData.getFormatting()), x + 9 + GAP, y + 1, -1);
+            var component = miningSpeedData.text().withStyle(miningSpeedData.getFormatting());
+            guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
 
             return x + miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
         }
 
-        private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison, int x, int y) {
+        private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison,
+                                           int x, int y) {
             if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
-                guiGraphics.blit(arrow, x + 7, CleanerTooltipsUtil.getTickToggle() ? y : y - 1, 0, 0, 3, 3, 3, 3);
+                int height = CleanerTooltipsUtil.getTickToggle() ? y : y - 1;
+                guiGraphics.blit(arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
             }
         }
 
@@ -405,7 +512,8 @@ public class CleanerTooltips {
      * Only used when the config option {@code INLINE} isn't selected, otherwise the durability
      * tooltip is handled by the {@link IconAttributeModifierTooltip} object.
      */
-    public record IconDurabilityTooltip(MutableComponent text) implements TooltipComponent, ClientTooltipComponent {
+    public record IconDurabilityTooltip(MutableComponent text)
+            implements TooltipComponent, ClientTooltipComponent {
 
         public IconDurabilityTooltip(ItemStack stack) {
             this(durabilityFormatting(stack));
@@ -422,7 +530,8 @@ public class CleanerTooltips {
         }
 
         @Override
-        public void renderImage(@NotNull Font font, int x, int y, @NotNull GuiGraphics guiGraphics) {
+        public void renderImage(@NotNull Font font, int x, int y,
+                                @NotNull GuiGraphics guiGraphics) {
             guiGraphics.blit(DURABILITY_ICON , x, y - 1, 0, 0, 9, 9, 9, 9);
             guiGraphics.drawString(MC.font, text, x + 9 + GAP, y, -1);
         }

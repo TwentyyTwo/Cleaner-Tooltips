@@ -17,8 +17,10 @@ import java.util.List;
 public abstract class WeaponAttributeTooltipMixin {
 
     @Inject(method = "modifyTooltip", at = @At("HEAD"), cancellable = true)
-    private static void onModifyTooltip(ItemStack itemStack, List<Component> lines, CallbackInfo ci) {
-        if (CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(itemStack)) {
+    private static void onModifyTooltip(ItemStack itemStack, List<Component> lines,
+                                        CallbackInfo ci) {
+        if (CleanerTooltipsUtil.shouldAddAttributes()
+                && CleanerTooltipsUtil.hasAttributes(itemStack)) {
             ci.cancel();
         }
     }

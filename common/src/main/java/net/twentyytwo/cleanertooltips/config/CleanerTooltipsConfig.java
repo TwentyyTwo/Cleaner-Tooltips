@@ -43,7 +43,7 @@ public class CleanerTooltipsConfig implements ConfigData {
 
         @ConfigEntry.Gui.Tooltip
         @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-        public posValues durabilityPos = posValues.INLINE;
+        public PosValues durabilityPos = PosValues.INLINE;
 
         @ConfigEntry.Gui.Tooltip
         public boolean maximumDurability = true;
@@ -58,16 +58,16 @@ public class CleanerTooltipsConfig implements ConfigData {
 
         @ConfigEntry.Gui.Tooltip
         @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
-        public slotGroupDisplay slotDisplay = slotGroupDisplay.ROWS;
+        public GroupDisplay groupDisplay = GroupDisplay.ROWS;
     }
 
-    public enum slotGroupDisplay {
+    public enum GroupDisplay {
         ROWS,
         INLINE,
         PRIMARY
     }
 
-    public enum posValues {
+    public enum PosValues {
         INLINE,
         BOTTOM,
         BELOW

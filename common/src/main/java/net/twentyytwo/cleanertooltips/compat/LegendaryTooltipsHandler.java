@@ -6,12 +6,14 @@ import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.util.List;
 
-public class LegendaryTooltipsCompat {
+public class LegendaryTooltipsHandler {
 
-    public static final boolean isModLoaded = Services.getInstance().isModLoaded("legendarytooltips");
+    public static final boolean isModLoaded = Services.getInstance()
+            .isModLoaded("legendarytooltips");
     public static final int increasedHeight = 1;
 
     public static boolean hasTitleBreak(List<ClientTooltipComponent> clientTooltipComponents) {
-        return clientTooltipComponents.stream().anyMatch(component -> component instanceof TitleBreakComponent);
+        return clientTooltipComponents.stream()
+                .anyMatch(component -> component instanceof TitleBreakComponent);
     }
 }

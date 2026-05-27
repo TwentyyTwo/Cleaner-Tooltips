@@ -14,26 +14,25 @@ import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.formatting;
 
-public class BetterCombatCompat {
+public class BetterCombatHandler {
 
     public static final boolean isModLoaded = Services.getInstance().isModLoaded("bettercombat");
+
+    private static final ResourceLocation INTERACTION_RANGE =
+            CleanerTooltips.location("textures/gui/attribute/entity_interaction_range.png");
 
     public static boolean hasAttributes(ItemStack stack) {
         return (WeaponRegistry.getAttributes(stack) != null);
     }
 
-    public static AttributeFormattingData attackRangeEntry(ItemStack stack) {
-        ResourceLocation INTERACTION_RANGE = CleanerTooltips.location("textures/gui/attribute/entity_interaction_range.png");
-
+    public static AttributeFormattingData getRangeData(ItemStack stack) {
         double baseValue = CleanerTooltipsUtil.getBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
         double value = getTotalRange(stack, baseValue);
 
         Comparison comparison = getComparison(stack, baseValue, value);
-
         MutableComponent text = formatting(value, baseValue, AttributeDisplayType.NUMBER);
         return new AttributeFormattingData(text, INTERACTION_RANGE, comparison);
     }
@@ -56,12 +55,13 @@ public class BetterCombatCompat {
             }
         });
 
-        return ((totalAddValue[0] * totalBaseMultiplier[0]) * totalMultiplier[0]) - baseValue + attributes.rangeBonus();
+        return ((totalAddValue[0] * totalBaseMultiplier[0]) * totalMultiplier[0])
+                - baseValue + attributes.rangeBonus();
     }
 
     private static Comparison getComparison(ItemStack stack, double baseValue, double value) {
         if (config.general.compareAttributes) {
-            ItemStack comparedStack = MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+            var comparedStack = CleanerTooltipsUtil.getEquippedStack(stack);
 
             if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                     && hasAttributes(comparedStack)) {

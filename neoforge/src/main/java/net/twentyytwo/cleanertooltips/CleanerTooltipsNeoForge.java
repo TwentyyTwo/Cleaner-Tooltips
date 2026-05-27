@@ -28,6 +28,8 @@ import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import java.util.List;
 import java.util.function.Supplier;
 
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
+
 @Mod(value = CleanerTooltips.MOD_ID, dist = Dist.CLIENT)
 @EventBusSubscriber(modid = CleanerTooltips.MOD_ID, value = Dist.CLIENT)
 public class CleanerTooltipsNeoForge {
@@ -35,8 +37,10 @@ public class CleanerTooltipsNeoForge {
 
     public CleanerTooltipsNeoForge(ModContainer container) {
         CleanerTooltips.init();
-        container.registerExtensionPoint(IConfigScreenFactory.class, (Supplier<IConfigScreenFactory>) () ->
-                (modContainer, parent) -> AutoConfig.getConfigScreen(CleanerTooltipsConfig.class, parent).get());
+        container.registerExtensionPoint(IConfigScreenFactory.class,
+                (Supplier<IConfigScreenFactory>) () ->
+                (modContainer, parent) ->
+                        AutoConfig.getConfigScreen(CleanerTooltipsConfig.class, parent).get());
     }
 
     @SubscribeEvent()
@@ -64,25 +68,31 @@ public class CleanerTooltipsNeoForge {
     public static void addTooltip(RenderTooltipEvent.GatherComponents event) {
         ItemStack stack = event.getItemStack();
         if (stack.isEmpty()) stack = stackBackup; // Backup if the gui container doesn't provide the stack
-        List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
 
-        int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(tooltipElements);
+        if (stack != null && !stack.isEmpty()) {
+            List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
 
-        boolean shouldAdd = CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(stack);
-        if (shouldAdd) {
-            tooltipElements.add(insertIndex, Either.right(IconAttributeModifierTooltip.get(stack)));
-        }
+            boolean shouldAddAttributes = CleanerTooltipsUtil.shouldAddAttributes()
+                    && CleanerTooltipsUtil.hasAttributes(stack);
+            boolean shouldAddDurability = config.durability.durabilityEnabled
+                    && stack.getMaxDamage() > 0;
 
-        if (CleanerTooltips.config.durability.durabilityEnabled && stack.getMaxDamage() > 0) {
-            switch (CleanerTooltips.config.durability.durabilityPos) {
-                case INLINE -> {
-                    if (shouldAdd) {
-                        return;
+            int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(tooltipElements);
+            if (shouldAddAttributes) {
+                tooltipElements.add(insertIndex, Either.right(IconAttributeModifierTooltip.get(stack)));
+                insertIndex++;
+            }
+
+            if (shouldAddDurability) {
+                switch (config.durability.durabilityPos) {
+                    case INLINE -> {
+                        if (!shouldAddAttributes) {
+                            tooltipElements.add(insertIndex, Either.right(new IconDurabilityTooltip(stack)));
+                        }
                     }
-                    tooltipElements.add(insertIndex, Either.right(new IconDurabilityTooltip(stack)));
+                    case BELOW -> tooltipElements.add(insertIndex, Either.right(new IconDurabilityTooltip(stack)));
+                    case BOTTOM -> tooltipElements.addLast(Either.right(new IconDurabilityTooltip(stack)));
                 }
-                case BELOW -> tooltipElements.add(shouldAdd ? insertIndex + 1 : insertIndex, Either.right(new IconDurabilityTooltip(stack)));
-                case BOTTOM -> tooltipElements.addLast(Either.right(new IconDurabilityTooltip(stack)));
             }
         }
     }
@@ -90,6 +100,7 @@ public class CleanerTooltipsNeoForge {
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
         stackBackup = event.getStack();
-        event.setSkipAll(CleanerTooltipsUtil.shouldAddAttributes() && CleanerTooltipsUtil.hasAttributes(stackBackup));
+        event.setSkipAll(CleanerTooltipsUtil.shouldAddAttributes()
+                && CleanerTooltipsUtil.hasAttributes(stackBackup));
     }
 }

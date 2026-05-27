@@ -8,7 +8,8 @@ public class Services {
     public static PlatformService getInstance() {
         if (instance == null) {
             ServiceLoader<PlatformService> loader = ServiceLoader.load(PlatformService.class);
-            instance = loader.findFirst().orElseThrow(() -> new IllegalStateException("No implementation found!"));
+            instance = loader.findFirst().orElseThrow(() ->
+                    new IllegalStateException("No implementation found!"));
         }
         return instance;
     }

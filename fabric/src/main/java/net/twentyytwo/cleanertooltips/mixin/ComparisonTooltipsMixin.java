@@ -17,7 +17,9 @@ import java.util.List;
 public class ComparisonTooltipsMixin {
 
     @ModifyVariable(method = "render", at = @At("STORE"), name = "itemStackTooltipLines")
-    private static List<ClientTooltipComponent> onRender(List<ClientTooltipComponent> components, @Local(ordinal = 0, argsOnly = true) ItemStack stack) {
+    private static List<ClientTooltipComponent> onRender(
+            List<ClientTooltipComponent> components,
+            @Local(ordinal = 0, argsOnly = true) ItemStack stack) {
         return CleanerTooltipsFabric.getNewComponents(stack, components);
     }
 }

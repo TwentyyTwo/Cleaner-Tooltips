@@ -7,6 +7,8 @@ import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ByIdMap;
 
+import java.util.function.IntFunction;
+
 public enum AttributeDisplayType {
     /**
      * Displays as either Enabled or Disabled.<br>
@@ -44,6 +46,8 @@ public enum AttributeDisplayType {
         return this == NUMBER || this == MULTIPLIER;
     }
 
+    public static final IntFunction<AttributeDisplayType> BY_ID = ByIdMap
+            .continuous(Enum::ordinal, values(), ByIdMap.OutOfBoundsStrategy.ZERO);
     public static final Codec<AttributeDisplayType> CODEC = Codec.STRING.comapFlatMap(s -> {
         try {
             return DataResult.success(AttributeDisplayType.valueOf(s.toUpperCase()));
@@ -52,5 +56,6 @@ public enum AttributeDisplayType {
         }
     }, AttributeDisplayType::toString);
 
-    public static final StreamCodec<ByteBuf, AttributeDisplayType> STREAM_CODEC = ByteBufCodecs.idMapper(ByIdMap.continuous(Enum::ordinal, values(), ByIdMap.OutOfBoundsStrategy.ZERO), Enum::ordinal);
+    public static final StreamCodec<ByteBuf, AttributeDisplayType> STREAM_CODEC =
+            ByteBufCodecs.idMapper(BY_ID, Enum::ordinal);
 }

@@ -10,10 +10,9 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsCompat;
+import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsHandler;
 import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.util.List;
@@ -66,14 +65,19 @@ public class CleanerTooltipsUtil {
         for (int i = 0; i < components.size(); i++) {
             var clientTooltipComponent = components.get(i);
             if (clientTooltipComponent instanceof ClientTextTooltip) {
-                // Because this is called after LegendaryTooltips add their components, we'll have to check for them.
-                indexToReturn = LegendaryTooltipsCompat.isModLoaded && LegendaryTooltipsCompat.hasTitleBreak(components)
+                indexToReturn = LegendaryTooltipsHandler.isModLoaded
+                        && LegendaryTooltipsHandler.hasTitleBreak(components)
                         ? i + 2
                         : i + 1;
                 break;
             }
         }
         return Math.min(indexToReturn, components.size());
+    }
+
+    public static ItemStack getEquippedStack(ItemStack stack) {
+        assert MC.player != null;
+        return MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
     }
 
     /**
@@ -84,11 +88,14 @@ public class CleanerTooltipsUtil {
     public static double getSharpnessBonus(ItemStack stack) {
         double sharpnessBonus = 0;
         if (config.general.sharpness) {
-            ItemEnchantments enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+            var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
             for (var enchantment : enchantments.entrySet()) {
-                var enchantmentKey = enchantment.getKey().unwrapKey();
-                if (enchantmentKey.isPresent() && enchantmentKey.get().equals(Enchantments.SHARPNESS) && enchantment.getIntValue() > 0) {
-                    sharpnessBonus = ((0.5 * enchantment.getIntValue()) + 0.5);
+                var key = enchantment.getKey().unwrapKey();
+                if (key.isPresent() && key.get() == Enchantments.SHARPNESS) {
+                    int level = enchantment.getIntValue();
+                    if (level > 0) {
+                        sharpnessBonus = ((0.5 * level) + 0.5);
+                    }
                     break;
                 }
             }
@@ -100,27 +107,12 @@ public class CleanerTooltipsUtil {
         return MC.player != null ? MC.player.getAttributeBaseValue(attribute) : 0;
     }
 
-    /**
-     * Calculates the attribute modifiers of all equipment slots.<br>
-     * Works for every type of equipment.
-     * @param stack the item stack that is used for the attribute modifiers
-     * @return      {@code ItemAttributeModifiers} of the item stack
-     */
-    public static ItemAttributeModifiers getAttributeModifiers(ItemStack stack) {
-        ItemAttributeModifiers.Builder builder = ItemAttributeModifiers.builder();
-        ItemAttributeModifiers defaultModifiers = stack.getOrDefault(DataComponents.ATTRIBUTE_MODIFIERS, ItemAttributeModifiers.EMPTY);
-        if (defaultModifiers.showInTooltip()) for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
-            stack.forEachModifier(slot, (attribute, modifier) -> builder.add(attribute, modifier, slot));
-        }
-        return builder.build();
-    }
-
     public static boolean shouldAddAttributes() {
         return MC.player != null && config.general.enabled && !Services.getInstance().isKeyDown();
     }
 
     public static boolean hasAttributes(ItemStack stack) {
-        if (stack.isEmpty()) return false;
+        if (stack == null || stack.isEmpty()) return false;
 
         boolean[] found = new boolean[]{false};
         for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
@@ -139,7 +131,7 @@ public class CleanerTooltipsUtil {
         return found[0];
     }
 
-    public static boolean shouldSeparateOperations(EquipmentSlotGroup slotGroup) {
+    public static boolean separateOperations(EquipmentSlotGroup slotGroup) {
         return slotGroup != EquipmentSlotGroup.MAINHAND
                 && slotGroup != EquipmentSlotGroup.OFFHAND
                 && slotGroup != EquipmentSlotGroup.BODY;

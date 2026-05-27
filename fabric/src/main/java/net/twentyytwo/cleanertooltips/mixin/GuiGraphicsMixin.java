@@ -19,14 +19,19 @@ import java.util.List;
 public abstract class GuiGraphicsMixin {
 
     @ModifyVariable(method = "renderTooltipInternal", at = @At("HEAD"), index = 2, argsOnly = true)
-    private List<ClientTooltipComponent> onRenderTooltipInternalHead(List<ClientTooltipComponent> components) {
+    private List<ClientTooltipComponent> onRenderTooltipInternalHead(
+            List<ClientTooltipComponent> components) {
         ItemStack stack = StackHolder.getInstance().getItemStack();
         return CleanerTooltipsFabric.getNewComponents(stack, components);
     }
 
     @Inject(method = "renderTooltipInternal", at = @At("RETURN"))
-    private void onRenderTooltipInternalTail(Font font, List<ClientTooltipComponent> components, int mouseX, int mouseY, ClientTooltipPositioner tooltipPositioner, CallbackInfo ci) {
-        // Reset the ItemStack at the tail to ensure that additional calls to ItemStack#getTooltipLines do not override the ItemStack
+    private void onRenderTooltipInternalTail(Font font, List<ClientTooltipComponent> components,
+                                             int mouseX, int mouseY,
+                                             ClientTooltipPositioner tooltipPositioner,
+                                             CallbackInfo ci) {
+        // Reset the ItemStack at the tail to ensure that additional calls
+        // to ItemStack#getTooltipLines do not override the ItemStack
         StackHolder.getInstance().resetStack();
     }
 }

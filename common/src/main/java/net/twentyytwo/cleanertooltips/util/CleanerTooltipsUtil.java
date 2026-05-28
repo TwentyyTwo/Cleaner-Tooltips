@@ -48,11 +48,14 @@ public class CleanerTooltipsUtil {
         int indexToReturn = 1;
         for (int i = 0; i < tooltipElements.size(); i++) {
             if (tooltipElements.get(i).left().isPresent()) {
-                indexToReturn = i + 1;
+                indexToReturn = LegendaryTooltipsHandler.isModLoaded
+                        && LegendaryTooltipsHandler.hasTitleBreakNeoforge(tooltipElements)
+                        ? i + 2
+                        : i + 1;
                 break;
             }
         }
-        return indexToReturn;
+        return Math.min(indexToReturn, tooltipElements.size());
     }
 
     /**
@@ -66,7 +69,7 @@ public class CleanerTooltipsUtil {
             var clientTooltipComponent = components.get(i);
             if (clientTooltipComponent instanceof ClientTextTooltip) {
                 indexToReturn = LegendaryTooltipsHandler.isModLoaded
-                        && LegendaryTooltipsHandler.hasTitleBreak(components)
+                        && LegendaryTooltipsHandler.hasTitleBreakFabric(components)
                         ? i + 2
                         : i + 1;
                 break;

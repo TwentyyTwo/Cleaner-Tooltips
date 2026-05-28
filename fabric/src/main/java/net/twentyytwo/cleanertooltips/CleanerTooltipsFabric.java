@@ -43,7 +43,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
                     && stack.getMaxDamage() > 0;
 
             if (LegendaryTooltipsHandler.isModLoaded
-                    && !LegendaryTooltipsHandler.hasTitleBreak(newComponents)
+                    && !LegendaryTooltipsHandler.hasTitleBreakFabric(newComponents)
                     && (shouldAddAttributes || shouldAddDurability)) {
                 for (int i = 0; i < newComponents.size(); i++) {
                     if (newComponents.get(i) instanceof ClientTextTooltip) {

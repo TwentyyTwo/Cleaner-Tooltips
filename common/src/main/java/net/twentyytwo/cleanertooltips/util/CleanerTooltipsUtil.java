@@ -10,7 +10,8 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.enchantment.Enchantments;
+import net.minecraft.world.item.enchantment.Enchantment;
+import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsHandler;
 import net.twentyytwo.cleanertooltips.services.Services;
@@ -88,22 +89,23 @@ public class CleanerTooltipsUtil {
      * @param stack the item stack
      * @return      the additional attack damage
      */
-    public static double getSharpnessBonus(ItemStack stack) {
-        double sharpnessBonus = 0;
+    public static float getSharpnessBonus(ItemStack stack) {
+        assert MC.player != null;
+        float bonus = 0;
         if (config.general.sharpness) {
             var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-            for (var enchantment : enchantments.entrySet()) {
-                var key = enchantment.getKey().unwrapKey();
-                if (key.isPresent() && key.get() == Enchantments.SHARPNESS) {
-                    int level = enchantment.getIntValue();
-                    if (level > 0) {
-                        sharpnessBonus = ((0.5 * level) + 0.5);
+            for (var entry : enchantments.entrySet()) {
+                Enchantment enchantment = entry.getKey().value();
+                var effects = enchantment.getEffects(EnchantmentEffectComponents.DAMAGE);
+
+                for (var effect : effects) {
+                    if (effect.requirements().isEmpty()) {
+                        bonus = effect.effect().process(entry.getIntValue(), MC.player.getRandom(), bonus);
                     }
-                    break;
                 }
             }
         }
-        return sharpnessBonus;
+        return bonus;
     }
 
     public static double getBaseValue(Holder<Attribute> attribute) {

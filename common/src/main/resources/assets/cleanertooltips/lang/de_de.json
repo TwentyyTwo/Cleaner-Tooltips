@@ -34,5 +34,7 @@
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay": "Slot Group Display",
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay.@Tooltip": "Ändere wie mehrere Equipment Slot Groups angezeigt werden sollen.\n\nROWS zeigt sie in mehreren Reihen an, INLINE zeigt sie in einer Reihe an und\nPRIMARY zeigt nur die passende Slot Group an, z.B. \"mainhand\" für Schwerter.\nBeachte das Items normalerweise nur eine Slot Group haben, in dem Fall\nwird diese Einstellung ignoriert.",
 
+  "text.cleanertooltips.mining_speed": "%s Abbaugeschwindigkeit",
+
   "key.cleanertooltips.hide_tooltip": "Attribut-Tooltips verstecken"
 }

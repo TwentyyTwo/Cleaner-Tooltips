@@ -11,7 +11,6 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -21,8 +20,6 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.enchantment.Enchantments;
-import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
@@ -173,7 +170,7 @@ public class CleanerTooltips {
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
             if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem item) {
-                float speed = getMiningSpeed(stack, item.getTier().getSpeed());
+                float speed = CleanerTooltipsUtil.getDiggingSpeed(stack, item);
 
                 var component = Component.literal(DecimalFormat.getInstance().format(speed));
                 Comparison comparison = getMiningSpeedComparison(stack, speed);
@@ -190,27 +187,12 @@ public class CleanerTooltips {
                 if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                         && comparedStack.getItem() instanceof DiggerItem item
                         && stack.getItem().getClass().equals(item.getClass())) {
-                    float comparedSpeed = item.getTier().getSpeed();
-                    comparedSpeed = getMiningSpeed(comparedStack, comparedSpeed);
+                    float comparedSpeed = CleanerTooltipsUtil.getDiggingSpeed(comparedStack, item);
                     return Comparison.getComparison(speed, comparedSpeed);
                 }
             }
 
             return Comparison.NONE;
-        }
-
-        private static float getMiningSpeed(ItemStack stack, float speed) {
-            ItemEnchantments enchantments =
-                    stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
-            for (var enchantment : enchantments.entrySet()) {
-                var key = enchantment.getKey().unwrapKey();
-                if (key.isPresent() && key.get() == Enchantments.EFFICIENCY
-                        && enchantment.getIntValue() > 0) {
-                    speed += (float) (enchantment.getIntValue() * enchantment.getIntValue()) + 1;
-                    break;
-                }
-            }
-            return speed;
         }
 
         @Override

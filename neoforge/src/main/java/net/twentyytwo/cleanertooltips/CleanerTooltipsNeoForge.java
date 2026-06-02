@@ -102,5 +102,10 @@ public class CleanerTooltipsNeoForge {
         stackBackup = event.getStack();
         event.setSkipAll(CleanerTooltipsUtil.shouldAddAttributes()
                 && CleanerTooltipsUtil.hasAttributes(stackBackup));
+
+        // Don't display mining efficiency if mining speed is displayed
+        if (config.general.miningSpeed) {
+            event.skipId(CleanerTooltipsUtil.EFFICIENCY);
+        }
     }
 }

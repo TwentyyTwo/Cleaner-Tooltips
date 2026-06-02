@@ -1,14 +1,20 @@
 package net.twentyytwo.cleanertooltips.util;
 
 import com.mojang.datafixers.util.Either;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
+import net.minecraft.network.chat.MutableComponent;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
@@ -16,6 +22,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsHandler;
 import net.twentyytwo.cleanertooltips.services.Services;
 
+import java.text.DecimalFormat;
 import java.util.List;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
@@ -25,6 +32,9 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
  * Collection of useful functions.
  */
 public class CleanerTooltipsUtil {
+    public static final ResourceLocation EFFICIENCY =
+            ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
+
     private static int tick = 0;
     private static boolean tickToggle = false;
 
@@ -106,6 +116,29 @@ public class CleanerTooltipsUtil {
             }
         }
         return bonus;
+    }
+
+    public static MutableComponent getDiggingSpeedComponent(ItemStack stack, DiggerItem item) {
+        return CommonComponents.space()
+                .append(Component.translatable("text.cleanertooltips.mining_speed",
+                        DecimalFormat.getInstance().format(getDiggingSpeed(stack, item))))
+                .withStyle(ChatFormatting.DARK_GREEN);
+    }
+
+    public static float getDiggingSpeed(ItemStack stack, DiggerItem item) {
+        float diggingSpeed = item.getTier().getSpeed(); // base tool speed
+
+        var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
+        for (var entry : enchantments.entrySet()) {
+            Enchantment enchantment = entry.getKey().value();
+            var effects = enchantment.getEffects(EnchantmentEffectComponents.ATTRIBUTES);
+
+            for (var effect : effects) {
+                diggingSpeed += effect.amount().calculate(entry.getIntValue());
+            }
+        }
+
+        return diggingSpeed;
     }
 
     public static double getBaseValue(Holder<Attribute> attribute) {

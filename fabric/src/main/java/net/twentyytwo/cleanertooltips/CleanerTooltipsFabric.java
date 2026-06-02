@@ -40,7 +40,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
             boolean shouldAddAttributes = CleanerTooltipsUtil.shouldAddAttributes()
                     && CleanerTooltipsUtil.hasAttributes(stack);
             boolean shouldAddDurability = config.durability.durabilityEnabled
-                    && stack.getMaxDamage() > 0;
+                    && stack.isDamageableItem();
 
             if (LegendaryTooltipsHandler.isModLoaded
                     && !LegendaryTooltipsHandler.hasTitleBreakFabric(newComponents)

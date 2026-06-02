@@ -75,7 +75,7 @@ public class CleanerTooltipsNeoForge {
             boolean shouldAddAttributes = CleanerTooltipsUtil.shouldAddAttributes()
                     && CleanerTooltipsUtil.hasAttributes(stack);
             boolean shouldAddDurability = config.durability.durabilityEnabled
-                    && stack.getMaxDamage() > 0;
+                    && stack.isDamageableItem();
 
             int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(tooltipElements);
             if (shouldAddAttributes) {

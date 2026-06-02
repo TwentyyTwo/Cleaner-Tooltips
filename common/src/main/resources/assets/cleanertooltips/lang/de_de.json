@@ -14,7 +14,7 @@
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint": "Versteckte Attribute Hinweis",
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint.@Tooltip": "Wenn ein Item Attribute hat die versteckt sind, weise darauf hin. \"[+]\"",
   "text.autoconfig.cleanertooltips.option.general.miningSpeed": "Abbaugeschwindigkeit",
-  "text.autoconfig.cleanertooltips.option.general.miningSpeed.@Tooltip": "Ob die Abbaugeschwindigkeit von Werkzeugen angezeigt werden soll.\nEffekte wie Eile oder unter Wasser sein werden nicht berücksichtigt.",
+  "text.autoconfig.cleanertooltips.option.general.miningSpeed.@Tooltip": "Ob die Abbaugeschwindigkeit von Werkzeugen angezeigt werden soll.\nWird auch als text angezeigt wenn Symbol Attribute deaktiviert sind.\nHinweis: Blendet den Text für das Abbaueffizienz Attribute aus.",
 
   "text.autoconfig.cleanertooltips.option.durability": "Haltbarkeit",
 

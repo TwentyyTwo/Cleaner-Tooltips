@@ -14,7 +14,7 @@
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint": "Hidden Attributes Hint",
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint.@Tooltip": "If an item has attributes that are hidden, display a hint. \"[+]\"",
   "text.autoconfig.cleanertooltips.option.general.miningSpeed": "Mining Speed",
-  "text.autoconfig.cleanertooltips.option.general.miningSpeed.@Tooltip": "Whether to display the mining speed of tools.\nNote: only takes efficiency into account, effects like haste\nor being under water are not taken into account.",
+  "text.autoconfig.cleanertooltips.option.general.miningSpeed.@Tooltip": "Whether to display the mining speed of tools; also displays as text if icon attributes are disabled.\nNote: Hides the mining efficiency attribute text.",
 
   "text.autoconfig.cleanertooltips.option.durability": "Durability",
 
@@ -34,6 +34,7 @@
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay": "Slot Group Display",
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay.@Tooltip": "Change the way multiple equipment slot groups are displayed.\n\nROWS displays each slot group in a different row, INLINE displays them in the same row\nand PRIMARY only displays the slot group matching the item, e.g. mainhand for swords.\nNote: Usually items don't have multiple slot groups, in which case this setting is ignored.",
 
+  "text.cleanertooltips.total_durability": " / %s",
   "text.cleanertooltips.mining_speed": "%s Mining Speed",
 
   "key.cleanertooltips.hide_tooltip": "Hide Attribute Tooltips"

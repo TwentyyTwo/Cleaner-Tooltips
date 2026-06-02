@@ -95,12 +95,13 @@ public class CleanerTooltips {
                 : diff >= 0.15f ? ChatFormatting.GOLD
                 : ChatFormatting.RED;
 
-        Component totalDurability = Component.literal(" / ")
-                .append(Component.literal(String.valueOf(maxDurability)))
-                .withStyle(ChatFormatting.DARK_GRAY);
+        var remain = Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor);
+        if (!config.durability.maximumDurability) {
+            return remain;
+        }
 
-        return Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor)
-                .append(config.durability.maximumDurability ? totalDurability : Component.empty());
+        return remain.append(Component.translatable("text.cleanertooltips.total_durability", maxDurability)
+                .withStyle(ChatFormatting.DARK_GRAY));
     }
 
     public record IconAttributeModifierTooltip(ItemStack stack,
@@ -220,7 +221,7 @@ public class CleanerTooltips {
                     ? miningSpeedData.textWidth() + GROUP_GAP + GAP + 9
                     : 0;
 
-            width += (config.durability.durabilityEnabled && stack.getMaxDamage() > 0
+            width += (config.durability.durabilityEnabled && stack.isDamageableItem()
                     && config.durability.durabilityPos == PosValues.INLINE)
                     ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
                     : 0;
@@ -336,7 +337,7 @@ public class CleanerTooltips {
                 groupX = renderMiningTooltip(guiGraphics, groupX, y - 1);
             }
 
-            if (config.durability.durabilityEnabled && stack.getMaxDamage() > 0
+            if (config.durability.durabilityEnabled && stack.isDamageableItem()
                     && config.durability.durabilityPos == PosValues.INLINE) {
                 guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);

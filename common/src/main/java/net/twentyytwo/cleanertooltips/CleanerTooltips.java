@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.mojang.blaze3d.platform.InputConstants;
 import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.JanksonConfigSerializer;
+import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -14,6 +14,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ArmorItem;
@@ -24,6 +25,7 @@ import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 import org.jetbrains.annotations.NotNull;
@@ -32,6 +34,9 @@ import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
 import java.util.Objects;
+
+import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.blacklistedHints;
+import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.configHolder;
 
 public class CleanerTooltips {
 
@@ -56,8 +61,14 @@ public class CleanerTooltips {
     private static final ResourceLocation LOWER = location(PATH + "lower.png");
 
     public static void init() {
-        AutoConfig.register(CleanerTooltipsConfig.class, JanksonConfigSerializer::new);
+        configHolder = AutoConfig.register(CleanerTooltipsConfig.class, GsonConfigSerializer::new);
+        configHolder.registerSaveListener((holder, configInstance) -> {
+            config = configInstance;
+            config.onConfigSave();
+            return InteractionResult.SUCCESS;
+        });
         config = AutoConfig.getConfigHolder(CleanerTooltipsConfig.class).getConfig();
+        config.onConfigSave();
     }
 
     public static ResourceLocation location(String path) {
@@ -139,7 +150,11 @@ public class CleanerTooltips {
                 var attribute = entry.attribute();
                 MutableComponent text = formatting(entry.modifier().amount(),
                         CleanerTooltipsUtil.getBaseValue(attribute), entry.displayType());
-                builder.put(slot, new AttributeFormattingData(text, attribute, comparison));
+
+                ResourceLocation texture = AttributeManager.getTexture(attribute);
+                if (texture != null || !blacklistedHints.contains(attribute)) {
+                    builder.put(slot, new AttributeFormattingData(text, attribute, comparison));
+                }
             });
 
             EquipmentSlotGroup mainhand = EquipmentSlotGroup.MAINHAND;

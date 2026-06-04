@@ -5,7 +5,9 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.Holder;
+import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.FormattedText;
@@ -24,6 +26,7 @@ import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.text.DecimalFormat;
 import java.util.List;
+import java.util.Optional;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
@@ -34,6 +37,8 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 public class CleanerTooltipsUtil {
     public static final ResourceLocation EFFICIENCY =
             ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
+
+    private static final String[] prefixes = new String[]{"player.", "generic."};
 
     private static int tick = 0;
     private static boolean tickToggle = false;
@@ -87,6 +92,26 @@ public class CleanerTooltipsUtil {
             }
         }
         return Math.min(indexToReturn, components.size());
+    }
+
+    public static Optional<Holder.Reference<Attribute>> resolveAttribute(String s) {
+        Registry<Attribute> registry = BuiltInRegistries.ATTRIBUTE;
+
+        // parse automatically adds the minecraft namespace if missing
+        var location = ResourceLocation.parse(s);
+        var holder = registry.getHolder(location);
+
+        // First test if the initial String is valid
+        if (holder.isPresent()) return holder;
+
+        // Then test if any prefix is missing from the String
+        for (String pre : prefixes) {
+            var preLocation = location.withPrefix(pre);
+            holder = registry.getHolder(preLocation);
+            if (holder.isPresent()) return holder;
+        }
+
+        return Optional.empty();
     }
 
     public static ItemStack getEquippedStack(ItemStack stack) {

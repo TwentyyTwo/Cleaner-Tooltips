@@ -33,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
-import java.util.Objects;
 
 import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.blacklistedHints;
 import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.configHolder;
@@ -115,14 +114,31 @@ public class CleanerTooltips {
                 .withStyle(ChatFormatting.DARK_GRAY));
     }
 
-    public record IconAttributeModifierTooltip(ItemStack stack,
-            ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap,
-            MutableComponent durabilityComponent, AttributeFormattingData miningSpeedData)
+    public static class IconAttributeModifierTooltip
             implements TooltipComponent, ClientTooltipComponent {
+        private final ItemStack stack;
+        private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
+        private final MutableComponent durabilityComponent;
+        private final AttributeFormattingData miningSpeedData;
+
+        private final boolean anyTextureMissing;
+
+        public IconAttributeModifierTooltip(ItemStack stack,
+                ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap,
+                MutableComponent durabilityComponent, AttributeFormattingData miningSpeedData,
+                boolean anyTextureMissing) {
+            this.stack = stack;
+            this.groupFormattingDataMap = groupFormattingDataMap;
+            this.durabilityComponent = durabilityComponent;
+            this.miningSpeedData = miningSpeedData;
+            this.anyTextureMissing = anyTextureMissing;
+        }
 
         public static IconAttributeModifierTooltip get(ItemStack stack) {
             CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
+
+            final boolean[] anyTextureMissing = {false};
 
             if (!config.advanced.onlyCompareShared) {
                 boolean isArmor = stack.getItem() instanceof ArmorItem;
@@ -152,8 +168,10 @@ public class CleanerTooltips {
                         CleanerTooltipsUtil.getBaseValue(attribute), entry.displayType());
 
                 ResourceLocation texture = AttributeManager.getTexture(attribute);
-                if (texture != null || !blacklistedHints.contains(attribute)) {
+                if (texture != null) {
                     builder.put(slot, new AttributeFormattingData(text, attribute, comparison));
+                } else if (!blacklistedHints.contains(attribute)) {
+                    anyTextureMissing[0] = true;
                 }
             });
 
@@ -163,10 +181,8 @@ public class CleanerTooltips {
                 builder.put(mainhand, BetterCombatHandler.getRangeData(stack));
             }
 
-            return new IconAttributeModifierTooltip(stack,
-                    builder.build(),
-                    durabilityFormatting(stack),
-                    getMiningSpeedData(stack));
+            return new IconAttributeModifierTooltip(stack, builder.build(),
+                    durabilityFormatting(stack), getMiningSpeedData(stack), anyTextureMissing[0]);
         }
 
         private static CombinedAttributeModifiers getComparedModifiers(ItemStack stack) {
@@ -213,19 +229,9 @@ public class CleanerTooltips {
 
         @Override
         public int getHeight() {
-            if (config.advanced.groupDisplay == CleanerTooltipsConfig.GroupDisplay.ROWS) {
-                int rowCounter = 0;
-
-                for (var formattingData : groupFormattingDataMap.asMap().values()) {
-                    if (formattingData.stream()
-                            .map(AttributeFormattingData::icon)
-                            .anyMatch(Objects::nonNull)) {
-                        rowCounter++;
-                    }
-                }
-                return Math.max(10, rowCounter * 10);
-            }
-            return 10;
+            return config.advanced.groupDisplay == CleanerTooltipsConfig.GroupDisplay.ROWS
+                    ? Math.max(10, groupFormattingDataMap.asMap().size() * 10)
+                    : 10;
         }
 
         @Override
@@ -259,84 +265,48 @@ public class CleanerTooltips {
             int biggestRowWidth = 0;
 
             boolean firstIteration = true;
-            boolean anyIconMissing = false;
 
             var dataMap = groupFormattingDataMap.asMap();
             for (var collection : dataMap.values()) {
+                int rowWidth = 0;
                 for (var formattingData : collection) {
-                    if (formattingData.icon() == null) {
-                        anyIconMissing = true;
-                        continue;
-                    }
-
-                    width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
+                    rowWidth += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
                 }
 
                 if (firstIteration) {
                     firstIteration = false;
-                    firstRowWidth = width;
-                } else if (width > biggestRowWidth) {
-                    biggestRowWidth = width;
+                    firstRowWidth += rowWidth;
                 }
-                width = 0;
+                biggestRowWidth = Math.max(rowWidth, biggestRowWidth);
             }
 
-            if (dataMap.size() > 1) {
-                firstRowWidth += (9 + GROUP_GAP);
-                biggestRowWidth += (9 + GROUP_GAP);
-            }
-
-            if (anyIconMissing && config.general.hiddenAttributesHint) {
+            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
                 firstRowWidth += font.width("[+]") + GROUP_GAP;
             }
 
-            return Math.max(firstRowWidth, biggestRowWidth);
+            int slotSize = dataMap.size() > 1 ? (9 + GROUP_GAP) : 0;
+            return Math.max(firstRowWidth, biggestRowWidth) + slotSize;
         }
 
         private int getWidthInline(Font font, int width) {
-            int slotCounter = 0;
-            boolean anyIconMissing = false;
-
-            var dataMap = groupFormattingDataMap.asMap();
-            for (var collection : dataMap.values()) {
-                boolean groupHasIcons = false;
-                for (var formattingData : collection) {
-                    if (formattingData.icon() == null) {
-                        anyIconMissing = true;
-                        continue;
-                    }
-
-                    groupHasIcons = true;
-                    width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
-                }
-
-                if (groupHasIcons) slotCounter++;
-            }
-
-            if (dataMap.size() > 1) {
-                width += slotCounter * (9 + GROUP_GAP);
-            }
-
-            if (anyIconMissing && config.general.hiddenAttributesHint) {
-                width += font.width("[+]") + GROUP_GAP;
-            }
-
-            return width;
-        }
-
-        private int getWidthPrimary(Font font, int width) {
-            boolean anyIconMissing = false;
-
-            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
-                if (formattingData.icon() == null) {
-                    anyIconMissing = true;
-                    continue;
-                }
-
+            for (var formattingData : groupFormattingDataMap.values()) {
                 width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
             }
 
-            if (anyIconMissing && config.general.hiddenAttributesHint) {
+            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
+                width += font.width("[+]") + GROUP_GAP;
+            }
+
+            int slotSize = groupFormattingDataMap.asMap().size();
+            return width + (slotSize > 1 ? slotSize * (9 + GROUP_GAP) : 0);
+        }
+
+        private int getWidthPrimary(Font font, int width) {
+            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
+                width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
+            }
+
+            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
                 width += font.width("[+]") + GROUP_GAP;
             }
 
@@ -373,25 +343,15 @@ public class CleanerTooltips {
             int firstGroupX = x;
 
             boolean firstIteration = true;
-            boolean anyIconMissing = false;
 
             var dataMap = groupFormattingDataMap.asMap();
             for (var entry : dataMap.entrySet()) {
-                var collection = entry.getValue();
+                if (dataMap.size() > 1) {
+                    var icon = getSlotIcon(entry.getKey());
+                    groupX = renderSlotGroupIcon(guiGraphics, icon, groupX, groupY);
+                }
 
-                boolean groupHasIcons = false;
-                for (var formattingData : collection) {
-                    if (formattingData.icon() == null) {
-                        anyIconMissing = true;
-                        continue;
-                    }
-
-                    if (dataMap.size() > 1 && !groupHasIcons) {
-                        var icon = getSlotIcon(entry.getKey());
-                        groupX = renderSlotGroupIcon(guiGraphics, icon, groupX, groupY);
-                        groupHasIcons = true;
-                    }
-
+                for (var formattingData : entry.getValue()) {
                     groupX = renderAttributeIconPair(guiGraphics, formattingData, groupX, groupY);
                 }
 
@@ -403,51 +363,33 @@ public class CleanerTooltips {
                 groupY += 10;
             }
 
-            return anyIconMissing
+            return this.anyTextureMissing
                     ? renderHiddenHint(font, guiGraphics, firstGroupX, y)
                     : firstGroupX;
         }
 
         private int renderInline(Font font, GuiGraphics guiGraphics, int x, int y) {
-            boolean anyIconMissing = false;
-
             var dataMap = groupFormattingDataMap.asMap();
             for (var entry : dataMap.entrySet()) {
-                var collection = entry.getValue();
+                if (dataMap.size() > 1) {
+                    var icon = getSlotIcon(entry.getKey());
+                    x = renderSlotGroupIcon(guiGraphics, icon, x, y - 1);
+                }
 
-                boolean groupHasIcons = false;
-                for (var formattingData : collection) {
-                    if (formattingData.icon() == null) {
-                        anyIconMissing = true;
-                        continue;
-                    }
-
-                    if (dataMap.size() > 1 && !groupHasIcons) {
-                        var icon = getSlotIcon(entry.getKey());
-                        x = renderSlotGroupIcon(guiGraphics, icon, x, y - 1);
-                        groupHasIcons = true;
-                    }
-
+                for (var formattingData : entry.getValue()) {
                     x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
                 }
             }
 
-            return anyIconMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
+            return this.anyTextureMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
         }
 
         private int renderPrimary(Font font, GuiGraphics guiGraphics, int x, int y) {
-            boolean anyIconMissing = false;
-
             for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
-                if (formattingData.icon() == null) {
-                    anyIconMissing = true;
-                    continue;
-                }
-
                 x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
             }
 
-            return anyIconMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
+            return this.anyTextureMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
         }
 
         private int renderSlotGroupIcon(GuiGraphics guiGraphics,

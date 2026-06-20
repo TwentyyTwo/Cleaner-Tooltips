@@ -19,7 +19,9 @@ import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
-import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeModifierTooltip;
+import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
+import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
+import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
@@ -60,8 +62,8 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void registerTooltips(RegisterClientTooltipComponentFactoriesEvent event) {
-        event.register(IconAttributeModifierTooltip.class, payload -> payload);
-        event.register(IconDurabilityTooltip.class, payload -> payload);
+        event.register(IconAttributeComponent.class, IconAttributeTooltip::new);
+        event.register(IconDurabilityComponent.class, IconDurabilityTooltip::new);
     }
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
@@ -72,14 +74,14 @@ public class CleanerTooltipsNeoForge {
         if (stack != null && !stack.isEmpty()) {
             List<Either<FormattedText, TooltipComponent>> tooltipElements = event.getTooltipElements();
 
-            boolean shouldAddAttributes = CleanerTooltipsUtil.shouldAddAttributes()
-                    && CleanerTooltipsUtil.hasAttributes(stack);
-            boolean shouldAddDurability = config.durability.durabilityEnabled
-                    && stack.isDamageableItem();
+            boolean shouldAddAttributes = CleanerTooltipsUtil.canAddAttributeTooltip(stack);
+            boolean shouldAddDurability = CleanerTooltipsUtil.canAddDurabilityTooltip(stack);
 
-            int insertIndex = CleanerTooltipsUtil.getIndexNeoforge(tooltipElements);
+            if (!(shouldAddAttributes || shouldAddDurability)) return;
+
+            int insertIndex = getIndex(tooltipElements);
             if (shouldAddAttributes) {
-                tooltipElements.add(insertIndex, Either.right(IconAttributeModifierTooltip.get(stack)));
+                tooltipElements.add(insertIndex, Either.right(new IconAttributeComponent(stack)));
                 insertIndex++;
             }
 
@@ -87,21 +89,38 @@ public class CleanerTooltipsNeoForge {
                 switch (config.durability.durabilityPos) {
                     case INLINE -> {
                         if (!shouldAddAttributes) {
-                            tooltipElements.add(insertIndex, Either.right(new IconDurabilityTooltip(stack)));
+                            tooltipElements.add(insertIndex, Either.right(new IconDurabilityComponent(stack)));
                         }
                     }
-                    case BELOW -> tooltipElements.add(insertIndex, Either.right(new IconDurabilityTooltip(stack)));
-                    case BOTTOM -> tooltipElements.addLast(Either.right(new IconDurabilityTooltip(stack)));
+                    case BELOW -> tooltipElements.add(insertIndex, Either.right(new IconDurabilityComponent(stack)));
+                    case BOTTOM -> tooltipElements.addLast(Either.right(new IconDurabilityComponent(stack)));
                 }
             }
         }
     }
 
+    private static int getIndex(List<Either<FormattedText, TooltipComponent>> elements) {
+        int index = 1;
+        for (int i = 0; i < elements.size(); i++) {
+            // Check for the first FormattedText element, and get the index after
+            if (elements.get(i).left().isPresent()) {
+                index = i + 1;
+                break;
+            }
+        }
+
+        // If that element's a TooltipComponent, increment by one
+        while (index < elements.size() && elements.get(index).right().isPresent()) {
+            index++;
+        }
+
+        return index;
+    }
+
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
         stackBackup = event.getStack();
-        event.setSkipAll(CleanerTooltipsUtil.shouldAddAttributes()
-                && CleanerTooltipsUtil.hasAttributes(stackBackup));
+        event.setSkipAll(CleanerTooltipsUtil.canAddAttributeTooltip(stackBackup));
 
         // Don't display mining efficiency if mining speed is displayed
         if (config.general.miningSpeed) {

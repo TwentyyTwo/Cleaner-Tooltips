@@ -114,8 +114,10 @@ public class CleanerTooltips {
                 .withStyle(ChatFormatting.DARK_GRAY));
     }
 
-    public static class IconAttributeModifierTooltip
-            implements TooltipComponent, ClientTooltipComponent {
+    public record IconAttributeComponent(ItemStack stack) implements TooltipComponent {
+    }
+
+    public static class IconAttributeTooltip implements ClientTooltipComponent {
         private final ItemStack stack;
         private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
         private final MutableComponent durabilityComponent;
@@ -123,7 +125,11 @@ public class CleanerTooltips {
 
         private final boolean anyTextureMissing;
 
-        public IconAttributeModifierTooltip(ItemStack stack,
+        public ItemStack getStack() {
+            return this.stack;
+        }
+
+        public IconAttributeTooltip(ItemStack stack,
                 ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap,
                 MutableComponent durabilityComponent, AttributeFormattingData miningSpeedData,
                 boolean anyTextureMissing) {
@@ -134,7 +140,11 @@ public class CleanerTooltips {
             this.anyTextureMissing = anyTextureMissing;
         }
 
-        public static IconAttributeModifierTooltip get(ItemStack stack) {
+        public IconAttributeTooltip(IconAttributeComponent component) {
+            this(component.stack());
+        }
+
+        public IconAttributeTooltip(ItemStack stack) {
             CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
@@ -181,8 +191,11 @@ public class CleanerTooltips {
                 builder.put(mainhand, BetterCombatHandler.getRangeData(stack));
             }
 
-            return new IconAttributeModifierTooltip(stack, builder.build(),
-                    durabilityFormatting(stack), getMiningSpeedData(stack), anyTextureMissing[0]);
+            this.stack = stack;
+            this.groupFormattingDataMap = builder.build();
+            this.durabilityComponent = durabilityFormatting(stack);
+            this.miningSpeedData = getMiningSpeedData(stack);
+            this.anyTextureMissing = anyTextureMissing[0];
         }
 
         private static CombinedAttributeModifiers getComparedModifiers(ItemStack stack) {
@@ -242,7 +255,7 @@ public class CleanerTooltips {
                     ? miningSpeedData.textWidth() + GROUP_GAP + GAP + 9
                     : 0;
 
-            width += (config.durability.durabilityEnabled && stack.isDamageableItem()
+            width += (CleanerTooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durability.durabilityPos == PosValues.INLINE)
                     ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
                     : 0;
@@ -322,7 +335,7 @@ public class CleanerTooltips {
                 groupX = renderMiningTooltip(guiGraphics, groupX, y - 1);
             }
 
-            if (config.durability.durabilityEnabled && stack.isDamageableItem()
+            if (CleanerTooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durability.durabilityPos == PosValues.INLINE) {
                 guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
@@ -446,14 +459,20 @@ public class CleanerTooltips {
         }
     }
 
+    public record IconDurabilityComponent(ItemStack stack) implements TooltipComponent {
+    }
+
     /**
      * A custom durability tooltip rendering the durability of an itemstack on the tooltip. <p>
      *
      * Only used when the config option {@code INLINE} isn't selected, otherwise the durability
-     * tooltip is handled by the {@link IconAttributeModifierTooltip} object.
+     * tooltip is handled by the {@link IconAttributeTooltip} object.
      */
-    public record IconDurabilityTooltip(MutableComponent text)
-            implements TooltipComponent, ClientTooltipComponent {
+    public record IconDurabilityTooltip(MutableComponent text) implements ClientTooltipComponent {
+
+        public IconDurabilityTooltip(IconDurabilityComponent component) {
+            this(component.stack());
+        }
 
         public IconDurabilityTooltip(ItemStack stack) {
             this(durabilityFormatting(stack));

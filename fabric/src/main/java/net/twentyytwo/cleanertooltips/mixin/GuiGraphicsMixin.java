@@ -1,37 +1,50 @@
 package net.twentyytwo.cleanertooltips.mixin;
 
-import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipPositioner;
-import net.minecraft.world.item.ItemStack;
-import net.twentyytwo.cleanertooltips.CleanerTooltipsFabric;
-import net.twentyytwo.cleanertooltips.util.StackHolder;
+import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
+import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
+import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
-import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.ModifyVariable;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
+import java.util.ArrayList;
 import java.util.List;
+
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 
 @Mixin(GuiGraphics.class)
 public abstract class GuiGraphicsMixin {
 
+    // Because the IconDurabilityComponent isn't added if the IconAttributeComponent is, it
+    // has to be added here. Also shifts the position of the durability component if necessary.
     @ModifyVariable(method = "renderTooltipInternal", at = @At("HEAD"), index = 2, argsOnly = true)
     private List<ClientTooltipComponent> onRenderTooltipInternalHead(
             List<ClientTooltipComponent> components) {
-        ItemStack stack = StackHolder.getInstance().getItemStack();
-        return CleanerTooltipsFabric.getNewComponents(stack, components);
-    }
+        var position = config.durability.durabilityPos;
+        if (config.durability.durabilityEnabled && position != PosValues.INLINE) {
 
-    @Inject(method = "renderTooltipInternal", at = @At("RETURN"))
-    private void onRenderTooltipInternalTail(Font font, List<ClientTooltipComponent> components,
-                                             int mouseX, int mouseY,
-                                             ClientTooltipPositioner tooltipPositioner,
-                                             CallbackInfo ci) {
-        // Reset the ItemStack at the tail to ensure that additional calls
-        // to ItemStack#getTooltipLines do not override the ItemStack
-        StackHolder.getInstance().resetStack();
+            List<ClientTooltipComponent> newComponents = new ArrayList<>(components);
+            for (int i = 0; i < components.size(); i++) {
+                if (components.get(i) instanceof IconAttributeTooltip tooltip) {
+                    var stack = tooltip.getStack();
+                    if (stack.isDamageableItem()) {
+                        if (position == PosValues.BELOW) {
+                            newComponents.add(i + 1, new IconDurabilityTooltip(stack));
+                        } else if (position == PosValues.BOTTOM) {
+                            newComponents.add(new IconDurabilityTooltip(stack));
+                        }
+                    }
+                    return newComponents;
+                } else if (components.get(i) instanceof IconDurabilityTooltip) {
+                    if (i != components.size() - 1 && position == PosValues.BOTTOM) {
+                        newComponents.add(newComponents.remove(i));
+                    }
+                    return newComponents;
+                }
+            }
+        }
+        return components;
     }
 }

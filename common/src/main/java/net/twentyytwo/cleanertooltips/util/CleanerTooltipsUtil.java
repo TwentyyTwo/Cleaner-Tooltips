@@ -1,31 +1,24 @@
 package net.twentyytwo.cleanertooltips.util;
 
-import com.mojang.datafixers.util.Either;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTextTooltip;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
-import net.minecraft.network.chat.FormattedText;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.twentyytwo.cleanertooltips.compat.LegendaryTooltipsHandler;
 import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.text.DecimalFormat;
-import java.util.List;
 import java.util.Optional;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
@@ -53,45 +46,6 @@ public class CleanerTooltipsUtil {
 
     public static boolean getTickToggle() {
         return tickToggle;
-    }
-
-    /**
-     * Gets the index of the item name and returns the index below it.
-     * @param tooltipElements   the elements of the tooltip
-     * @return                  the index at which the icon attributes should be added
-     */
-    public static int getIndexNeoforge(List<Either<FormattedText, TooltipComponent>> tooltipElements) {
-        int indexToReturn = 1;
-        for (int i = 0; i < tooltipElements.size(); i++) {
-            if (tooltipElements.get(i).left().isPresent()) {
-                indexToReturn = LegendaryTooltipsHandler.isModLoaded
-                        && LegendaryTooltipsHandler.hasTitleBreakNeoforge(tooltipElements)
-                        ? i + 2
-                        : i + 1;
-                break;
-            }
-        }
-        return Math.min(indexToReturn, tooltipElements.size());
-    }
-
-    /**
-     * Calculates the index of the first ClientTextTooltip and returns the index below it.
-     * @param components the list of {@code ClientTooltipComponent}s
-     * @return the index at which the icon attributes should be added
-     */
-    public static int getIndexFabric(List<ClientTooltipComponent> components) {
-        int indexToReturn = 1;
-        for (int i = 0; i < components.size(); i++) {
-            var clientTooltipComponent = components.get(i);
-            if (clientTooltipComponent instanceof ClientTextTooltip) {
-                indexToReturn = LegendaryTooltipsHandler.isModLoaded
-                        && LegendaryTooltipsHandler.hasTitleBreakFabric(components)
-                        ? i + 2
-                        : i + 1;
-                break;
-            }
-        }
-        return Math.min(indexToReturn, components.size());
     }
 
     public static Optional<Holder.Reference<Attribute>> resolveAttribute(String s) {
@@ -170,7 +124,7 @@ public class CleanerTooltipsUtil {
         return MC.player != null ? MC.player.getAttributeBaseValue(attribute) : 0;
     }
 
-    public static boolean shouldAddAttributes() {
+    public static boolean isViableForAttributes() {
         return MC.player != null && config.general.enabled && !Services.getInstance().isKeyDown();
     }
 
@@ -192,6 +146,14 @@ public class CleanerTooltipsUtil {
             });
         }
         return found[0];
+    }
+
+    public static boolean canAddAttributeTooltip(ItemStack stack) {
+        return isViableForAttributes() && hasAttributes(stack);
+    }
+
+    public static boolean canAddDurabilityTooltip(ItemStack stack) {
+        return config.durability.durabilityEnabled && stack.isDamageableItem();
     }
 
     public static boolean separateOperations(EquipmentSlotGroup slotGroup) {

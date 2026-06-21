@@ -6,7 +6,8 @@
   "mixins": [],
   "client": [
     "GuiGraphicsMixin",
-    "ItemStackMixin"
+    "ItemStackMixin",
+    "TextUtilsMixin"
   ],
   "injectors": {
     "defaultRequire": 1

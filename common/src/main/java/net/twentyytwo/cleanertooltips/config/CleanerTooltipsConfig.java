@@ -92,7 +92,7 @@ public class CleanerTooltipsConfig implements ConfigData {
         public GroupDisplay groupDisplay = GroupDisplay.ROWS;
 
         @ConfigEntry.Gui.Tooltip
-        public List<String> hintBlacklist = List.of("minecraft:player.mining_efficiency");
+        public List<String> hintBlacklist = List.of("minecraft:mining_efficiency");
     }
 
     public enum GroupDisplay {

@@ -1,60 +1,60 @@
 {
-  "minecraft:generic.armor": {
+  "minecraft:armor": {
     "display_type": "NUMBER",
     "priority": 0,
     "is_priority_armor": true
   },
-  "minecraft:generic.armor_toughness": {
+  "minecraft:armor_toughness": {
     "display_type": "NUMBER",
     "priority": 0,
     "is_priority_armor": true
   },
-  "minecraft:generic.attack_damage": {
+  "minecraft:attack_damage": {
     "display_type": "NUMBER",
     "priority": 0,
     "is_priority_armor": false
   },
-  "minecraft:generic.attack_knockback": {
+  "minecraft:attack_knockback": {
     "display_type": "DIFFERENCE",
     "priority": 1,
     "is_priority_armor": false
   },
-  "minecraft:generic.attack_speed": {
+  "minecraft:attack_speed": {
     "display_type": "NUMBER",
     "priority": 0,
     "is_priority_armor": false
   },
-  "minecraft:generic.gravity": {
+  "minecraft:gravity": {
     "display_type": "PERCENTAGE",
     "priority": 99,
     "is_priority_armor": false
   },
-  "minecraft:generic.knockback_resistance": {
+  "minecraft:knockback_resistance": {
     "display_type": "PERCENTAGE",
     "priority": 0,
     "is_priority_armor": true
   },
-  "minecraft:generic.luck": {
+  "minecraft:luck": {
     "display_type": "PERCENTAGE",
     "priority": 99,
     "is_priority_armor": false
   },
-  "minecraft:generic.max_health": {
+  "minecraft:max_health": {
     "display_type": "DIFFERENCE",
     "priority": 2,
     "is_priority_armor": true
   },
-  "minecraft:generic.movement_speed": {
+  "minecraft:movement_speed": {
     "display_type": "PERCENTAGE",
     "priority": 99,
     "is_priority_armor": true
   },
-  "minecraft:player.block_interaction_range": {
+  "minecraft:block_interaction_range": {
     "display_type": "DIFFERENCE",
     "priority": 2,
     "is_priority_armor": false
   },
-  "minecraft:player.entity_interaction_range": {
+  "minecraft:entity_interaction_range": {
     "display_type": "DIFFERENCE",
     "priority": 2,
     "is_priority_armor": false

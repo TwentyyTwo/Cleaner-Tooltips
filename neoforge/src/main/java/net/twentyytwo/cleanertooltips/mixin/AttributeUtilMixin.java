@@ -29,8 +29,8 @@ public abstract class AttributeUtilMixin {
     private static void addMiningSpeedTooltip(ItemStack stack, Consumer<Component> tooltip,
                                               AttributeTooltipContext ctx, CallbackInfo ci) {
         if (config.general.miningSpeed && stack != null && !stack.isEmpty()
-                && stack.getItem() instanceof DiggerItem item) {
-            tooltip.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(stack, item));
+                && stack.getItem() instanceof DiggerItem) {
+            tooltip.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(stack));
         }
     }
 

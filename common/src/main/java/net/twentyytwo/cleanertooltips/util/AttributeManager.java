@@ -61,7 +61,7 @@ public class AttributeManager
 
             ResourceLocation location = location(path);
             if (manager.getResource(location).isPresent()) {
-                var attribute = BuiltInRegistries.ATTRIBUTE.getHolder(k).orElseThrow();
+                var attribute = BuiltInRegistries.ATTRIBUTE.get(k).orElseThrow();
                 HOLDER_MAP.put(attribute, new DisplayTextureHolder(location, v.displayType(),
                         v.priority(),
                         v.isPriorityArmor()));

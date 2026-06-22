@@ -6,9 +6,7 @@
   "compatibilityLevel": "JAVA_18",
   "mixins": [],
   "client": [
-    "WeaponAttributeTooltipMixin",
-    "TooltipDecorMixin",
-    "TitleBreakComponentMixin"
+    "TooltipDecorMixin"
   ],
   "server": [],
   "injectors": {

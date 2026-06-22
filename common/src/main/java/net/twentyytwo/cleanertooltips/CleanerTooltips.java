@@ -11,6 +11,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -21,12 +22,12 @@ import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.ClientIconComponent;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -117,7 +118,7 @@ public class CleanerTooltips {
     public record IconAttributeComponent(ItemStack stack) implements TooltipComponent {
     }
 
-    public static class IconAttributeTooltip implements ClientTooltipComponent {
+    public static class IconAttributeTooltip implements ClientIconComponent {
         private final ItemStack stack;
         private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
         private final MutableComponent durabilityComponent;
@@ -185,12 +186,6 @@ public class CleanerTooltips {
                 }
             });
 
-            EquipmentSlotGroup mainhand = EquipmentSlotGroup.MAINHAND;
-            if (BetterCombatHandler.isModLoaded && BetterCombatHandler.hasAttributes(stack)
-                    && modifiers.modifiers().containsKey(mainhand)) {
-                builder.put(mainhand, BetterCombatHandler.getRangeData(stack));
-            }
-
             this.stack = stack;
             this.groupFormattingDataMap = builder.build();
             this.durabilityComponent = durabilityFormatting(stack);
@@ -214,8 +209,8 @@ public class CleanerTooltips {
 
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
-            if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem item) {
-                float speed = CleanerTooltipsUtil.getDiggingSpeed(stack, item);
+            if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem) {
+                float speed = CleanerTooltipsUtil.getDiggingSpeed(stack);
 
                 var component = Component.literal(DecimalFormat.getInstance().format(speed));
                 Comparison comparison = getMiningSpeedComparison(stack, speed);
@@ -232,7 +227,7 @@ public class CleanerTooltips {
                 if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                         && comparedStack.getItem() instanceof DiggerItem item
                         && stack.getItem().getClass().equals(item.getClass())) {
-                    float comparedSpeed = CleanerTooltipsUtil.getDiggingSpeed(comparedStack, item);
+                    float comparedSpeed = CleanerTooltipsUtil.getDiggingSpeed(comparedStack);
                     return Comparison.getComparison(speed, comparedSpeed);
                 }
             }
@@ -241,7 +236,7 @@ public class CleanerTooltips {
         }
 
         @Override
-        public int getHeight() {
+        public int getHeight(@NotNull Font font) {
             return config.advanced.groupDisplay == CleanerTooltipsConfig.GroupDisplay.ROWS
                     ? Math.max(10, groupFormattingDataMap.asMap().size() * 10)
                     : 10;
@@ -327,7 +322,7 @@ public class CleanerTooltips {
         }
 
         @Override
-        public void renderImage(@NotNull Font font, int x, int y,
+        public void renderImage(@NotNull Font font, int x, int y, int width, int height,
                                 @NotNull GuiGraphics guiGraphics) {
             int groupX = renderAttributeModifiers(font, guiGraphics, x, y);
 
@@ -337,7 +332,7 @@ public class CleanerTooltips {
 
             if (CleanerTooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durability.durabilityPos == PosValues.INLINE) {
-                guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
+                guiGraphics.blit(RenderType::guiTextured, DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
@@ -408,14 +403,14 @@ public class CleanerTooltips {
         private int renderSlotGroupIcon(GuiGraphics guiGraphics,
                                         ResourceLocation icon,
                                         int x, int y) {
-            guiGraphics.blit(icon, x, y, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderType::guiTextured, icon, x, y, 0, 0, 9, 9, 9, 9);
             return x + 9 + GROUP_GAP;
         }
 
         private int renderAttributeIconPair(GuiGraphics guiGraphics,
                                             AttributeFormattingData entry,
                                             int x, int y) {
-            guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderType::guiTextured, entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
             var component = entry.text().withStyle(entry.getFormatting());
             guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
@@ -433,7 +428,7 @@ public class CleanerTooltips {
         }
 
         private int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y) {
-            guiGraphics.blit(miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderType::guiTextured, miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, miningSpeedData.comparison(), x, y);
             var component = miningSpeedData.text().withStyle(miningSpeedData.getFormatting());
             guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
@@ -446,7 +441,7 @@ public class CleanerTooltips {
             if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
                 int height = CleanerTooltipsUtil.getTickToggle() ? y : y - 1;
-                guiGraphics.blit(arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
+                guiGraphics.blit(RenderType::guiTextured, arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
             }
         }
 
@@ -468,7 +463,7 @@ public class CleanerTooltips {
      * Only used when the config option {@code INLINE} isn't selected, otherwise the durability
      * tooltip is handled by the {@link IconAttributeTooltip} object.
      */
-    public record IconDurabilityTooltip(MutableComponent text) implements ClientTooltipComponent {
+    public record IconDurabilityTooltip(MutableComponent text) implements ClientIconComponent {
 
         public IconDurabilityTooltip(IconDurabilityComponent component) {
             this(component.stack());
@@ -479,7 +474,7 @@ public class CleanerTooltips {
         }
 
         @Override
-        public int getHeight() {
+        public int getHeight(@NotNull Font font) {
             return 10;
         }
 
@@ -489,9 +484,9 @@ public class CleanerTooltips {
         }
 
         @Override
-        public void renderImage(@NotNull Font font, int x, int y,
+        public void renderImage(@NotNull Font font, int x, int y, int width, int height,
                                 @NotNull GuiGraphics guiGraphics) {
-            guiGraphics.blit(DURABILITY_ICON , x, y - 1, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderType::guiTextured, DURABILITY_ICON, x, y - 1, 0, 0, 9, 9, 9, 9);
             guiGraphics.drawString(MC.font, text, x + 9 + GAP, y, -1);
         }
     }

@@ -6,6 +6,7 @@ import com.google.common.collect.ListMultimap;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
@@ -13,12 +14,11 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
+import net.minecraft.world.item.equipment.Equippable;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
@@ -44,7 +44,7 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
 
     public static CombinedAttributeModifiers fromStack(ItemStack stack) {
         Builder builder = builder().orderValues(stack.getItem() instanceof ArmorItem);
-        EquipmentSlotGroup primaryGroup = getPrimaryGroup(stack.getItem());
+        EquipmentSlotGroup primaryGroup = getPrimaryGroup(stack);
         double sharpnessBonus = CleanerTooltipsUtil.getSharpnessBonus(stack);
 
         ListMultimap<Holder<Attribute>, AttributeModifier> source = ArrayListMultimap.create();
@@ -53,9 +53,6 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
             EquipmentSlotGroup slot = values[(i + primaryGroup.ordinal()) % length];
 
             stack.forEachModifier(slot, source::put);
-            if (BetterCombatHandler.isModLoaded && BetterCombatHandler.hasAttributes(stack)) {
-                source.removeAll(Attributes.ENTITY_INTERACTION_RANGE);
-            }
 
             builder.putAll(slot, Merger.merge(source,
                     CleanerTooltipsUtil.separateOperations(slot),
@@ -65,10 +62,12 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
         return builder.build();
     }
 
-    private static EquipmentSlotGroup getPrimaryGroup(Item item) {
-        return item instanceof ArmorItem armorItem
-                ? EquipmentSlotGroup.bySlot(armorItem.getEquipmentSlot())
-                : EquipmentSlotGroup.MAINHAND;
+    private static EquipmentSlotGroup getPrimaryGroup(ItemStack stack) {
+        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
+        if (equippable != null) {
+            return EquipmentSlotGroup.bySlot(equippable.slot());
+        }
+        return EquipmentSlotGroup.MAINHAND;
     }
 
     public CombinedAttributeModifiers combine(CombinedAttributeModifiers other,

@@ -5,8 +5,7 @@
   "compatibilityLevel": "JAVA_21",
   "mixins": [],
   "client": [
-    "AttributeUtilMixin",
-    "TextUtilsMixin"
+    "AttributeUtilMixin"
   ],
   "injectors": {
     "defaultRequire": 1

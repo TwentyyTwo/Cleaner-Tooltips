@@ -2,7 +2,6 @@ package net.twentyytwo.cleanertooltips.util;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
@@ -11,8 +10,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
@@ -31,8 +30,6 @@ public class CleanerTooltipsUtil {
     public static final ResourceLocation EFFICIENCY =
             ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
 
-    private static final String[] prefixes = new String[]{"player.", "generic."};
-
     private static int tick = 0;
     private static boolean tickToggle = false;
 
@@ -49,23 +46,9 @@ public class CleanerTooltipsUtil {
     }
 
     public static Optional<Holder.Reference<Attribute>> resolveAttribute(String s) {
-        Registry<Attribute> registry = BuiltInRegistries.ATTRIBUTE;
-
         // parse automatically adds the minecraft namespace if missing
         var location = ResourceLocation.parse(s);
-        var holder = registry.getHolder(location);
-
-        // First test if the initial String is valid
-        if (holder.isPresent()) return holder;
-
-        // Then test if any prefix is missing from the String
-        for (String pre : prefixes) {
-            var preLocation = location.withPrefix(pre);
-            holder = registry.getHolder(preLocation);
-            if (holder.isPresent()) return holder;
-        }
-
-        return Optional.empty();
+        return BuiltInRegistries.ATTRIBUTE.get(location);
     }
 
     public static ItemStack getEquippedStack(ItemStack stack) {
@@ -97,15 +80,20 @@ public class CleanerTooltipsUtil {
         return bonus;
     }
 
-    public static MutableComponent getDiggingSpeedComponent(ItemStack stack, DiggerItem item) {
+    public static MutableComponent getDiggingSpeedComponent(ItemStack stack) {
         return CommonComponents.space()
                 .append(Component.translatable("text.cleanertooltips.mining_speed",
-                        DecimalFormat.getInstance().format(getDiggingSpeed(stack, item))))
+                        DecimalFormat.getInstance().format(getDiggingSpeed(stack))))
                 .withStyle(ChatFormatting.DARK_GREEN);
     }
 
-    public static float getDiggingSpeed(ItemStack stack, DiggerItem item) {
-        float diggingSpeed = item.getTier().getSpeed(); // base tool speed
+    public static float getDiggingSpeed(ItemStack stack) {
+        Tool tool = stack.get(DataComponents.TOOL);
+        if (tool == null || tool.rules().isEmpty()) {
+            return 0.0f;
+        }
+        final float[] diggingSpeed = {0.0f};
+        for (var rule : tool.rules()) rule.speed().ifPresent(f -> diggingSpeed[0] = f);
 
         var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         for (var entry : enchantments.entrySet()) {
@@ -113,11 +101,11 @@ public class CleanerTooltipsUtil {
             var effects = enchantment.getEffects(EnchantmentEffectComponents.ATTRIBUTES);
 
             for (var effect : effects) {
-                diggingSpeed += effect.amount().calculate(entry.getIntValue());
+                diggingSpeed[0] += effect.amount().calculate(entry.getIntValue());
             }
         }
 
-        return diggingSpeed;
+        return diggingSpeed[0];
     }
 
     public static double getBaseValue(Holder<Attribute> attribute) {

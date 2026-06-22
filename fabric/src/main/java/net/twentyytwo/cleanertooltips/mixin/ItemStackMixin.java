@@ -59,8 +59,8 @@ public abstract class ItemStackMixin {
     private void addMiningSpeedTooltip(Consumer<Component> tooltipAdder, Player player, CallbackInfo ci) {
         ItemStack thisStack = (ItemStack) (Object) this;
         if (config.general.miningSpeed && thisStack != null && !thisStack.isEmpty()
-                && thisStack.getItem() instanceof DiggerItem item) {
-            tooltipAdder.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(thisStack, item));
+                && thisStack.getItem() instanceof DiggerItem) {
+            tooltipAdder.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(thisStack));
         }
     }
 

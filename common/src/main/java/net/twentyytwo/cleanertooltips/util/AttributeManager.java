@@ -25,9 +25,10 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.location;
 
 public class AttributeManager
         extends SimplePreparableReloadListener<Map<ResourceLocation, IntermediateHolder>> {
+    public static final ResourceLocation LOCATION = location("attribute_display.json");
+
     private static final Codec<Map<ResourceLocation, IntermediateHolder>> CODEC =
             Codec.unboundedMap(ResourceLocation.CODEC, IntermediateHolder.CODEC);
-    private static final ResourceLocation LOCATION = location("attribute_display.json");
     private static final Map<Holder<Attribute>, DisplayTextureHolder> HOLDER_MAP = new HashMap<>();
 
     @Override

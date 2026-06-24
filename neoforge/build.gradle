@@ -11,7 +11,7 @@ repositories {
 dependencies {
     api "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 
-    compileOnly "maven.modrinth:legendary-tooltips:1.5.0"
+    compileOnly "maven.modrinth:legendary-tooltips:1.5.1"
 }
 
 neoForge {
@@ -34,7 +34,7 @@ neoForge {
             client()
         }
         data {
-            data()
+            clientData()
 
             // DataGen can be run by - "./gradlew :neoforge:runData" in Terminal.
             // Specify the modid for data generation, where to output the resulting resource, and where to look for existing resources.

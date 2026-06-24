@@ -9,9 +9,9 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.GatherSkippedAttributeTooltipsEvent;
-import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
@@ -53,8 +53,8 @@ public class CleanerTooltipsNeoForge {
     }
 
     @SubscribeEvent()
-    public static void onResourceReload(RegisterClientReloadListenersEvent event) {
-        event.registerReloadListener(new AttributeManager());
+    public static void onResourceReload(AddClientReloadListenersEvent event) {
+        event.addListener(AttributeManager.LOCATION, new AttributeManager());
     }
 
     @SubscribeEvent()

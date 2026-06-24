@@ -35,7 +35,7 @@ dependencies {
 
     api "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
 
-    compileOnly "maven.modrinth:legendary-tooltips:VwRnalTb"
+    compileOnly "maven.modrinth:legendary-tooltips:6KgbcZvj"
 }
 
 configurations {

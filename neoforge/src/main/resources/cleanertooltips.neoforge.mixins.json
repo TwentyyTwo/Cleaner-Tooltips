@@ -6,7 +6,8 @@
   "mixins": [],
   "client": [
     "AttributeUtilMixin",
-    "TextUtilsMixin"
+    "TextUtilsMixin",
+    "ItemStackMixin"
   ],
   "injectors": {
     "defaultRequire": 1

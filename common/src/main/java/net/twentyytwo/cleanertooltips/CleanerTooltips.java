@@ -37,8 +37,9 @@ import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.config
 
 public class CleanerTooltips {
 
-    public static final String MOD_ID = "cleanertooltips";
     public static Minecraft MC = Minecraft.getInstance();
+
+    public static final String MOD_ID = "cleanertooltips";
     public static final KeyMapping hideTooltip = new KeyMapping(
             "key.cleanertooltips.hide_tooltip",
             InputConstants.Type.KEYSYM,

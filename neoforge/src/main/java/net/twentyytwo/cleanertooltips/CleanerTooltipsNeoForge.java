@@ -47,6 +47,7 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void onClientSetup(FMLClientSetupEvent event) {
+        // Minecraft instance isn't available mod initialization, so we get it here
         MC = Minecraft.getInstance();
     }
 

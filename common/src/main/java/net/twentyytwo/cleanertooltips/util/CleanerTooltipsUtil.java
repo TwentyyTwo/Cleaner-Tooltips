@@ -1,7 +1,6 @@
 package net.twentyytwo.cleanertooltips.util;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -125,7 +124,8 @@ public class CleanerTooltipsUtil {
     }
 
     public static boolean isViableForAttributes() {
-        return Minecraft.getInstance().player != null && config.general.enabled && !Services.getInstance().isKeyDown();
+        return MC != null && MC.player != null
+                && config.general.enabled && !Services.getInstance().isKeyDown();
     }
 
     public static boolean hasAttributes(ItemStack stack) {
@@ -153,7 +153,7 @@ public class CleanerTooltipsUtil {
     }
 
     public static boolean canAddDurabilityTooltip(ItemStack stack) {
-        return config.durability.durabilityEnabled && stack.isDamageableItem();
+        return MC != null && config.durability.durabilityEnabled && stack.isDamageableItem();
     }
 
     public static boolean separateOperations(EquipmentSlotGroup slotGroup) {

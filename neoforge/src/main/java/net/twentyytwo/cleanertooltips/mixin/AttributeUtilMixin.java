@@ -43,7 +43,7 @@ public abstract class AttributeUtilMixin {
                                              @Local(argsOnly = true) ItemStack stack,
                                              @Local(name = "attr") Holder<Attribute> attr,
                                              @Local(name = "entityBase") double entityBase) {
-        return MC.player != null && attr.value().getBaseId() == Item.BASE_ATTACK_DAMAGE_ID
+        return MC != null && MC.player != null && attr.value().getBaseId() == Item.BASE_ATTACK_DAMAGE_ID
                 ? base - entityBase + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
                 + CleanerTooltipsUtil.getSharpnessBonus(stack)
                 : base;

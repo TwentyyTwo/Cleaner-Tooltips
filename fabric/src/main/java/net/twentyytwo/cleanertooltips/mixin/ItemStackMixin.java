@@ -80,7 +80,7 @@ public abstract class ItemStackMixin {
     // Fixes MC-271840
     @ModifyVariable(method = "addModifierTooltip", at = @At(value = "STORE"), ordinal = 1)
     private double addAttackDamage(double value, @Local(argsOnly = true) AttributeModifier modifier) {
-        return MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)
+        return MC != null && MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)
                 ? modifier.amount() + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
                 + CleanerTooltipsUtil.getSharpnessBonus((ItemStack) (Object) this)
                 : value;

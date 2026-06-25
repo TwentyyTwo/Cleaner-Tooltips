@@ -5,7 +5,6 @@ import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.AttributeTooltipContext;
@@ -28,9 +27,11 @@ public abstract class AttributeUtilMixin {
     @Inject(method = "applyModifierTooltips", at = @At("TAIL"))
     private static void addMiningSpeedTooltip(ItemStack stack, Consumer<Component> tooltip,
                                               AttributeTooltipContext ctx, CallbackInfo ci) {
-        if (config.general.miningSpeed && stack != null && !stack.isEmpty()
-                && stack.getItem() instanceof DiggerItem) {
-            tooltip.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(stack));
+        if (config.general.miningSpeed && stack != null && !stack.isEmpty()) {
+            float speed = CleanerTooltipsUtil.getDiggingSpeed(stack);
+            if (speed > 0.0f) {
+                tooltip.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(speed));
+            }
         }
     }
 

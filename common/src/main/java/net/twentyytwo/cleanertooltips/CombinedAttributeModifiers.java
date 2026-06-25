@@ -14,7 +14,6 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -43,7 +42,7 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
             new CombinedAttributeModifiers(ImmutableListMultimap.of());
 
     public static CombinedAttributeModifiers fromStack(ItemStack stack) {
-        Builder builder = builder().orderValues(stack.getItem() instanceof ArmorItem);
+        Builder builder = builder().orderValues(CleanerTooltipsUtil.isArmor(stack));
         EquipmentSlotGroup primaryGroup = getPrimaryGroup(stack);
         double sharpnessBonus = CleanerTooltipsUtil.getSharpnessBonus(stack);
 

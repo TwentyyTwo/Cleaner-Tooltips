@@ -2,6 +2,7 @@ package net.twentyytwo.cleanertooltips;
 
 import com.mojang.datafixers.util.Either;
 import me.shedaniel.autoconfig.AutoConfig;
+import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
@@ -9,14 +10,15 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.event.lifecycle.FMLClientSetupEvent;
 import net.neoforged.neoforge.client.event.AddClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
-import net.neoforged.neoforge.client.event.GatherSkippedAttributeTooltipsEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RenderTooltipEvent;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
+import net.neoforged.neoforge.event.GatherSkippedAttributeTooltipsEvent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
@@ -28,6 +30,7 @@ import net.twentyytwo.cleanertooltips.util.AttributeManager;
 
 import java.util.function.Supplier;
 
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 
 @Mod(value = CleanerTooltips.MOD_ID, dist = Dist.CLIENT)
@@ -40,6 +43,11 @@ public class CleanerTooltipsNeoForge {
                 (Supplier<IConfigScreenFactory>) () ->
                 (modContainer, parent) ->
                         AutoConfig.getConfigScreen(CleanerTooltipsConfig.class, parent).get());
+    }
+
+    @SubscribeEvent()
+    public static void onClientSetup(FMLClientSetupEvent event) {
+        MC = Minecraft.getInstance();
     }
 
     @SubscribeEvent()

@@ -1,6 +1,7 @@
 package net.twentyytwo.cleanertooltips.util;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -80,10 +81,10 @@ public class CleanerTooltipsUtil {
         return bonus;
     }
 
-    public static MutableComponent getDiggingSpeedComponent(ItemStack stack) {
+    public static MutableComponent getDiggingSpeedComponent(float speed) {
         return CommonComponents.space()
                 .append(Component.translatable("text.cleanertooltips.mining_speed",
-                        DecimalFormat.getInstance().format(getDiggingSpeed(stack))))
+                        DecimalFormat.getInstance().format(speed)))
                 .withStyle(ChatFormatting.DARK_GREEN);
     }
 
@@ -93,7 +94,14 @@ public class CleanerTooltipsUtil {
             return 0.0f;
         }
         final float[] diggingSpeed = {0.0f};
-        for (var rule : tool.rules()) rule.speed().ifPresent(f -> diggingSpeed[0] = f);
+        for (var rule : tool.rules()) {
+            var key = rule.blocks().unwrapKey();
+            if (key.isPresent() && key.get().location().getPath().equals("sword_efficient")) {
+                return 0.0f;
+            }
+
+            rule.speed().ifPresent(f -> diggingSpeed[0] = f);
+        }
 
         var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         for (var entry : enchantments.entrySet()) {
@@ -112,8 +120,12 @@ public class CleanerTooltipsUtil {
         return MC.player != null ? MC.player.getAttributeBaseValue(attribute) : 0;
     }
 
+    public static boolean isArmor(ItemStack stack) {
+        return stack.get(DataComponents.EQUIPPABLE) != null;
+    }
+
     public static boolean isViableForAttributes() {
-        return MC.player != null && config.general.enabled && !Services.getInstance().isKeyDown();
+        return Minecraft.getInstance().player != null && config.general.enabled && !Services.getInstance().isKeyDown();
     }
 
     public static boolean hasAttributes(ItemStack stack) {

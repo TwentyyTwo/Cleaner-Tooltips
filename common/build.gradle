@@ -33,9 +33,7 @@ dependencies {
     compileOnly "io.github.llamalad7:mixinextras-common:${mixin_extras_version}"
     annotationProcessor "io.github.llamalad7:mixinextras-common:${mixin_extras_version}"
 
-    api "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
-
-    compileOnly "maven.modrinth:legendary-tooltips:6KgbcZvj"
+    api "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 }
 
 configurations {

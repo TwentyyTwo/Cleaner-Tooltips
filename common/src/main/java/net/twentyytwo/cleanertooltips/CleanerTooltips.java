@@ -10,7 +10,6 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -18,8 +17,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraft.world.item.ArmorItem;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
@@ -41,7 +38,7 @@ import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.config
 public class CleanerTooltips {
 
     public static final String MOD_ID = "cleanertooltips";
-    public static final Minecraft MC = Minecraft.getInstance();
+    public static Minecraft MC = Minecraft.getInstance();
     public static final KeyMapping hideTooltip = new KeyMapping(
             "key.cleanertooltips.hide_tooltip",
             InputConstants.Type.KEYSYM,
@@ -152,7 +149,7 @@ public class CleanerTooltips {
             final boolean[] anyTextureMissing = {false};
 
             if (!config.advanced.onlyCompareShared) {
-                boolean isArmor = stack.getItem() instanceof ArmorItem;
+                boolean isArmor = CleanerTooltipsUtil.isArmor(stack);
                 modifiers = modifiers.combine(comparedModifiers, isArmor, false);
             }
 
@@ -209,8 +206,9 @@ public class CleanerTooltips {
 
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
-            if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem) {
+            if (config.general.miningSpeed) {
                 float speed = CleanerTooltipsUtil.getDiggingSpeed(stack);
+                if (speed <= 0.0f) return null;
 
                 var component = Component.literal(DecimalFormat.getInstance().format(speed));
                 Comparison comparison = getMiningSpeedComparison(stack, speed);
@@ -225,9 +223,9 @@ public class CleanerTooltips {
                 var comparedStack = CleanerTooltipsUtil.getEquippedStack(stack);
 
                 if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
-                        && comparedStack.getItem() instanceof DiggerItem item
-                        && stack.getItem().getClass().equals(item.getClass())) {
+                        && stack.getItem().getClass().equals(comparedStack.getItem().getClass())) {
                     float comparedSpeed = CleanerTooltipsUtil.getDiggingSpeed(comparedStack);
+                    if (comparedSpeed <= 0.0f) return Comparison.NONE;
                     return Comparison.getComparison(speed, comparedSpeed);
                 }
             }

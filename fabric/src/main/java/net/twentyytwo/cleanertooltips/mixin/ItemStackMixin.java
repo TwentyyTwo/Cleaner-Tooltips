@@ -10,9 +10,9 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.TooltipDisplay;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
@@ -46,21 +46,25 @@ public abstract class ItemStackMixin {
     }
 
     // Hide the default attribute tooltip if the icon attributes are displayed
-    @WrapWithCondition(method = "getTooltipLines",
-                       at = @At(value = "INVOKE",
-                                target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;)V"))
-    private boolean hideDefaultAttributes(ItemStack instance,
-                                          Consumer<Component> equipmentslotgroup, Player player) {
+    @WrapWithCondition(
+            method = "addDetailsToTooltip",
+            at = @At(value = "INVOKE",
+                    target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/item/component/TooltipDisplay;Lnet/minecraft/world/entity/player/Player;)V")
+    )
+    private boolean hideDefaultAttributes(ItemStack instance, Consumer<Component> tooltipAdder,
+                                          TooltipDisplay tooltipDisplay, Player player) {
         return !CleanerTooltipsUtil.canAddAttributeTooltip(instance);
     }
 
     // Add the mining speed to the end of the attributes
     @Inject(method = "addAttributeTooltips", at = @At("TAIL"))
-    private void addMiningSpeedTooltip(Consumer<Component> tooltipAdder, Player player, CallbackInfo ci) {
+    private void addMiningSpeedTooltip(Consumer<Component> tooltipAdder, TooltipDisplay tooltipDisplay, Player player, CallbackInfo ci) {
         ItemStack thisStack = (ItemStack) (Object) this;
-        if (config.general.miningSpeed && thisStack != null && !thisStack.isEmpty()
-                && thisStack.getItem() instanceof DiggerItem) {
-            tooltipAdder.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(thisStack));
+        if (config.general.miningSpeed && thisStack != null && !thisStack.isEmpty()) {
+            float speed = CleanerTooltipsUtil.getDiggingSpeed(thisStack);
+            if (speed > 0.0f) {
+                tooltipAdder.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(speed));
+            }
         }
     }
 

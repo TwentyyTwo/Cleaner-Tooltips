@@ -12,7 +12,7 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.FabricAttributeManager;
 
 import java.util.ArrayList;
@@ -29,7 +29,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)
                 .registerReloadListener(new FabricAttributeManager());
-        ClientTickEvents.START_CLIENT_TICK.register(client -> CleanerTooltipsUtil.onTick());
+        ClientTickEvents.START_CLIENT_TICK.register(client -> TooltipsUtil.onTick());
 
         // Register a mapping of IconAttributeComponent to IconAttributeModifierTooltip
         // or IconDurabilityComponent to IconDurabilityTooltip

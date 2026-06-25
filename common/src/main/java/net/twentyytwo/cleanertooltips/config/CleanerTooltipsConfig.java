@@ -7,7 +7,7 @@ import me.shedaniel.autoconfig.annotation.ConfigEntry;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 
 import java.util.HashSet;
 import java.util.List;
@@ -27,7 +27,7 @@ public class CleanerTooltipsConfig implements ConfigData {
 
         int i = 0;
         for (String s : this.advanced.hintBlacklist) {
-            var holder = CleanerTooltipsUtil.resolveAttribute(s);
+            var holder = TooltipsUtil.resolveAttribute(s);
             if (holder.isPresent()) {
                 blacklistedHints.add(holder.get());
                 String resolved = holder.get().key().location().toString();

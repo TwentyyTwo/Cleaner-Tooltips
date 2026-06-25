@@ -25,7 +25,7 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 
 import java.util.function.Supplier;
@@ -58,7 +58,7 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void onTick(ClientTickEvent.Pre event) {
-        CleanerTooltipsUtil.onTick();
+        TooltipsUtil.onTick();
     }
 
     @SubscribeEvent()
@@ -98,9 +98,9 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(CleanerTooltipsUtil.canAddAttributeTooltip(event.getStack()));
+        event.setSkipAll(TooltipsUtil.canAddAttributeTooltip(event.getStack()));
 
         // Don't display mining efficiency if mining speed is displayed
-        if (config.general.miningSpeed) event.skipId(CleanerTooltipsUtil.EFFICIENCY);
+        if (config.general.miningSpeed) event.skipId(TooltipsUtil.EFFICIENCY);
     }
 }

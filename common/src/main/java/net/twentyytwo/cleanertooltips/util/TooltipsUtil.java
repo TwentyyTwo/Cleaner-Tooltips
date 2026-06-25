@@ -26,7 +26,7 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 /**
  * Collection of useful functions.
  */
-public class CleanerTooltipsUtil {
+public class TooltipsUtil {
     public static final ResourceLocation EFFICIENCY =
             ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
 

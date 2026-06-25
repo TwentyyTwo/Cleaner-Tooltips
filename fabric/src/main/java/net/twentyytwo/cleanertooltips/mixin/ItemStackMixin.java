@@ -15,7 +15,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -36,9 +36,9 @@ public abstract class ItemStackMixin {
     private Optional<TooltipComponent> addCustomComponent(Optional<TooltipComponent> original) {
         ItemStack stack = (ItemStack) (Object) this;
         if (stack != null && !stack.isEmpty()) {
-            if (CleanerTooltipsUtil.canAddAttributeTooltip(stack)) {
+            if (TooltipsUtil.canAddAttributeTooltip(stack)) {
                 return Optional.of(new IconAttributeComponent(stack));
-            } else if (CleanerTooltipsUtil.canAddDurabilityTooltip(stack)) {
+            } else if (TooltipsUtil.canAddDurabilityTooltip(stack)) {
                 return Optional.of(new IconDurabilityComponent(stack));
             }
         }
@@ -51,7 +51,7 @@ public abstract class ItemStackMixin {
                                 target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;)V"))
     private boolean hideDefaultAttributes(ItemStack instance,
                                           Consumer<Component> equipmentslotgroup, Player player) {
-        return !CleanerTooltipsUtil.canAddAttributeTooltip(instance);
+        return !TooltipsUtil.canAddAttributeTooltip(instance);
     }
 
     // Add the mining speed to the end of the attributes
@@ -60,7 +60,7 @@ public abstract class ItemStackMixin {
         ItemStack thisStack = (ItemStack) (Object) this;
         if (config.general.miningSpeed && thisStack != null && !thisStack.isEmpty()
                 && thisStack.getItem() instanceof DiggerItem item) {
-            tooltipAdder.accept(CleanerTooltipsUtil.getDiggingSpeedComponent(thisStack, item));
+            tooltipAdder.accept(TooltipsUtil.getDiggingSpeedComponent(thisStack, item));
         }
     }
 
@@ -70,7 +70,7 @@ public abstract class ItemStackMixin {
                                 target = "Lnet/minecraft/world/item/ItemStack;addModifierTooltip(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/ai/attributes/AttributeModifier;)V"))
     private boolean hideEfficiencyTooltip(ItemStack instance, Consumer<Component> tooltipAdder, Player player,
                                           Holder<Attribute> attribute, AttributeModifier modifier) {
-        return !(config.general.miningSpeed && modifier.is(CleanerTooltipsUtil.EFFICIENCY));
+        return !(config.general.miningSpeed && modifier.is(TooltipsUtil.EFFICIENCY));
     }
 
     // Fixes MC-271840
@@ -78,7 +78,7 @@ public abstract class ItemStackMixin {
     private double addAttackDamage(double value, @Local(argsOnly = true) AttributeModifier modifier) {
         return MC.player != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)
                 ? modifier.amount() + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
-                + CleanerTooltipsUtil.getSharpnessBonus((ItemStack) (Object) this)
+                + TooltipsUtil.getSharpnessBonus((ItemStack) (Object) this)
                 : value;
     }
 }

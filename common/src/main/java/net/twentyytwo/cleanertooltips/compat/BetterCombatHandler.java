@@ -11,7 +11,7 @@ import net.twentyytwo.cleanertooltips.AttributeFormattingData;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
@@ -29,7 +29,7 @@ public class BetterCombatHandler {
     }
 
     public static AttributeFormattingData getRangeData(ItemStack stack) {
-        double baseValue = CleanerTooltipsUtil.getBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
+        double baseValue = TooltipsUtil.getBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
         double value = getTotalRange(stack, baseValue);
 
         Comparison comparison = getComparison(stack, baseValue, value);
@@ -61,7 +61,7 @@ public class BetterCombatHandler {
 
     private static Comparison getComparison(ItemStack stack, double baseValue, double value) {
         if (config.general.compareAttributes) {
-            var comparedStack = CleanerTooltipsUtil.getEquippedStack(stack);
+            var comparedStack = TooltipsUtil.getEquippedStack(stack);
 
             if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                     && hasAttributes(comparedStack)) {

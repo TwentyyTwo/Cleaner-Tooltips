@@ -5,7 +5,7 @@ import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
@@ -18,9 +18,9 @@ public abstract class ItemStackMixin {
     private Optional<TooltipComponent> addCustomComponent(Optional<TooltipComponent> original) {
         ItemStack stack = (ItemStack) (Object) this;
         if (stack != null && !stack.isEmpty()) {
-            if (CleanerTooltipsUtil.canAddAttributeTooltip(stack)) {
+            if (TooltipsUtil.canAddAttributeTooltip(stack)) {
                 return Optional.of(new IconAttributeComponent(stack));
-            } else if (CleanerTooltipsUtil.canAddDurabilityTooltip(stack)) {
+            } else if (TooltipsUtil.canAddDurabilityTooltip(stack)) {
                 return Optional.of(new IconDurabilityComponent(stack));
             }
         }

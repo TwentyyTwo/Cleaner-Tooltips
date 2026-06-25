@@ -34,7 +34,7 @@
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay": "Slot Group Display",
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay.@Tooltip": "Change the way multiple equipment slot groups are displayed.\n\nROWS displays each slot group in a different row, INLINE displays them in the same row\nand PRIMARY only displays the slot group matching the item, e.g. mainhand for swords.\nNote: Usually items don't have multiple slot groups, in which case this setting is ignored.",
   "text.autoconfig.cleanertooltips.option.advanced.hintBlacklist": "Hint Blacklist",
-  "text.autoconfig.cleanertooltips.option.advanced.hintBlacklist.@Tooltip": "A list of attributes which do not cause the hidden attributes hint to appear.\nNote: the path prefix, e.g. \"player.\", and the minecraft namespace will be automatically added if missing.",
+  "text.autoconfig.cleanertooltips.option.advanced.hintBlacklist.@Tooltip": "A list of attributes which do not cause the hidden attributes hint to appear.\nNote: the minecraft namespace will be automatically added if missing.",
 
   "text.cleanertooltips.total_durability": " / %s",
   "text.cleanertooltips.mining_speed": "%s Mining Speed",

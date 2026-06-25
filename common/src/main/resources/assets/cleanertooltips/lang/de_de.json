@@ -34,7 +34,7 @@
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay": "Slot Group Display",
   "text.autoconfig.cleanertooltips.option.advanced.groupDisplay.@Tooltip": "Ändere wie mehrere Equipment Slot Groups angezeigt werden sollen.\n\nROWS zeigt sie in mehreren Reihen an, INLINE zeigt sie in einer Reihe an und\nPRIMARY zeigt nur die passende Slot Group an, z.B. \"mainhand\" für Schwerter.\nBeachte das Items normalerweise nur eine Slot Group haben, in dem Fall\nwird diese Einstellung ignoriert.",
   "text.autoconfig.cleanertooltips.option.advanced.hintBlacklist": "Hinweis Blockliste",
-  "text.autoconfig.cleanertooltips.option.advanced.hintBlacklist.@Tooltip": "Eine Liste von Attributen die nicht dazu führen dass ein Hinweis auf versteckte Attribute angezeigt wird.\nHinweis: Der Pfadpräfix, z.B. \"player.\", und der \"minecraft\" Namespace werden automatisch hinzugefügt falls sie fehlen.",
+  "text.autoconfig.cleanertooltips.option.advanced.hintBlacklist.@Tooltip": "Eine Liste von Attributen die nicht dazu führen dass ein Hinweis auf versteckte Attribute angezeigt wird.\nHinweis: Der \"minecraft\" Namespace wird automatisch hinzugefügt falls er fehlt.",
 
   "text.cleanertooltips.mining_speed": "%s Abbaugeschwindigkeit",
 

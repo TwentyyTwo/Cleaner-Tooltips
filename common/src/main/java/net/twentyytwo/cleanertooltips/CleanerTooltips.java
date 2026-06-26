@@ -19,6 +19,7 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
@@ -183,6 +184,12 @@ public class CleanerTooltips {
                     anyTextureMissing[0] = true;
                 }
             });
+
+            EquipmentSlotGroup mainhand = EquipmentSlotGroup.MAINHAND;
+            if (BetterCombatHandler.isModLoaded && BetterCombatHandler.hasAttributes(stack)
+                    && modifiers.modifiers().containsKey(mainhand)) {
+                builder.put(mainhand, BetterCombatHandler.getRangeData(stack));
+            }
 
             this.stack = stack;
             this.groupFormattingDataMap = builder.build();

@@ -45,7 +45,7 @@ public class CleanerTooltips {
             "key.cleanertooltips.hide_tooltip",
             InputConstants.Type.KEYSYM,
             GLFW.GLFW_KEY_V,
-            KeyMapping.CATEGORY_INVENTORY
+            KeyMapping.Category.INVENTORY
     );
 
     public static CleanerTooltipsConfig config;

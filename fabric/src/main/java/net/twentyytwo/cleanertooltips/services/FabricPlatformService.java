@@ -16,7 +16,7 @@ public class FabricPlatformService implements PlatformService {
 
     @Override
     public boolean isKeyDown() {
-        return InputConstants.isKeyDown(MC.getWindow().getWindow(),
+        return InputConstants.isKeyDown(MC.getWindow(),
                 KeyBindingHelper.getBoundKeyOf(CleanerTooltips.hideTooltip).getValue());
     }
 }

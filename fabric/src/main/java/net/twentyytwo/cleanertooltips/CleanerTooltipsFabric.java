@@ -4,7 +4,7 @@ import net.fabricmc.api.ClientModInitializer;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
+import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.server.packs.PackType;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
@@ -12,13 +12,14 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
+import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
-import net.twentyytwo.cleanertooltips.util.FabricAttributeManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.location;
 
 public class CleanerTooltipsFabric implements ClientModInitializer {
 
@@ -27,8 +28,9 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
         CleanerTooltips.init();
         KeyBindingHelper.registerKeyBinding(CleanerTooltips.hideTooltip);
 
-        ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)
-                .registerReloadListener(new FabricAttributeManager());
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloader(
+                location("attribute_display.json"), new AttributeManager()
+        );
         ClientTickEvents.START_CLIENT_TICK.register(client -> TooltipsUtil.onTick());
 
         // Register a mapping of IconAttributeComponent to IconAttributeModifierTooltip

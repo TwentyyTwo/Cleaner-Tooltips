@@ -15,7 +15,7 @@ public class NeoforgePlatformService implements PlatformService {
 
     @Override
     public boolean isKeyDown() {
-        return InputConstants.isKeyDown(MC.getWindow().getWindow(),
+        return InputConstants.isKeyDown(MC.getWindow(),
                 CleanerTooltips.hideTooltip.getKey().getValue());
     }
 }

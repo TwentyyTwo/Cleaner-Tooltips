@@ -30,7 +30,7 @@ public class CleanerTooltipsConfig implements ConfigData {
             var holder = TooltipsUtil.resolveAttribute(s);
             if (holder.isPresent()) {
                 blacklistedHints.add(holder.get());
-                String resolved = holder.get().key().location().toString();
+                String resolved = holder.get().key().identifier().toString();
                 if (!s.equals(resolved)) {
                     this.advanced.hintBlacklist.set(i, resolved);
                 }

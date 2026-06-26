@@ -4,7 +4,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.Comparison;
@@ -22,11 +22,11 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 public record AttributeFormattingData(
         MutableComponent text,
         int textWidth,
-        ResourceLocation icon,
+        Identifier icon,
         Comparison comparison
 ) {
 
-    public AttributeFormattingData(MutableComponent text, ResourceLocation icon,
+    public AttributeFormattingData(MutableComponent text, Identifier icon,
                                    Comparison comparison) {
         this(text, MC.font.width(text), icon, comparison);
     }

@@ -3,7 +3,7 @@ package net.twentyytwo.cleanertooltips.compat;
 import net.bettercombat.api.WeaponAttributes;
 import net.bettercombat.logic.WeaponRegistry;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
@@ -21,7 +21,7 @@ public class BetterCombatHandler {
 
     public static final boolean isModLoaded = Services.getInstance().isModLoaded("bettercombat");
 
-    private static final ResourceLocation INTERACTION_RANGE =
+    private static final Identifier INTERACTION_RANGE =
             CleanerTooltips.location("textures/gui/attribute/entity_interaction_range.png");
 
     public static boolean hasAttributes(ItemStack stack) {

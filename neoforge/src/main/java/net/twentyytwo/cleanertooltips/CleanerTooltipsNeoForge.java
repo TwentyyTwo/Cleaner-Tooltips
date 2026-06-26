@@ -1,7 +1,7 @@
 package net.twentyytwo.cleanertooltips;
 
 import com.mojang.datafixers.util.Either;
-import me.shedaniel.autoconfig.AutoConfig;
+import me.shedaniel.autoconfig.AutoConfigClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
@@ -42,7 +42,7 @@ public class CleanerTooltipsNeoForge {
         container.registerExtensionPoint(IConfigScreenFactory.class,
                 (Supplier<IConfigScreenFactory>) () ->
                 (modContainer, parent) ->
-                        AutoConfig.getConfigScreen(CleanerTooltipsConfig.class, parent).get());
+                        AutoConfigClient.getConfigScreen(CleanerTooltipsConfig.class, parent).get());
     }
 
     @SubscribeEvent()

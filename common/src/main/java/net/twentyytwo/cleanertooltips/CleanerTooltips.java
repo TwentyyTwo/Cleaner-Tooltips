@@ -13,7 +13,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
@@ -54,10 +54,10 @@ public class CleanerTooltips {
     private static final int GROUP_GAP = 8; // The gap between attributes
 
     private static final String PATH = "textures/gui/attribute/";
-    private static final ResourceLocation DURABILITY_ICON = location(PATH + "durability.png");
-    private static final ResourceLocation DIGGING_SPEED = location(PATH + "digging_speed.png");
-    private static final ResourceLocation HIGHER = location(PATH + "higher.png");
-    private static final ResourceLocation LOWER = location(PATH + "lower.png");
+    private static final Identifier DURABILITY_ICON = location(PATH + "durability.png");
+    private static final Identifier DIGGING_SPEED = location(PATH + "digging_speed.png");
+    private static final Identifier HIGHER = location(PATH + "higher.png");
+    private static final Identifier LOWER = location(PATH + "lower.png");
 
     public static void init() {
         configHolder = AutoConfig.register(CleanerTooltipsConfig.class, GsonConfigSerializer::new);
@@ -70,8 +70,8 @@ public class CleanerTooltips {
         config.onConfigSave();
     }
 
-    public static ResourceLocation location(String path) {
-        return ResourceLocation.fromNamespaceAndPath(MOD_ID, path);
+    public static Identifier location(String path) {
+        return Identifier.fromNamespaceAndPath(MOD_ID, path);
     }
 
     public static MutableComponent formatting(double value, double baseValue,
@@ -177,7 +177,7 @@ public class CleanerTooltips {
                 MutableComponent text = formatting(entry.modifier().amount(),
                         TooltipsUtil.getBaseValue(attribute), entry.displayType());
 
-                ResourceLocation texture = AttributeManager.getTexture(attribute);
+                Identifier texture = AttributeManager.getTexture(attribute);
                 if (texture != null) {
                     builder.put(slot, new AttributeFormattingData(text, attribute, comparison));
                 } else if (!blacklistedHints.contains(attribute)) {
@@ -407,7 +407,7 @@ public class CleanerTooltips {
         }
 
         private int renderSlotGroupIcon(GuiGraphics guiGraphics,
-                                        ResourceLocation icon,
+                                        Identifier icon,
                                         int x, int y) {
             guiGraphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, 9, 9, 9, 9);
             return x + 9 + GROUP_GAP;
@@ -445,15 +445,15 @@ public class CleanerTooltips {
         private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison,
                                            int x, int y) {
             if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
-                ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
+                Identifier arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
                 int height = TooltipsUtil.getTickToggle() ? y : y - 1;
                 guiGraphics.blit(RenderPipelines.GUI_TEXTURED, arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
             }
         }
 
-        private ResourceLocation getSlotIcon(EquipmentSlotGroup slotGroup) {
+        private Identifier getSlotIcon(EquipmentSlotGroup slotGroup) {
             String texturePath = "textures/gui/slot/" + slotGroup.getSerializedName() + ".png";
-            ResourceLocation resourceLocation = location(texturePath);
+            Identifier resourceLocation = location(texturePath);
             return MC.getResourceManager().getResource(resourceLocation).isEmpty()
                     ? location("textures/gui/slot/any.png")
                     : resourceLocation;

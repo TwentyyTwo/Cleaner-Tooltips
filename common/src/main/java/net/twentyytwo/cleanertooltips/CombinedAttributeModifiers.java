@@ -9,7 +9,7 @@ import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
@@ -169,7 +169,7 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
     }
 
     public static class Merger {
-        static ResourceLocation mergedId = location("merged_modifier");
+        static Identifier mergedId = location("merged_modifier");
         ListMultimap<Holder<Attribute>, AttributeModifier> sourceEntries =
                 ArrayListMultimap.create();
 

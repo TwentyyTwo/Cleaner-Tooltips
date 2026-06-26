@@ -7,7 +7,7 @@ import com.mojang.serialization.JsonOps;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.server.packs.resources.SimplePreparableReloadListener;
 import net.minecraft.util.profiling.ProfilerFiller;
@@ -24,18 +24,18 @@ import java.util.Map;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.location;
 
 public class AttributeManager
-        extends SimplePreparableReloadListener<Map<ResourceLocation, IntermediateHolder>> {
-    public static final ResourceLocation LOCATION = location("attribute_display.json");
+        extends SimplePreparableReloadListener<Map<Identifier, IntermediateHolder>> {
+    public static final Identifier LOCATION = location("attribute_display.json");
 
-    private static final Codec<Map<ResourceLocation, IntermediateHolder>> CODEC =
-            Codec.unboundedMap(ResourceLocation.CODEC, IntermediateHolder.CODEC);
+    private static final Codec<Map<Identifier, IntermediateHolder>> CODEC =
+            Codec.unboundedMap(Identifier.CODEC, IntermediateHolder.CODEC);
     private static final Map<Holder<Attribute>, DisplayTextureHolder> HOLDER_MAP = new HashMap<>();
 
     @Override
-    protected @NotNull Map<ResourceLocation, IntermediateHolder> prepare(
+    protected @NotNull Map<Identifier, IntermediateHolder> prepare(
             @NotNull ResourceManager manager,
             @NotNull ProfilerFiller profiler) {
-        Map<ResourceLocation, IntermediateHolder> holderMap = new HashMap<>();
+        Map<Identifier, IntermediateHolder> holderMap = new HashMap<>();
         profiler.startTick();
 
         try (Reader reader = manager.openAsReader(LOCATION)) {
@@ -51,7 +51,7 @@ public class AttributeManager
     }
 
     @Override
-    protected void apply(@NotNull Map<ResourceLocation, IntermediateHolder> map,
+    protected void apply(@NotNull Map<Identifier, IntermediateHolder> map,
                          @NotNull ResourceManager manager,
                          @NotNull ProfilerFiller profiler) {
         HOLDER_MAP.clear();
@@ -60,7 +60,7 @@ public class AttributeManager
             String path = "textures/gui/attribute/"
                     + k.getPath().replaceFirst("(generic|player)\\.", "") + ".png";
 
-            ResourceLocation location = location(path);
+            Identifier location = location(path);
             if (manager.getResource(location).isPresent()) {
                 var attribute = BuiltInRegistries.ATTRIBUTE.get(k).orElseThrow();
                 HOLDER_MAP.put(attribute, new DisplayTextureHolder(location, v.displayType(),
@@ -87,7 +87,7 @@ public class AttributeManager
     }
 
     private record DisplayTextureHolder(
-            ResourceLocation texture,
+            Identifier texture,
             AttributeDisplayType displayType,
             int priority,
             boolean isPriorityArmor
@@ -99,7 +99,7 @@ public class AttributeManager
     }
 
     @Nullable
-    public static ResourceLocation getTexture(Holder<Attribute> attribute) {
+    public static Identifier getTexture(Holder<Attribute> attribute) {
         DisplayTextureHolder holder = HOLDER_MAP.get(attribute);
         return holder != null ? holder.texture() : null;
     }

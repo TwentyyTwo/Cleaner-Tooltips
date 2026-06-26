@@ -7,7 +7,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.ItemStack;
@@ -27,8 +27,8 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
  * Collection of useful functions.
  */
 public class TooltipsUtil {
-    public static final ResourceLocation EFFICIENCY =
-            ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
+    public static final Identifier EFFICIENCY =
+            Identifier.withDefaultNamespace("enchantment.efficiency/mainhand");
 
     private static int tick = 0;
     private static boolean tickToggle = false;
@@ -47,7 +47,7 @@ public class TooltipsUtil {
 
     public static Optional<Holder.Reference<Attribute>> resolveAttribute(String s) {
         // parse automatically adds the minecraft namespace if missing
-        var location = ResourceLocation.parse(s);
+        var location = Identifier.parse(s);
         return BuiltInRegistries.ATTRIBUTE.get(location);
     }
 

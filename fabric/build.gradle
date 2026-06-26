@@ -21,6 +21,7 @@ dependencies {
 
     modCompileOnly "com.terraformersmc:modmenu:14.0.0-rc.2"
     modCompileOnly "maven.modrinth:legendary-tooltips:1.5.1"
+    modCompileOnly "maven.modrinth:better-combat:2.3.0+1.21.4-fabric"
 }
 
 loom {

@@ -134,7 +134,7 @@ public class TooltipsUtil {
         boolean[] found = new boolean[]{false};
         for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
             if (found[0]) break;
-            stack.forEachModifier(slot, (attribute, modifier) -> {
+            stack.forEachModifier(slot, (attribute, modifier, display) -> {
                 if (found[0]) return;
                 if (AttributeManager.getTexture(attribute) == null) return;
                 if (modifier.amount() != 0) {

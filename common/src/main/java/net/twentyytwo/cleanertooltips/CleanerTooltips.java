@@ -10,7 +10,7 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.renderer.RenderType;
+import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
@@ -331,7 +331,7 @@ public class CleanerTooltips {
 
             if (TooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durability.durabilityPos == PosValues.INLINE) {
-                guiGraphics.blit(RenderType::guiTextured, DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
@@ -402,14 +402,14 @@ public class CleanerTooltips {
         private int renderSlotGroupIcon(GuiGraphics guiGraphics,
                                         ResourceLocation icon,
                                         int x, int y) {
-            guiGraphics.blit(RenderType::guiTextured, icon, x, y, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, 9, 9, 9, 9);
             return x + 9 + GROUP_GAP;
         }
 
         private int renderAttributeIconPair(GuiGraphics guiGraphics,
                                             AttributeFormattingData entry,
                                             int x, int y) {
-            guiGraphics.blit(RenderType::guiTextured, entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
             var component = entry.text().withStyle(entry.getFormatting());
             guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
@@ -427,7 +427,7 @@ public class CleanerTooltips {
         }
 
         private int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y) {
-            guiGraphics.blit(RenderType::guiTextured, miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, miningSpeedData.comparison(), x, y);
             var component = miningSpeedData.text().withStyle(miningSpeedData.getFormatting());
             guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
@@ -440,7 +440,7 @@ public class CleanerTooltips {
             if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
                 int height = TooltipsUtil.getTickToggle() ? y : y - 1;
-                guiGraphics.blit(RenderType::guiTextured, arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
+                guiGraphics.blit(RenderPipelines.GUI_TEXTURED, arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
             }
         }
 
@@ -485,7 +485,7 @@ public class CleanerTooltips {
         @Override
         public void renderImage(@NotNull Font font, int x, int y, int width, int height,
                                 @NotNull GuiGraphics guiGraphics) {
-            guiGraphics.blit(RenderType::guiTextured, DURABILITY_ICON, x, y - 1, 0, 0, 9, 9, 9, 9);
+            guiGraphics.blit(RenderPipelines.GUI_TEXTURED, DURABILITY_ICON, x, y - 1, 0, 0, 9, 9, 9, 9);
             guiGraphics.drawString(MC.font, text, x + 9 + GAP, y, -1);
         }
     }

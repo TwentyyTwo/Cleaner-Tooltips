@@ -51,7 +51,9 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
         for (int i = 0, length = values.length; i < length; i++) {
             EquipmentSlotGroup slot = values[(i + primaryGroup.ordinal()) % length];
 
-            stack.forEachModifier(slot, source::put);
+            stack.forEachModifier(slot, (attribute, modifier, display) -> {
+                source.put(attribute, modifier);
+            });
 
             builder.putAll(slot, Merger.merge(source,
                     TooltipsUtil.separateOperations(slot),

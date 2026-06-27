@@ -6,7 +6,6 @@
   "mixins": [],
   "client": [
     "GuiGraphicsMixin",
-    "ItemAttributeModifiersMixin",
     "ItemStackMixin"
   ],
   "injectors": {

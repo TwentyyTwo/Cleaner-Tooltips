@@ -14,7 +14,7 @@ import java.util.List;
 
 @Pseudo
 @Mixin(WeaponAttributeTooltip.class)
-public class WeaponAttributeTooltipMixin {
+public abstract class WeaponAttributeTooltipMixin {
 
     @Inject(
             method = "modifyTooltip",

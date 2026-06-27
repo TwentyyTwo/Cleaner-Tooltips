@@ -8,22 +8,24 @@ import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.component.TooltipDisplay;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
-import net.twentyytwo.cleanertooltips.util.ItemStackHolder;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.ModifyArg;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 
 @Mixin(ItemStack.class)
@@ -76,7 +78,23 @@ public abstract class ItemStackMixin {
     private void setStack(Consumer<Component> tooltipAdder,
                           TooltipDisplay tooltipDisplay,
                           Player player, CallbackInfo ci) {
+        // Because you cannot access the current "this" instance inside
+        // a lambda mixin, we'll get it here when the lambda is invoked.
         cleanerTooltipsStack = (ItemStack) (Object) this;
+    }
+
+    // modify the attribute modifier to include the sharpness value
+    @ModifyArg(
+            method = "method_57370",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/component/ItemAttributeModifiers$Display;apply(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/ai/attributes/AttributeModifier;)V"),
+            index = 3
+    )
+    private static AttributeModifier addAttackDamage(AttributeModifier modifier) {
+        if (MC != null && modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) {
+            double amount = modifier.amount() + TooltipsUtil.getSharpnessBonus(cleanerTooltipsStack);
+            return new AttributeModifier(modifier.id(), amount, modifier.operation());
+        }
+        return modifier;
     }
 
     // Hide the mining efficiency attribute tooltip in favor of mining speed
@@ -88,7 +106,6 @@ public abstract class ItemStackMixin {
                                                  Consumer<Component> tooltipAdder,
                                                  Player player, Holder<Attribute> attribute,
                                                  AttributeModifier modifier) {
-        ((ItemStackHolder) instance).cleanerTooltips$setStack(cleanerTooltipsStack);
         return !(config.general.miningSpeed && modifier.is(TooltipsUtil.EFFICIENCY));
     }
 }

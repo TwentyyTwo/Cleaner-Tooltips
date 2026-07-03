@@ -26,7 +26,7 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 /**
  * Collection of useful functions.
  */
-public class CleanerTooltipsUtil {
+public class TooltipsUtil {
     public static final ResourceLocation EFFICIENCY =
             ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
 
@@ -109,7 +109,10 @@ public class CleanerTooltipsUtil {
     }
 
     public static double getBaseValue(Holder<Attribute> attribute) {
-        return MC.player != null ? MC.player.getAttributeBaseValue(attribute) : 0;
+        if (MC.player != null && MC.player.getAttributes().hasAttribute(attribute)) {
+            return MC.player.getAttributeBaseValue(attribute);
+        }
+        return 0;
     }
 
     public static boolean isViableForAttributes() {

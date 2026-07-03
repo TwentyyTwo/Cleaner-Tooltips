@@ -19,9 +19,10 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.minecraft.world.item.equipment.Equippable;
+import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 
 import java.util.ArrayList;
@@ -30,7 +31,7 @@ import java.util.Collections;
 import java.util.Comparator;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.location;
-import static net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil.getBaseValue;
+import static net.twentyytwo.cleanertooltips.util.TooltipsUtil.getBaseValue;
 
 /**
  * A record containing data to simplify working with attribute modifiers.
@@ -45,7 +46,7 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
     public static CombinedAttributeModifiers fromStack(ItemStack stack) {
         Builder builder = builder().orderValues(stack.getItem() instanceof ArmorItem);
         EquipmentSlotGroup primaryGroup = getPrimaryGroup(stack);
-        double sharpnessBonus = CleanerTooltipsUtil.getSharpnessBonus(stack);
+        double sharpnessBonus = TooltipsUtil.getSharpnessBonus(stack);
 
         ListMultimap<Holder<Attribute>, AttributeModifier> source = ArrayListMultimap.create();
         EquipmentSlotGroup[] values = EquipmentSlotGroup.values();
@@ -53,9 +54,12 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
             EquipmentSlotGroup slot = values[(i + primaryGroup.ordinal()) % length];
 
             stack.forEachModifier(slot, source::put);
+            if (BetterCombatHandler.isModLoaded && BetterCombatHandler.hasAttributes(stack)) {
+                source.removeAll(Attributes.ENTITY_INTERACTION_RANGE);
+            }
 
             builder.putAll(slot, Merger.merge(source,
-                    CleanerTooltipsUtil.separateOperations(slot),
+                    TooltipsUtil.separateOperations(slot),
                     sharpnessBonus));
             source.clear();
         }
@@ -81,7 +85,7 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
 
         Builder builder = builder().orderValues(isArmor).putAll(this.modifiers);
         otherModifiers.asMap().forEach((slot, entries) -> {
-            boolean keepOperationsSeparate = CleanerTooltipsUtil.separateOperations(slot);
+            boolean keepOperationsSeparate = TooltipsUtil.separateOperations(slot);
 
             if (!this.modifiers.containsKey(slot)) {
                 for (Entry e : entries) {

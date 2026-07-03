@@ -26,7 +26,7 @@ import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
-import net.twentyytwo.cleanertooltips.util.CleanerTooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.ClientIconComponent;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 import org.jetbrains.annotations.NotNull;
@@ -161,7 +161,7 @@ public class CleanerTooltips {
             modifiers.modifiers().forEach((slot, entry) -> {
                 Comparison comparison = Comparison.NONE;
                 if (comparedModifiers.modifiers().containsKey(slot)) {
-                    boolean keepOperationsSeparate = CleanerTooltipsUtil.separateOperations(slot);
+                    boolean keepOperationsSeparate = TooltipsUtil.separateOperations(slot);
                     comparison = comparedModifiers.modifiers().get(slot).stream()
                             .filter(e -> {
                                 boolean baseCheck = entry.matchesAttribute(e.attribute());
@@ -176,7 +176,7 @@ public class CleanerTooltips {
 
                 var attribute = entry.attribute();
                 MutableComponent text = formatting(entry.modifier().amount(),
-                        CleanerTooltipsUtil.getBaseValue(attribute), entry.displayType());
+                        TooltipsUtil.getBaseValue(attribute), entry.displayType());
 
                 ResourceLocation texture = AttributeManager.getTexture(attribute);
                 if (texture != null) {
@@ -204,9 +204,9 @@ public class CleanerTooltips {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
-            var comparedStack = CleanerTooltipsUtil.getEquippedStack(stack);
+            var comparedStack = TooltipsUtil.getEquippedStack(stack);
             if (comparedStack.isEmpty() || comparedStack.equals(stack)
-                    || !CleanerTooltipsUtil.hasAttributes(comparedStack)) {
+                    || !TooltipsUtil.hasAttributes(comparedStack)) {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
@@ -216,7 +216,7 @@ public class CleanerTooltips {
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
             if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem) {
-                float speed = CleanerTooltipsUtil.getDiggingSpeed(stack);
+                float speed = TooltipsUtil.getDiggingSpeed(stack);
 
                 var component = Component.literal(DecimalFormat.getInstance().format(speed));
                 Comparison comparison = getMiningSpeedComparison(stack, speed);
@@ -228,12 +228,12 @@ public class CleanerTooltips {
 
         private static Comparison getMiningSpeedComparison(ItemStack stack, float speed) {
             if (config.general.compareAttributes) {
-                var comparedStack = CleanerTooltipsUtil.getEquippedStack(stack);
+                var comparedStack = TooltipsUtil.getEquippedStack(stack);
 
                 if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                         && comparedStack.getItem() instanceof DiggerItem item
                         && stack.getItem().getClass().equals(item.getClass())) {
-                    float comparedSpeed = CleanerTooltipsUtil.getDiggingSpeed(comparedStack);
+                    float comparedSpeed = TooltipsUtil.getDiggingSpeed(comparedStack);
                     return Comparison.getComparison(speed, comparedSpeed);
                 }
             }
@@ -256,7 +256,7 @@ public class CleanerTooltips {
                     ? miningSpeedData.textWidth() + GROUP_GAP + GAP + 9
                     : 0;
 
-            width += (CleanerTooltipsUtil.canAddDurabilityTooltip(stack)
+            width += (TooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durability.durabilityPos == PosValues.INLINE)
                     ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
                     : 0;
@@ -336,7 +336,7 @@ public class CleanerTooltips {
                 groupX = renderMiningTooltip(guiGraphics, groupX, y - 1);
             }
 
-            if (CleanerTooltipsUtil.canAddDurabilityTooltip(stack)
+            if (TooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durability.durabilityPos == PosValues.INLINE) {
                 guiGraphics.blit(RenderType::guiTextured, DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
@@ -446,7 +446,7 @@ public class CleanerTooltips {
                                            int x, int y) {
             if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
-                int height = CleanerTooltipsUtil.getTickToggle() ? y : y - 1;
+                int height = TooltipsUtil.getTickToggle() ? y : y - 1;
                 guiGraphics.blit(RenderType::guiTextured, arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
             }
         }

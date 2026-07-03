@@ -19,6 +19,7 @@ import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
 import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;

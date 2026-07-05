@@ -89,7 +89,7 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(TooltipsUtil.canAddAttributeTooltip(event.getStack()));
+        event.setSkipAll(TooltipsUtil.isViableForAttributes());
 
         // Don't display mining efficiency if mining speed is displayed
         if (config.general.miningSpeed) event.skipId(TooltipsUtil.EFFICIENCY);

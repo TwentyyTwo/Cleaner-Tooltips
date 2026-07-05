@@ -11,6 +11,7 @@ import org.spongepowered.asm.mixin.injection.At;
 
 import java.util.Optional;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
 

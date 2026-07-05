@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 @Mixin(ItemStack.class)
 public abstract class ItemStackMixin {
 
@@ -51,7 +52,7 @@ public abstract class ItemStackMixin {
                                 target = "Lnet/minecraft/world/item/ItemStack;addAttributeTooltips(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;)V"))
     private boolean hideDefaultAttributes(ItemStack instance,
                                           Consumer<Component> equipmentslotgroup, Player player) {
-        return !TooltipsUtil.canAddAttributeTooltip(instance);
+        return !TooltipsUtil.isViableForAttributes();
     }
 
     // Add the mining speed to the end of the attributes

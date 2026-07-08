@@ -108,15 +108,9 @@ public class AttributeManager
         return holder != null ? holder.priority() : 99;
     }
 
-    public static int getFullPriority(Holder<Attribute> attribute, boolean isArmor) {
+    public static int getPriority(Holder<Attribute> attribute, boolean isArmor) {
         DisplayTextureHolder holder = HOLDER_MAP.get(attribute);
-        if (holder != null) {
-            int priority = holder.priority();
-            boolean isPriorityArmor = holder.isPriorityArmor();
-            return isArmor && isPriorityArmor ? priority
-                    : !isArmor && !isPriorityArmor ? priority : priority + 1;
-        }
-        return 99;
+        return holder != null ? (holder.priority() + (isArmor ^ holder.isPriorityArmor() ? 1 : 0)) : 99;
     }
 
 }

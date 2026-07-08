@@ -17,7 +17,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -117,6 +116,7 @@ public class CleanerTooltips {
     public record IconAttributeComponent(ItemStack stack) implements TooltipComponent {
     }
 
+    @SuppressWarnings("unused")
     public static class IconAttributeTooltip implements ClientTooltipComponent {
         private final ItemStack stack;
         private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
@@ -145,42 +145,29 @@ public class CleanerTooltips {
         }
 
         public IconAttributeTooltip(ItemStack stack) {
-            CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack);
+            CombinedAttributeModifiers modifiers = new CombinedAttributeModifiers(stack);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
             final boolean[] anyTextureMissing = {false};
 
-            if (!config.advanced.onlyCompareShared) {
-                boolean isArmor = stack.getItem() instanceof ArmorItem;
-                modifiers = modifiers.combine(comparedModifiers, isArmor, false);
-            }
+            if (!config.advanced.onlyCompareShared) modifiers.combine(comparedModifiers);
 
             ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder =
                     ImmutableListMultimap.builder();
             modifiers.modifiers().forEach((slot, entry) -> {
                 Comparison comparison = Comparison.NONE;
                 if (comparedModifiers.modifiers().containsKey(slot)) {
-                    boolean keepOperationsSeparate = TooltipsUtil.separateOperations(slot);
                     comparison = comparedModifiers.modifiers().get(slot).stream()
-                            .filter(e -> {
-                                boolean baseCheck = entry.matchesAttribute(e.attribute());
-                                return keepOperationsSeparate
-                                        ? baseCheck && entry.matchesOperation(e.modifier())
-                                        : baseCheck;
-                            })
+                            .filter(e -> entry.isComparableWith(e, slot))
                             .findFirst()
                             .map(entry::getComparison)
-                            .orElseGet(() -> entry.getComparison(0, 0));
+                            .orElse(entry.getComparison());
                 }
 
-                var attribute = entry.attribute();
-                MutableComponent text = formatting(entry.modifier().amount(),
-                        TooltipsUtil.getBaseValue(attribute), entry.displayType());
-
-                ResourceLocation texture = AttributeManager.getTexture(attribute);
+                ResourceLocation texture = AttributeManager.getTexture(entry.attribute());
                 if (texture != null) {
-                    builder.put(slot, new AttributeFormattingData(text, attribute, comparison));
-                } else if (!blacklistedHints.contains(attribute)) {
+                    builder.put(slot, new AttributeFormattingData(entry, texture, comparison));
+                } else if (!blacklistedHints.contains(entry.attribute())) {
                     anyTextureMissing[0] = true;
                 }
             });
@@ -209,7 +196,7 @@ public class CleanerTooltips {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
-            return CombinedAttributeModifiers.fromStack(comparedStack);
+            return new CombinedAttributeModifiers(comparedStack);
         }
 
         @Nullable
@@ -243,22 +230,20 @@ public class CleanerTooltips {
         @Override
         public int getHeight() {
             return config.advanced.groupDisplay == CleanerTooltipsConfig.GroupDisplay.ROWS
-                    ? Math.max(10, groupFormattingDataMap.asMap().size() * 10)
-                    : 10;
+                    ? Math.max(10, groupFormattingDataMap.asMap().size() * 10) : 10;
         }
 
         @Override
         public int getWidth(@NotNull Font font) {
             int width = 0;
 
-            width += miningSpeedData != null
-                    ? miningSpeedData.textWidth() + GROUP_GAP + GAP + 9
-                    : 0;
+            if (miningSpeedData != null) {
+                width += miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
+            }
 
-            width += (TooltipsUtil.canAddDurabilityTooltip(stack)
-                    && config.durability.durabilityPos == PosValues.INLINE)
-                    ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
-                    : 0;
+            if (TooltipsUtil.canAddDurabilityTooltip(stack) && config.durability.durabilityPos == PosValues.INLINE) {
+                width += MC.font.width(durabilityComponent) + GROUP_GAP + GAP + 9;
+            }
 
             width = calculateAttributeWidth(font, width);
 

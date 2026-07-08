@@ -127,6 +127,12 @@ public class TooltipsUtil {
         return 0;
     }
 
+    public static <T> T[] shiftArray(final T[] array, int offset) {
+        T[] shiftedArray = array.clone();
+        for (int i = 0, l = array.length; i < l; i++) shiftedArray[i] = array[(i + offset) % l];
+        return shiftedArray;
+    }
+
     public static boolean isViableForAttributes() {
         return MC.player != null && config.general.enabled && !Services.getInstance().isKeyDown();
     }
@@ -159,9 +165,13 @@ public class TooltipsUtil {
         return config.durability.durabilityEnabled && stack.isDamageableItem();
     }
 
-    public static boolean separateOperations(EquipmentSlotGroup slotGroup) {
-        return slotGroup != EquipmentSlotGroup.MAINHAND
-                && slotGroup != EquipmentSlotGroup.OFFHAND
-                && slotGroup != EquipmentSlotGroup.BODY;
+    // Returns whether the provided slot group applies to only the item it is on (exclusive),
+    // or if it applies to more items that it is on (nonexclusive).
+    // Essentially, if an entries slot group is exclusive, every modifier operation can be combined
+    // into one modifier, otherwise they are separated.
+    public static boolean isExclusive(EquipmentSlotGroup slotGroup) {
+        return slotGroup == EquipmentSlotGroup.MAINHAND
+                || slotGroup == EquipmentSlotGroup.OFFHAND
+                || slotGroup == EquipmentSlotGroup.BODY;
     }
 }

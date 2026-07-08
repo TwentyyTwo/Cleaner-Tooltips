@@ -8,6 +8,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.Comparison;
+import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
@@ -19,12 +20,28 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
  * @param icon          the resource location of the attribute
  * @param comparison    a comparison of this attribute to another
  */
+@SuppressWarnings("unused")
 public record AttributeFormattingData(
         MutableComponent text,
         int textWidth,
         ResourceLocation icon,
         Comparison comparison
 ) {
+
+    public AttributeFormattingData(CombinedAttributeModifiers.Entry entry, Comparison comparison) {
+        this(entry, AttributeManager.getTexture(entry.attribute()), comparison);
+    }
+
+    public AttributeFormattingData(CombinedAttributeModifiers.Entry entry, ResourceLocation icon,
+                                   Comparison comparison) {
+        this(
+                CleanerTooltips.formatting(
+                        entry.modifier().amount(),
+                        TooltipsUtil.getBaseValue(entry.attribute()),
+                        entry.displayType()),
+                icon, comparison
+        );
+    }
 
     public AttributeFormattingData(MutableComponent text, ResourceLocation icon,
                                    Comparison comparison) {
@@ -33,7 +50,7 @@ public record AttributeFormattingData(
 
     public AttributeFormattingData(MutableComponent text, Holder<Attribute> attribute,
                                    Comparison comparison) {
-        this(text, MC.font.width(text), AttributeManager.getTexture(attribute), comparison);
+        this(text, AttributeManager.getTexture(attribute), comparison);
     }
 
     public ChatFormatting getFormatting() {

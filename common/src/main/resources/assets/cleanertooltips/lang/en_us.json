@@ -15,6 +15,10 @@
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint.@Tooltip": "If an item has attributes that are hidden, display a hint. \"[+]\"",
   "text.autoconfig.cleanertooltips.option.general.miningSpeed": "Mining Speed",
   "text.autoconfig.cleanertooltips.option.general.miningSpeed.@Tooltip": "Whether to display the mining speed of tools; also displays as text if icon attributes are disabled.\nNote: Hides the mining efficiency attribute text.",
+  "text.autoconfig.cleanertooltips.option.general.innerGap": "Inner Gap",
+  "text.autoconfig.cleanertooltips.option.general.innerGap.@Tooltip": "The distance between the number and the icon; in pixels.",
+  "text.autoconfig.cleanertooltips.option.general.attributeGap": "Attribute Gap",
+  "text.autoconfig.cleanertooltips.option.general.attributeGap.@Tooltip": "The distance between the individual attributes; in pixels.",
 
   "text.autoconfig.cleanertooltips.option.durability": "Durability",
 

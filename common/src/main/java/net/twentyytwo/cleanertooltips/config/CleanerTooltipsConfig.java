@@ -37,6 +37,9 @@ public class CleanerTooltipsConfig implements ConfigData {
             }
             i++;
         }
+
+        CleanerTooltips.GAP = general.innerGap;
+        CleanerTooltips.GROUP_GAP = general.attributeGap;
     }
 
     @ConfigEntry.Gui.CollapsibleObject(startExpanded = true)
@@ -66,6 +69,14 @@ public class CleanerTooltipsConfig implements ConfigData {
 
         @ConfigEntry.Gui.Tooltip
         public boolean miningSpeed = false;
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.BoundedDiscrete(max = 20)
+        public int innerGap = 3;
+
+        @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.BoundedDiscrete(max = 20)
+        public int attributeGap = 8;
     }
 
     public static class Durability {

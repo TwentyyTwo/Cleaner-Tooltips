@@ -49,8 +49,8 @@ public class CleanerTooltips {
 
     public static CleanerTooltipsConfig config;
 
-    private static final int GAP = 3; // The gap between the icon and the value
-    private static final int GROUP_GAP = 8; // The gap between attributes
+    public static int GAP; // The gap between the icon and the value
+    public static int GROUP_GAP; // The gap between attributes
 
     private static final String PATH = "textures/gui/attribute/";
     private static final ResourceLocation DURABILITY_ICON = location(PATH + "durability.png");

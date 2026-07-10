@@ -15,6 +15,10 @@
   "text.autoconfig.cleanertooltips.option.general.hiddenAttributesHint.@Tooltip": "Wenn ein Item Attribute hat die versteckt sind, weise darauf hin. \"[+]\"",
   "text.autoconfig.cleanertooltips.option.general.miningSpeed": "Abbaugeschwindigkeit",
   "text.autoconfig.cleanertooltips.option.general.miningSpeed.@Tooltip": "Ob die Abbaugeschwindigkeit von Werkzeugen angezeigt werden soll.\nWird auch als text angezeigt wenn Symbol Attribute deaktiviert sind.\nHinweis: Blendet den Text für das Abbaueffizienz Attribute aus.",
+  "text.autoconfig.cleanertooltips.option.general.innerGap": "Innerer Abstand",
+  "text.autoconfig.cleanertooltips.option.general.innerGap.@Tooltip": "Der abstand zwischen der Zahl und dem Symbol; in Pixeln.",
+  "text.autoconfig.cleanertooltips.option.general.attributeGap": "Attribut Abstand",
+  "text.autoconfig.cleanertooltips.option.general.attributeGap.@Tooltip": "Der Abstand zwischen den einzelnen Attributen; in Pixeln.",
 
   "text.autoconfig.cleanertooltips.option.durability": "Haltbarkeit",
 

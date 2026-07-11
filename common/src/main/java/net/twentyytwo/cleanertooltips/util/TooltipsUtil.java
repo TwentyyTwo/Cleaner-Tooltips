@@ -11,8 +11,8 @@ import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
@@ -97,15 +97,27 @@ public class TooltipsUtil {
         return bonus;
     }
 
-    public static MutableComponent getDiggingSpeedComponent(ItemStack stack, DiggerItem item) {
+    public static MutableComponent getDiggingSpeedComponent(float speed) {
         return CommonComponents.space()
                 .append(Component.translatable("text.cleanertooltips.mining_speed",
-                        DecimalFormat.getInstance().format(getDiggingSpeed(stack, item))))
+                        DecimalFormat.getInstance().format(speed)))
                 .withStyle(ChatFormatting.DARK_GREEN);
     }
 
-    public static float getDiggingSpeed(ItemStack stack, DiggerItem item) {
-        float diggingSpeed = item.getTier().getSpeed(); // base tool speed
+    public static float getDiggingSpeed(ItemStack stack) {
+        Tool tool = stack.get(DataComponents.TOOL);
+        if (tool == null || tool.rules().isEmpty()) {
+            return 0.0f;
+        }
+        final float[] diggingSpeed = {0.0f};
+        for (var rule : tool.rules()) {
+            var key = rule.blocks().unwrapKey();
+            if (key.isPresent() && key.get().location().getPath().equals("sword_efficient")) {
+                return 0.0f;
+            }
+
+            rule.speed().ifPresent(f -> diggingSpeed[0] = f);
+        }
 
         var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         for (var entry : enchantments.entrySet()) {
@@ -113,11 +125,11 @@ public class TooltipsUtil {
             var effects = enchantment.getEffects(EnchantmentEffectComponents.ATTRIBUTES);
 
             for (var effect : effects) {
-                diggingSpeed += effect.amount().calculate(entry.getIntValue());
+                diggingSpeed[0] += effect.amount().calculate(entry.getIntValue());
             }
         }
 
-        return diggingSpeed;
+        return diggingSpeed[0];
     }
 
     public static double getBaseValue(Holder<Attribute> attribute) {

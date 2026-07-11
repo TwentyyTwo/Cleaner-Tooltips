@@ -10,7 +10,6 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
@@ -59,9 +58,11 @@ public abstract class ItemStackMixin {
     @Inject(method = "addAttributeTooltips", at = @At("TAIL"))
     private void addMiningSpeedTooltip(Consumer<Component> tooltipAdder, Player player, CallbackInfo ci) {
         ItemStack thisStack = (ItemStack) (Object) this;
-        if (config.general.miningSpeed && thisStack != null && !thisStack.isEmpty()
-                && thisStack.getItem() instanceof DiggerItem item) {
-            tooltipAdder.accept(TooltipsUtil.getDiggingSpeedComponent(thisStack, item));
+        if (config.general.miningSpeed && thisStack != null && !thisStack.isEmpty()) {
+            float speed = TooltipsUtil.getDiggingSpeed(thisStack);
+            if (speed > 0.0f) {
+                tooltipAdder.accept(TooltipsUtil.getDiggingSpeedComponent(speed));
+            }
         }
     }
 

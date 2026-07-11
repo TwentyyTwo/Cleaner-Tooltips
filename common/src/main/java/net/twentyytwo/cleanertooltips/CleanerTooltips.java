@@ -17,7 +17,6 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
-import net.minecraft.world.item.DiggerItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
@@ -201,8 +200,9 @@ public class CleanerTooltips {
 
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
-            if (config.general.miningSpeed && stack.getItem() instanceof DiggerItem item) {
-                float speed = TooltipsUtil.getDiggingSpeed(stack, item);
+            if (config.general.miningSpeed) {
+                float speed = TooltipsUtil.getDiggingSpeed(stack);
+                if (speed <= 0.0f) return null;
 
                 var component = Component.literal(DecimalFormat.getInstance().format(speed));
                 Comparison comparison = getMiningSpeedComparison(stack, speed);
@@ -217,9 +217,9 @@ public class CleanerTooltips {
                 var comparedStack = TooltipsUtil.getEquippedStack(stack);
 
                 if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
-                        && comparedStack.getItem() instanceof DiggerItem item
-                        && stack.getItem().getClass().equals(item.getClass())) {
-                    float comparedSpeed = TooltipsUtil.getDiggingSpeed(comparedStack, item);
+                        && stack.getItem().getClass().equals(comparedStack.getItem().getClass())) {
+                    float comparedSpeed = TooltipsUtil.getDiggingSpeed(comparedStack);
+                    if (comparedSpeed <= 0.0f) return Comparison.NONE;
                     return Comparison.getComparison(speed, comparedSpeed);
                 }
             }

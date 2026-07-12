@@ -26,8 +26,10 @@
   "text.autoconfig.cleanertooltips.option.durability.durabilityEnabled.@Tooltip": "Ob die Haltbarkeit von Items angezeigt werden soll.\nDies funktioniert auch ohne Symbol Attribute.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityPos": "Haltbarkeit Position",
   "text.autoconfig.cleanertooltips.option.durability.durabilityPos.@Tooltip": "Ändere die Position von der Haltbarkeit.\n\nINLINE zeigt sie in der gleichen Reihe wie die Attribute an, BELOW zeigt sie direkt unter\nden Attributen und BOTTOM zeigt sie am ende des Tooltips an.\nBeachte das INLINE und BELOW das gleiche machen wenn Symbol Attribute deaktiviert sind.",
+  "text.autoconfig.cleanertooltips.option.durability.durabilityStyle": "Haltbarkeit Stil",
+  "text.autoconfig.cleanertooltips.option.durability.durabilityStyle.@Tooltip": "Ändere den Stil von der Haltbarkeit.",
   "text.autoconfig.cleanertooltips.option.durability.maximumDurability": "Maximale Haltbarkeit",
-  "text.autoconfig.cleanertooltips.option.durability.maximumDurability.@Tooltip": "Ob auch die maximale Haltbarkeit angezeigt werden soll.",
+  "text.autoconfig.cleanertooltips.option.durability.maximumDurability.@Tooltip": "Ob auch die maximale Haltbarkeit angezeigt werden soll.\nFunktioniert nicht mit dem \"Percentage\" Stil.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor": "Haltbarkeit Farbe",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor.@Tooltip": "Ob sich die Farbe der Haltbarkeit je nach der übrigen Haltbarkeit ändern soll.",
 

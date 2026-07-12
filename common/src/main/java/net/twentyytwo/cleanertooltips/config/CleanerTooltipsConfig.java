@@ -88,6 +88,10 @@ public class CleanerTooltipsConfig implements ConfigData {
         public PosValues durabilityPos = PosValues.INLINE;
 
         @ConfigEntry.Gui.Tooltip
+        @ConfigEntry.Gui.EnumHandler(option = ConfigEntry.Gui.EnumHandler.EnumDisplayOption.BUTTON)
+        public DurabilityStyle durabilityStyle = DurabilityStyle.DEFAULT;
+
+        @ConfigEntry.Gui.Tooltip
         public boolean maximumDurability = true;
 
         @ConfigEntry.Gui.Tooltip
@@ -110,6 +114,11 @@ public class CleanerTooltipsConfig implements ConfigData {
         ROWS,
         INLINE,
         PRIMARY
+    }
+
+    public enum DurabilityStyle {
+        DEFAULT,
+        PERCENTAGE
     }
 
     public enum PosValues {

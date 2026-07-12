@@ -103,13 +103,19 @@ public class CleanerTooltips {
                 : diff >= 0.15f ? ChatFormatting.GOLD
                 : ChatFormatting.RED;
 
-        var remain = Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor);
-        if (!config.durability.maximumDurability) {
-            return remain;
-        }
+        switch (config.durability.durabilityStyle) {
+            case PERCENTAGE -> {
+                diff *= 100;
+                return Component.literal(String.format("%.0f%%", diff)).withStyle(durabilityColor);
+            }
+            case null, default -> {
+                var remain = Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor);
+                if (!config.durability.maximumDurability) return remain;
 
-        return remain.append(Component.translatable("text.cleanertooltips.total_durability", maxDurability)
-                .withStyle(ChatFormatting.DARK_GRAY));
+                return remain.append(Component.translatable("text.cleanertooltips.total_durability", maxDurability)
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
     }
 
     public record IconAttributeComponent(ItemStack stack) implements TooltipComponent {

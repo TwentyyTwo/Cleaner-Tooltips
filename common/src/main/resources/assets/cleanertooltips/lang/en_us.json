@@ -26,8 +26,10 @@
   "text.autoconfig.cleanertooltips.option.durability.durabilityEnabled.@Tooltip": "Whether the durability of items should be displayed.\nThis also works without using the icon attributes.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityPos": "Durability Position",
   "text.autoconfig.cleanertooltips.option.durability.durabilityPos.@Tooltip": "Change the position of the durability.\n\nINLINE displays it in the same row as the attributes, BELOW directly under the\nattributes and BOTTOM displays it at the bottom of the tooltip.\nNote that if icon attributes are disabled, both INLINE and BELOW do the same.",
+  "text.autoconfig.cleanertooltips.option.durability.durabilityStyle": "Durability Style",
+  "text.autoconfig.cleanertooltips.option.durability.durabilityStyle.@Tooltip": "Change the style of the durability.",
   "text.autoconfig.cleanertooltips.option.durability.maximumDurability": "Maximum Durability",
-  "text.autoconfig.cleanertooltips.option.durability.maximumDurability.@Tooltip": "Whether to include the maximum durability of an item.",
+  "text.autoconfig.cleanertooltips.option.durability.maximumDurability.@Tooltip": "Whether to include the maximum durability of an item.\nDoesn't work with the percentage style.",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor": "Durability Color",
   "text.autoconfig.cleanertooltips.option.durability.durabilityColor.@Tooltip": "Whether the color of the durability should change based on the remaining durability.",
 

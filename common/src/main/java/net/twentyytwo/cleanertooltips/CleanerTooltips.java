@@ -3,8 +3,6 @@ package net.twentyytwo.cleanertooltips;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ListMultimap;
 import com.mojang.blaze3d.platform.InputConstants;
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -14,14 +12,14 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
+import net.twentyytwo.cleanertooltips.config.TooltipsConfig.Position;
+import net.twentyytwo.cleanertooltips.config.TooltipsClothConfig;
+import net.twentyytwo.cleanertooltips.config.TooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
@@ -31,9 +29,6 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
-
-import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.blacklistedHints;
-import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.configHolder;
 
 public class CleanerTooltips {
 
@@ -46,7 +41,7 @@ public class CleanerTooltips {
             KeyMapping.CATEGORY_INVENTORY
     );
 
-    public static CleanerTooltipsConfig config;
+    public static TooltipsConfig config = TooltipsClothConfig.init();
 
     public static int GAP; // The gap between the icon and the value
     public static int GROUP_GAP; // The gap between attributes
@@ -58,14 +53,7 @@ public class CleanerTooltips {
     private static final ResourceLocation LOWER = location(PATH + "lower.png");
 
     public static void init() {
-        configHolder = AutoConfig.register(CleanerTooltipsConfig.class, GsonConfigSerializer::new);
-        configHolder.registerSaveListener((holder, configInstance) -> {
-            config = configInstance;
-            config.onConfigSave();
-            return InteractionResult.SUCCESS;
-        });
-        config = AutoConfig.getConfigHolder(CleanerTooltipsConfig.class).getConfig();
-        config.onConfigSave();
+        TooltipsClothConfig.saveConfig();
     }
 
     public static ResourceLocation location(String path) {
@@ -97,20 +85,20 @@ public class CleanerTooltips {
         int curDurability = maxDurability - stack.getDamageValue();
         float diff = (float) curDurability / maxDurability;
 
-        ChatFormatting durabilityColor = !config.durability.durabilityColor
+        ChatFormatting durabilityColor = !config.durabilityColor
                 || curDurability == maxDurability ? ChatFormatting.GRAY
                 : diff >= 0.5f ? ChatFormatting.GREEN
                 : diff >= 0.15f ? ChatFormatting.GOLD
                 : ChatFormatting.RED;
 
-        switch (config.durability.durabilityStyle) {
+        switch (config.durabilityStyle) {
             case PERCENTAGE -> {
                 diff *= 100;
                 return Component.literal(String.format("%.0f%%", diff)).withStyle(durabilityColor);
             }
             case null, default -> {
                 var remain = Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor);
-                if (!config.durability.maximumDurability) return remain;
+                if (!config.durabilityMaximum) return remain;
 
                 return remain.append(Component.translatable("text.cleanertooltips.total_durability", maxDurability)
                         .withStyle(ChatFormatting.DARK_GRAY));
@@ -155,7 +143,7 @@ public class CleanerTooltips {
 
             final boolean[] anyTextureMissing = {false};
 
-            if (!config.advanced.onlyCompareShared) modifiers.combine(comparedModifiers);
+            if (!config.onlyCompareMutual) modifiers.combine(comparedModifiers);
 
             ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder =
                     ImmutableListMultimap.builder();
@@ -172,7 +160,7 @@ public class CleanerTooltips {
                 ResourceLocation texture = AttributeManager.getTexture(entry.attribute());
                 if (texture != null) {
                     builder.put(slot, new AttributeFormattingData(entry, texture, comparison));
-                } else if (!blacklistedHints.contains(entry.attribute())) {
+                } else if (!TooltipsConfig.BLACKLISTED_HINTS.contains(entry.attribute())) {
                     anyTextureMissing[0] = true;
                 }
             });
@@ -191,7 +179,7 @@ public class CleanerTooltips {
         }
 
         private static CombinedAttributeModifiers getComparedModifiers(ItemStack stack) {
-            if (!config.general.compareAttributes) {
+            if (!config.comparisonEnabled) {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
@@ -206,7 +194,7 @@ public class CleanerTooltips {
 
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
-            if (config.general.miningSpeed) {
+            if (config.miningSpeed) {
                 float speed = TooltipsUtil.getDiggingSpeed(stack);
                 if (speed <= 0.0f) return null;
 
@@ -219,7 +207,7 @@ public class CleanerTooltips {
         }
 
         private static Comparison getMiningSpeedComparison(ItemStack stack, float speed) {
-            if (config.general.compareAttributes) {
+            if (config.comparisonEnabled) {
                 var comparedStack = TooltipsUtil.getEquippedStack(stack);
 
                 if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
@@ -235,7 +223,7 @@ public class CleanerTooltips {
 
         @Override
         public int getHeight() {
-            return config.advanced.groupDisplay == CleanerTooltipsConfig.GroupDisplay.ROWS
+            return config.groupDisplay == TooltipsConfig.GroupDisplay.ROWS
                     ? Math.max(10, groupFormattingDataMap.asMap().size() * 10) : 10;
         }
 
@@ -247,7 +235,7 @@ public class CleanerTooltips {
                 width += miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
             }
 
-            if (TooltipsUtil.canAddDurabilityTooltip(stack) && config.durability.durabilityPos == PosValues.INLINE) {
+            if (TooltipsUtil.canAddDurabilityTooltip(stack) && config.durabilityPos == Position.INLINE) {
                 width += MC.font.width(durabilityComponent) + GROUP_GAP + GAP + 9;
             }
 
@@ -257,7 +245,7 @@ public class CleanerTooltips {
         }
 
         private int calculateAttributeWidth(Font font, int width) {
-            return switch (config.advanced.groupDisplay) {
+            return switch (config.groupDisplay) {
                 case ROWS -> getWidthRows(font, width);
                 case INLINE -> getWidthInline(font, width);
                 case PRIMARY -> getWidthPrimary(font, width);
@@ -284,7 +272,7 @@ public class CleanerTooltips {
                 biggestRowWidth = Math.max(rowWidth, biggestRowWidth);
             }
 
-            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
+            if (this.anyTextureMissing && config.hintEnabled) {
                 firstRowWidth += font.width("[+]") + GROUP_GAP;
             }
 
@@ -297,7 +285,7 @@ public class CleanerTooltips {
                 width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
             }
 
-            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
+            if (this.anyTextureMissing && config.hintEnabled) {
                 width += font.width("[+]") + GROUP_GAP;
             }
 
@@ -310,7 +298,7 @@ public class CleanerTooltips {
                 width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
             }
 
-            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
+            if (this.anyTextureMissing && config.hintEnabled) {
                 width += font.width("[+]") + GROUP_GAP;
             }
 
@@ -327,14 +315,14 @@ public class CleanerTooltips {
             }
 
             if (TooltipsUtil.canAddDurabilityTooltip(stack)
-                    && config.durability.durabilityPos == PosValues.INLINE) {
+                    && config.durabilityPos == Position.INLINE) {
                 guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
                 guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
 
         private int renderAttributeModifiers(Font font, GuiGraphics guiGraphics, int x, int y) {
-            return switch (config.advanced.groupDisplay) {
+            return switch (config.groupDisplay) {
                 case ROWS -> renderRows(font, guiGraphics, x, y);
                 case INLINE -> renderInline(font, guiGraphics, x, y);
                 case PRIMARY -> renderPrimary(font, guiGraphics, x, y);
@@ -415,7 +403,7 @@ public class CleanerTooltips {
         }
 
         private int renderHiddenHint(Font font, GuiGraphics guiGraphics, int x, int y) {
-            if (config.general.hiddenAttributesHint) {
+            if (config.hintEnabled) {
                 var component = Component.literal("[+]").withStyle(ChatFormatting.YELLOW);
                 guiGraphics.drawString(font, component, x, y, -1);
                 x += font.width("[+]") + GROUP_GAP;
@@ -434,7 +422,7 @@ public class CleanerTooltips {
 
         private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison,
                                            int x, int y) {
-            if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
+            if (config.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
                 int height = TooltipsUtil.getTickToggle() ? y : y - 1;
                 guiGraphics.blit(arrow, x + 7, height, 0, 0, 3, 3, 3, 3);

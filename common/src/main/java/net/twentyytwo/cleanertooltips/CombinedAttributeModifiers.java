@@ -38,7 +38,7 @@ import static net.twentyytwo.cleanertooltips.util.TooltipsUtil.getBaseValue;
  *
  * @see ItemAttributeModifiers
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class CombinedAttributeModifiers {
     private ListMultimap<EquipmentSlotGroup, Entry> modifiers;
 

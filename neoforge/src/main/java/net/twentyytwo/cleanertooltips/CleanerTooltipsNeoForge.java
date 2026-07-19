@@ -1,7 +1,6 @@
 package net.twentyytwo.cleanertooltips;
 
 import com.mojang.datafixers.util.Either;
-import me.shedaniel.autoconfig.AutoConfig;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
@@ -21,8 +20,8 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
+import net.twentyytwo.cleanertooltips.config.TooltipsConfig.Position;
+import net.twentyytwo.cleanertooltips.config.TooltipsClothConfig;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 
@@ -36,10 +35,8 @@ public class CleanerTooltipsNeoForge {
 
     public CleanerTooltipsNeoForge(ModContainer container) {
         CleanerTooltips.init();
-        container.registerExtensionPoint(IConfigScreenFactory.class,
-                (Supplier<IConfigScreenFactory>) () ->
-                (modContainer, parent) ->
-                        AutoConfig.getConfigScreen(CleanerTooltipsConfig.class, parent).get());
+        container.registerExtensionPoint(IConfigScreenFactory.class, (Supplier<IConfigScreenFactory>)
+                () -> (client, parent) -> TooltipsClothConfig.getConfigScreen(parent));
     }
 
     @SubscribeEvent()
@@ -65,8 +62,8 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent(priority = EventPriority.HIGHEST)
     public static void getMissingComponents(RenderTooltipEvent.GatherComponents event) {
-        PosValues position = config.durability.durabilityPos;
-        if (!config.durability.durabilityEnabled || position == PosValues.INLINE) return;
+        Position position = config.durabilityPos;
+        if (!config.durabilityEnabled || position == Position.INLINE) return;
 
         var elements = event.getTooltipElements();
         for (int i = 0; i < elements.size(); i++) {
@@ -74,12 +71,12 @@ public class CleanerTooltipsNeoForge {
             if (op.isEmpty()) continue;
             if (op.get() instanceof IconAttributeComponent(ItemStack stack)) {
                 if (stack.isDamageableItem()) {
-                    int index = position == PosValues.BELOW ? i + 1 : elements.size();
+                    int index = position == Position.BELOW ? i + 1 : elements.size();
                     elements.add(index, Either.right(new IconDurabilityComponent(stack)));
                 }
                 return;
             } else if (op.get() instanceof IconDurabilityComponent) {
-                if (i != elements.size() - 1 && position == PosValues.BOTTOM) {
+                if (i != elements.size() - 1 && position == Position.BOTTOM) {
                     elements.add(elements.remove(i));
                 }
                 return;
@@ -92,6 +89,6 @@ public class CleanerTooltipsNeoForge {
         event.setSkipAll(TooltipsUtil.isViableForAttributes());
 
         // Don't display mining efficiency if mining speed is displayed
-        if (config.general.miningSpeed) event.skipId(TooltipsUtil.EFFICIENCY);
+        if (config.miningSpeed) event.skipId(TooltipsUtil.EFFICIENCY);
     }
 }

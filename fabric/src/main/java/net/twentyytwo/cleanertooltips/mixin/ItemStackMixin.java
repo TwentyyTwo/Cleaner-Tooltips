@@ -58,7 +58,7 @@ public abstract class ItemStackMixin {
     @Inject(method = "addAttributeTooltips", at = @At("TAIL"))
     private void addMiningSpeedTooltip(Consumer<Component> tooltipAdder, Player player, CallbackInfo ci) {
         ItemStack thisStack = (ItemStack) (Object) this;
-        if (config.general.miningSpeed && thisStack != null && !thisStack.isEmpty()) {
+        if (config.miningSpeed && thisStack != null && !thisStack.isEmpty()) {
             float speed = TooltipsUtil.getDiggingSpeed(thisStack);
             if (speed > 0.0f) {
                 tooltipAdder.accept(TooltipsUtil.getDiggingSpeedComponent(speed));
@@ -72,7 +72,7 @@ public abstract class ItemStackMixin {
                                 target = "Lnet/minecraft/world/item/ItemStack;addModifierTooltip(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/ai/attributes/AttributeModifier;)V"))
     private boolean hideEfficiencyTooltip(ItemStack instance, Consumer<Component> tooltipAdder, Player player,
                                           Holder<Attribute> attribute, AttributeModifier modifier) {
-        return !(config.general.miningSpeed && modifier.is(TooltipsUtil.EFFICIENCY));
+        return !(config.miningSpeed && modifier.is(TooltipsUtil.EFFICIENCY));
     }
 
     // Fixes MC-271840

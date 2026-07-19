@@ -11,7 +11,7 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
+import net.twentyytwo.cleanertooltips.config.TooltipsConfig.Position;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.FabricAttributeManager;
 
@@ -50,9 +50,9 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
      */
     public static List<ClientTooltipComponent> getMissingComponents(
             List<ClientTooltipComponent> components) {
-        PosValues position = config.durability.durabilityPos;
+        Position position = config.durabilityPos;
 
-        if (!config.durability.durabilityEnabled || position == PosValues.INLINE) {
+        if (!config.durabilityEnabled || position == Position.INLINE) {
             return components;
         }
 
@@ -60,12 +60,12 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
         for (int i = 0; i < newList.size(); i++) {
             if (newList.get(i) instanceof IconAttributeTooltip tooltip) {
                 if (tooltip.getStack().isDamageableItem()) {
-                    int index = position == PosValues.BELOW ? i + 1 : newList.size();
+                    int index = position == Position.BELOW ? i + 1 : newList.size();
                     newList.add(index, new IconDurabilityTooltip(tooltip.getStack()));
                 }
                 return newList;
             } else if (newList.get(i) instanceof IconDurabilityTooltip) {
-                if (i != newList.size() - 1 && position == PosValues.BOTTOM) {
+                if (i != newList.size() - 1 && position == Position.BOTTOM) {
                     newList.add(newList.remove(i));
                 }
                 return newList;

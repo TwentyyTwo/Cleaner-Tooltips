@@ -36,7 +36,7 @@ public abstract class TextUtilsMixin {
             }
 
             if (shouldAddDurability) {
-                switch (config.durability.durabilityPos) {
+                switch (config.durabilityPos) {
                     case INLINE -> {
                         if (!shouldAddAttributes) {
                             original.add(index, new IconDurabilityTooltip(stack));

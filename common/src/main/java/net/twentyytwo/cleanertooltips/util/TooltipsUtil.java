@@ -81,7 +81,7 @@ public class TooltipsUtil {
     public static float getSharpnessBonus(ItemStack stack) {
         assert MC.player != null;
         float bonus = 0;
-        if (config.general.sharpness) {
+        if (config.sharpnessFix) {
             var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
             for (var entry : enchantments.entrySet()) {
                 Enchantment enchantment = entry.getKey().value();
@@ -146,7 +146,7 @@ public class TooltipsUtil {
     }
 
     public static boolean isViableForAttributes() {
-        return MC.player != null && config.general.enabled && !Services.getInstance().isKeyDown();
+        return MC.player != null && config.iconsEnabled && !Services.getInstance().isKeyDown();
     }
 
     public static boolean hasAttributes(ItemStack stack) {
@@ -174,7 +174,7 @@ public class TooltipsUtil {
     }
 
     public static boolean canAddDurabilityTooltip(ItemStack stack) {
-        return config.durability.durabilityEnabled && stack.isDamageableItem();
+        return config.durabilityEnabled && stack.isDamageableItem();
     }
 
     // Returns whether the provided slot group applies to only the item it is on (exclusive),

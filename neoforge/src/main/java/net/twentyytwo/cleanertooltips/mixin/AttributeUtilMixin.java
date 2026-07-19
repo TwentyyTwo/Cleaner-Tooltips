@@ -27,7 +27,7 @@ public abstract class AttributeUtilMixin {
     @Inject(method = "applyModifierTooltips", at = @At("TAIL"))
     private static void addMiningSpeedTooltip(ItemStack stack, Consumer<Component> tooltip,
                                               AttributeTooltipContext ctx, CallbackInfo ci) {
-        if (config.general.miningSpeed && stack != null && !stack.isEmpty()) {
+        if (config.miningSpeed && stack != null && !stack.isEmpty()) {
             float speed = TooltipsUtil.getDiggingSpeed(stack);
             if (speed > 0.0f) {
                 tooltip.accept(TooltipsUtil.getDiggingSpeedComponent(speed));

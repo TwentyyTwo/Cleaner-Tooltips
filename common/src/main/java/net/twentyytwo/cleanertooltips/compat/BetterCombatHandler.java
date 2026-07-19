@@ -60,7 +60,7 @@ public class BetterCombatHandler {
     }
 
     private static Comparison getComparison(ItemStack stack, double baseValue, double value) {
-        if (config.general.compareAttributes) {
+        if (config.comparisonEnabled) {
             var comparedStack = TooltipsUtil.getEquippedStack(stack);
 
             if (!comparedStack.isEmpty() && !comparedStack.equals(stack)

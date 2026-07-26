@@ -32,12 +32,17 @@
   "config.cleanertooltips.option.durabilityEnabled.tooltip": "Whether the durability of items should be displayed.",
   "config.cleanertooltips.option.durabilityMaximum": "Display Maximum Durability",
   "config.cleanertooltips.option.durabilityMaximum.tooltip": "Whether to include the maximum durability of an item.",
+  "config.cleanertooltips.option.hideWhenRepaired": "Hide When Repaired",
+  "config.cleanertooltips.option.hideWhenRepaired.tooltip": "Only display the durability when the item is damaged.",
   "config.cleanertooltips.option.durabilityColor": "Durability Color",
   "config.cleanertooltips.option.durabilityColor.tooltip": "Whether the color of the durability should change based on the remaining durability.",
   "config.cleanertooltips.option.durabilityStyle": "Durability Style",
   "config.cleanertooltips.option.durabilityStyle.tooltip": "Change the style of the durability.",
   "config.cleanertooltips.option.durabilityPos": "Durability Position",
   "config.cleanertooltips.option.durabilityPos.tooltip": "Change the position of the durability.\nINLINE: same row as the attributes; BELOW: directly under the attributes; BOTTOM: displays it at the bottom of the tooltip.",
+
+  "config.cleanertooltips.attribute_id.empty": "Attribute ID cannot be empty.",
+  "config.cleanertooltips.attribute_id.not_found": "Attribute ID does not exist: %s",
 
   "text.cleanertooltips.total_durability": " / %s",
   "text.cleanertooltips.mining_speed": "%s Mining Speed",

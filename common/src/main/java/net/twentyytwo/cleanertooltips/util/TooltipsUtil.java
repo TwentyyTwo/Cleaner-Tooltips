@@ -2,7 +2,6 @@ package net.twentyytwo.cleanertooltips.util;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Holder;
-import net.minecraft.core.Registry;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
@@ -31,8 +30,6 @@ public class TooltipsUtil {
     public static final ResourceLocation EFFICIENCY =
             ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
 
-    private static final String[] prefixes = new String[]{"player.", "generic."};
-
     private static int tick = 0;
     private static boolean tickToggle = false;
 
@@ -48,29 +45,13 @@ public class TooltipsUtil {
         return tickToggle;
     }
 
-    public static Optional<Holder.Reference<Attribute>> resolveAttribute(String s) {
-        Registry<Attribute> registry = BuiltInRegistries.ATTRIBUTE;
-
-        // parse automatically adds the minecraft namespace if missing
-        var location = ResourceLocation.parse(s);
-        var holder = registry.getHolder(location);
-
-        // First test if the initial String is valid
-        if (holder.isPresent()) return holder;
-
-        // Then test if any prefix is missing from the String
-        for (String pre : prefixes) {
-            var preLocation = location.withPrefix(pre);
-            holder = registry.getHolder(preLocation);
-            if (holder.isPresent()) return holder;
-        }
-
-        return Optional.empty();
-    }
-
     public static ItemStack getEquippedStack(ItemStack stack) {
         assert MC.player != null;
         return MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+    }
+
+    public static Optional<Holder.Reference<Attribute>> getAttributeFromString(String s) {
+        return BuiltInRegistries.ATTRIBUTE.getHolder(ResourceLocation.parse(s));
     }
 
     /**
@@ -173,8 +154,12 @@ public class TooltipsUtil {
         return isViableForAttributes() && hasAttributes(stack);
     }
 
+    public static boolean isDamageable(ItemStack stack) {
+        return !config.hideWhenRepaired ? stack.isDamageableItem() : stack.isDamaged();
+    }
+
     public static boolean canAddDurabilityTooltip(ItemStack stack) {
-        return config.durabilityEnabled && stack.isDamageableItem();
+        return config.durabilityEnabled && isDamageable(stack);
     }
 
     // Returns whether the provided slot group applies to only the item it is on (exclusive),

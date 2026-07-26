@@ -29,6 +29,7 @@ public class TooltipsConfig {
     // ------------------- Durability ------------------- //
     public boolean durabilityEnabled = false;
     public boolean durabilityMaximum = true;
+    public boolean hideWhenRepaired = false;
     public boolean durabilityColor = true;
 
     public Style durabilityStyle = Style.DEFAULT;

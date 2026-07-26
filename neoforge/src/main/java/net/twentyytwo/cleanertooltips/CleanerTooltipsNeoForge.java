@@ -70,7 +70,7 @@ public class CleanerTooltipsNeoForge {
             var op = elements.get(i).right();
             if (op.isEmpty()) continue;
             if (op.get() instanceof IconAttributeComponent(ItemStack stack)) {
-                if (stack.isDamageableItem()) {
+                if (TooltipsUtil.isDamageable(stack)) {
                     int index = position == Position.BELOW ? i + 1 : elements.size();
                     elements.add(index, Either.right(new IconDurabilityComponent(stack)));
                 }

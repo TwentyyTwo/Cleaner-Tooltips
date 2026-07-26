@@ -59,7 +59,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
         List<ClientTooltipComponent> newList = new ArrayList<>(components);
         for (int i = 0; i < newList.size(); i++) {
             if (newList.get(i) instanceof IconAttributeTooltip tooltip) {
-                if (tooltip.getStack().isDamageableItem()) {
+                if (TooltipsUtil.isDamageable(tooltip.getStack())) {
                     int index = position == Position.BELOW ? i + 1 : newList.size();
                     newList.add(index, new IconDurabilityTooltip(tooltip.getStack()));
                 }

@@ -32,12 +32,17 @@
   "config.cleanertooltips.option.durabilityEnabled.tooltip": "Ob die Haltbarkeit von Items angezeigt werden soll.",
   "config.cleanertooltips.option.durabilityMaximum": "Maximale Haltbarkeit Anzeigen",
   "config.cleanertooltips.option.durabilityMaximum.tooltip": "Ob auch die maximale Haltbarkeit angezeigt werden soll.",
+  "config.cleanertooltips.option.hideWhenRepaired": "Wenn Repariert, Ausblenden",
+  "config.cleanertooltips.option.hideWhenRepaired.tooltip": "Haltbarkeit nur anzeigen wenn das Item beschädigt ist.",
   "config.cleanertooltips.option.durabilityColor": "Haltbarkeit Farbe",
   "config.cleanertooltips.option.durabilityColor.tooltip": "Ob sich die Farbe der Haltbarkeit je nach der übrigen Haltbarkeit ändern soll.",
   "config.cleanertooltips.option.durabilityStyle": "Haltbarkeit Stil",
   "config.cleanertooltips.option.durabilityStyle.tooltip": "Ändere den Stil von der Haltbarkeit.",
   "config.cleanertooltips.option.durabilityPos": "Haltbarkeit Position",
   "config.cleanertooltips.option.durabilityPos.tooltip": "Ändere die Position von der Haltbarkeit.\nINLINE: Gleiche Reihe wie die Attribute. BELOW: Direkt unter den Attributen. BOTTOM: Zeigt sie am ende des Tooltips an.",
+
+  "config.cleanertooltips.attribute_id.empty": "Attribut ID kann nicht leer sein.",
+  "config.cleanertooltips.attribute_id.not_found": "Attribut ID existiert nicht: %s",
 
   "text.cleanertooltips.mining_speed": "%s Abbaugeschwindigkeit",
 

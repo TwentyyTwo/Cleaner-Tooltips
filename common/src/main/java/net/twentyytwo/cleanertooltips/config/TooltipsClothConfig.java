@@ -12,18 +12,32 @@ import me.shedaniel.clothconfig2.api.Requirement;
 import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
 import me.shedaniel.clothconfig2.gui.entries.IntegerSliderEntry;
-import me.shedaniel.clothconfig2.gui.entries.StringListListEntry;
 import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
+import net.twentyytwo.cleanertooltips.config.AutoListListEntry.AutoListCell;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.function.Function;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("UnstableApiUsage")
 @Config(name = CleanerTooltips.MOD_ID)
 public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
+
+    private static final Function<String, Optional<Component>> ATTRIBUTE_ID_VALIDATOR = str -> {
+        if (str == null || str.trim().isEmpty()) {
+            return Optional.of(translate("attribute_id.empty"));
+        }
+        ResourceLocation id = ResourceLocation.parse(str);
+        if (!BuiltInRegistries.ATTRIBUTE.containsKey(id)) {
+            return Optional.of(translate("attribute_id.not_found", str));
+        }
+        return Optional.empty();
+    };
 
     public static Screen getConfigScreen(Screen parent) {
         ConfigBuilder configBuilder = ConfigBuilder.create()
@@ -78,12 +92,20 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setSaveConsumer(newVal -> config.hintEnabled = newVal)
                 .build();
 
-        StringListListEntry hintBlacklist = entryBuilder
-                .startStrList(translate("option.hintBlacklist"), config.hintBlacklist)
+        List<String> attributeIds = new TreeSet<>(BuiltInRegistries.ATTRIBUTE.keySet()).stream()
+                .map(ResourceLocation::toString).toList();
+
+        AutoListListEntry hintBlacklist = new AutoListBuilder(
+                entryBuilder, translate("option.hintBlacklist"), config.hintBlacklist)
                 .setTooltip(translate("option.hintBlacklist.tooltip"))
                 .setDefaultValue(List.of("minecraft:player.mining_efficiency"))
                 .setRequirement(Requirement.all(Requirement.isTrue(iconsEnabled), Requirement.isTrue(hiddenHint)))
                 .setSaveConsumer(newVal -> config.hintBlacklist = newVal)
+                .setInsertInFront(true)
+                .setCellErrorSupplier(ATTRIBUTE_ID_VALIDATOR)
+                .setCreateNewInstance(entry -> new AutoListCell("", entry, attributeIds, TooltipsClothConfig::isValidLocation))
+                .setSuggestions(attributeIds)
+                .setFilter(TooltipsClothConfig::isValidLocation)
                 .build();
 
         IntegerSliderEntry attributeGap = entryBuilder
@@ -156,6 +178,14 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setSaveConsumer(newVal -> config.durabilityMaximum = newVal)
                 .build();
 
+        BooleanListEntry hideWhenRepaired = entryBuilder
+                .startBooleanToggle(translate("option.hideWhenRepaired"), config.hideWhenRepaired)
+                .setTooltip(translate("option.hideWhenRepaired.tooltip"))
+                .setDefaultValue(false)
+                .setRequirement(Requirement.isTrue(durabilityEnabled))
+                .setSaveConsumer(newVal -> config.hideWhenRepaired = newVal)
+                .build();
+
         BooleanListEntry durabilityColor = entryBuilder
                 .startBooleanToggle(translate("option.durabilityColor"), config.durabilityColor)
                 .setTooltip(translate("option.durabilityColor.tooltip"))
@@ -174,7 +204,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
 
         addEntries(
                 configBuilder.getOrCreateCategory(translate("durability")),
-                durabilityEnabled, durabilityMaximum, durabilityColor, style, position
+                durabilityEnabled, durabilityMaximum, hideWhenRepaired, durabilityColor, style, position
         );
 
         return configBuilder.build();
@@ -188,19 +218,15 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         Arrays.stream(entries).forEach(category::addEntry);
     }
 
+    private static boolean isValidLocation(String text) {
+        return Pattern.compile("^[a-z0-9._-]*(:[a-z0-9._/-]*)?$").matcher(text).matches();
+    }
+
     public static void saveConfig() {
         BLACKLISTED_HINTS.clear();
         var config = CleanerTooltips.config;
 
-        int[] i = {0};
-        for (var s : config.hintBlacklist) {
-            TooltipsUtil.resolveAttribute(s).ifPresent(a -> {
-                BLACKLISTED_HINTS.add(a);
-                String resolved = a.key().location().toString();
-                if (!s.equals(resolved)) config.hintBlacklist.set(i[0], resolved);
-            });
-            i[0]++;
-        }
+        config.hintBlacklist.forEach(s -> TooltipsUtil.getAttributeFromString(s).ifPresent(BLACKLISTED_HINTS::add));
 
         CleanerTooltips.GROUP_GAP = config.attributeGap;
         CleanerTooltips.GAP = config.innerGap;

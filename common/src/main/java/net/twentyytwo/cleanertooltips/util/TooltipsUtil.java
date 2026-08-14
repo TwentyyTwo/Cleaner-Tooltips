@@ -18,6 +18,7 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.text.DecimalFormat;
+import java.util.Map;
 import java.util.Optional;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
@@ -124,6 +125,39 @@ public class TooltipsUtil {
         T[] shiftedArray = array.clone();
         for (int i = 0, l = array.length; i < l; i++) shiftedArray[i] = array[(i + offset) % l];
         return shiftedArray;
+    }
+
+    /**
+     * Compares two maps with each other for equality. Returns {@code true}
+     * if both maps represent the same mappings and in the same order.
+     * @param m1    a map
+     * @param m2    a map to be compared with {@code m1} for equality
+     * @return      {@code true} if both maps are equal to each other
+     * @see         java.util.AbstractMap#equals(Object)
+     * @see         java.util.AbstractMap.SimpleEntry#equals(Object)
+     */
+    public static boolean equalsOrdered(Map<?, ?> m1, Map<?, ?> m2) {
+        if (m1 == m2) {
+            return true;
+        }
+
+        if (m1 == null || m2 == null || m1.size() != m2.size()) {
+            return false;
+        }
+
+        var iterator1 = m1.entrySet().iterator();
+        var iterator2 = m2.entrySet().iterator();
+
+        while (iterator1.hasNext() && iterator2.hasNext()) {
+            Map.Entry<?, ?> entry1 = iterator1.next();
+            Map.Entry<?, ?> entry2 = iterator2.next();
+
+            if (!entry1.equals(entry2)) {
+                return false;
+            }
+        }
+
+        return !iterator1.hasNext() && !iterator2.hasNext();
     }
 
     public static boolean isViableForAttributes() {

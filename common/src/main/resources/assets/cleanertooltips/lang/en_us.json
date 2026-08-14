@@ -40,11 +40,14 @@
   "config.cleanertooltips.option.durabilityStyle.tooltip": "Change the style of the durability.",
   "config.cleanertooltips.option.durabilityPos": "Durability Position",
   "config.cleanertooltips.option.durabilityPos.tooltip": "Change the position of the durability.\nINLINE: same row as the attributes; BELOW: directly under the attributes; BOTTOM: displays it at the bottom of the tooltip.",
+  "config.cleanertooltips.option.durabilityColorMode": "Durability Color Mode",
+  "config.cleanertooltips.option.durabilityColorMode.tooltip": "Change how the durability color should change.\nDEFAULT: color changes when durability drops below a color stop.\nLINEAR: color changes linearly based on the color stops.\nNATIVE: same color as the durability bar.",
+  "config.cleanertooltips.option.colorStops": "Color Stops",
+  "config.cleanertooltips.option.colorStops.tooltip": "A list of color stops.",
 
   "config.cleanertooltips.attribute_id.empty": "Attribute ID cannot be empty.",
   "config.cleanertooltips.attribute_id.not_found": "Attribute ID does not exist: %s",
 
-  "text.cleanertooltips.total_durability": " / %s",
   "text.cleanertooltips.mining_speed": "%s Mining Speed",
 
   "key.cleanertooltips.hide_tooltip": "Hide Attribute Tooltips"

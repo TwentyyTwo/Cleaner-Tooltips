@@ -12,6 +12,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
@@ -83,25 +84,54 @@ public class CleanerTooltips {
     private static MutableComponent durabilityFormatting(ItemStack stack) {
         int maxDurability = stack.getMaxDamage();
         int curDurability = maxDurability - stack.getDamageValue();
-        float diff = (float) curDurability / maxDurability;
+        int percentage = Math.round(((float) curDurability / maxDurability) * 100);
 
-        ChatFormatting durabilityColor = !config.durabilityColor
-                || curDurability == maxDurability ? ChatFormatting.GRAY
-                : diff >= 0.5f ? ChatFormatting.GREEN
-                : diff >= 0.15f ? ChatFormatting.GOLD
-                : ChatFormatting.RED;
+        int durabilityColor = getDurabilityColor(stack, percentage);
 
         switch (config.durabilityStyle) {
             case PERCENTAGE -> {
-                diff *= 100;
-                return Component.literal(String.format("%.0f%%", diff)).withStyle(durabilityColor);
+                return Component.literal(String.format("%d%%", percentage)).withColor(durabilityColor);
             }
             case null, default -> {
-                var remain = Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor);
+                var remain = Component.literal(String.valueOf(curDurability)).withColor(durabilityColor);
                 if (!config.durabilityMaximum) return remain;
 
-                return remain.append(Component.translatable("text.cleanertooltips.total_durability", maxDurability)
+                return remain.append(Component.literal(String.format(" / %s", maxDurability))
                         .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+    }
+
+    private static int getDurabilityColor(ItemStack stack, int percentage) {
+        if (!config.durabilityColor || !stack.isDamaged()) {
+            return 0xAAAAAA;
+        }
+
+        switch (config.colorMode) {
+            case LINEAR -> {
+                if (TooltipsConfig.SORTED_STOPS.isEmpty()) return 0xAAAAAA;
+
+                if (percentage <= TooltipsConfig.SORTED_STOPS.firstKey()) {
+                    return TooltipsConfig.SORTED_STOPS.firstEntry().getValue();
+                } else if (percentage >= TooltipsConfig.SORTED_STOPS.lastKey()) {
+                    return TooltipsConfig.SORTED_STOPS.lastEntry().getValue();
+                }
+
+                var lower = TooltipsConfig.SORTED_STOPS.floorEntry(percentage);
+                var upper = TooltipsConfig.SORTED_STOPS.ceilingEntry(percentage);
+
+                float delta = (float) (percentage - lower.getKey()) / (upper.getKey() - lower.getKey());
+
+                return FastColor.ARGB32.lerp(delta, lower.getValue(), upper.getValue());
+            }
+            case NATIVE -> {
+                return stack.getBarColor();
+            }
+            case null, default -> {
+                for (var e : TooltipsConfig.SORTED_STOPS.entrySet()) {
+                    if (percentage <= e.getKey()) return e.getValue();
+                }
+                return 0xAAAAAA;
             }
         }
     }

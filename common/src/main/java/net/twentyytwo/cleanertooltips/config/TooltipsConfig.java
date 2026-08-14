@@ -1,14 +1,20 @@
 package net.twentyytwo.cleanertooltips.config;
 
+import com.google.common.collect.ImmutableMap;
 import net.minecraft.core.Holder;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.NavigableMap;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class TooltipsConfig {
     public static final Set<Holder<Attribute>> BLACKLISTED_HINTS = new HashSet<>();
+    public static final NavigableMap<Integer, Integer> SORTED_STOPS = new TreeMap<>();
 
     // -------------------- General --------------------- //
     public boolean iconsEnabled = true;
@@ -31,12 +37,20 @@ public class TooltipsConfig {
     public boolean durabilityMaximum = true;
     public boolean hideWhenRepaired = false;
     public boolean durabilityColor = true;
+    public ColorMode colorMode = ColorMode.DEFAULT;
 
     public Style durabilityStyle = Style.DEFAULT;
     public Position durabilityPos = Position.INLINE;
 
+    public Map<Integer, Integer> colorsStops = new LinkedHashMap<>(
+            ImmutableMap.of(100, 0x55ff55, 50, 0xffaa00, 15, 0xff5555));
+
     public enum Style {
         DEFAULT, PERCENTAGE
+    }
+
+    public enum ColorMode {
+        DEFAULT, LINEAR, NATIVE
     }
 
     public enum GroupDisplay {

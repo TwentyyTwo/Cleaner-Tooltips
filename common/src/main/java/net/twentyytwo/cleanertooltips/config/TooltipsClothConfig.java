@@ -1,5 +1,6 @@
 package net.twentyytwo.cleanertooltips.config;
 
+import com.google.common.collect.ImmutableMap;
 import me.shedaniel.autoconfig.AutoConfig;
 import me.shedaniel.autoconfig.ConfigData;
 import me.shedaniel.autoconfig.annotation.Config;
@@ -10,6 +11,7 @@ import me.shedaniel.clothconfig2.api.ConfigCategory;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.api.Requirement;
 import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
+import me.shedaniel.clothconfig2.gui.entries.EmptyEntry;
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
 import me.shedaniel.clothconfig2.gui.entries.IntegerSliderEntry;
 import net.minecraft.client.gui.screens.Screen;
@@ -18,9 +20,14 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.config.AutoListListEntry.AutoListCell;
+import net.twentyytwo.cleanertooltips.config.ColorStopMapListEntry.ColorStopMapCell;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Optional;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -44,11 +51,11 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setParentScreen(parent)
                 .setTitle(translate("title"))
                 .setSavingRunnable(TooltipsClothConfig::saveConfig);
-        configBuilder.setGlobalized(true);
-        configBuilder.setGlobalizedExpanded(false);
         ConfigEntryBuilder entryBuilder = configBuilder.entryBuilder().setResetButtonKey(Component.literal("⇄"));
 
         var config = CleanerTooltips.config;
+
+        EmptyEntry empty = new EmptyEntry(20);
 
         // --------------------------------------------------
         // General
@@ -202,9 +209,30 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setSaveConsumer(newVal -> config.durabilityPos = newVal)
                 .build();
 
+        EnumListEntry<ColorMode> colorMode = entryBuilder
+                .startEnumSelector(translate("option.durabilityColorMode"), ColorMode.class, config.colorMode)
+                .setTooltip(translate("option.durabilityColorMode.tooltip"))
+                .setDefaultValue(ColorMode.DEFAULT)
+                .setRequirement(Requirement.all(Requirement.isTrue(durabilityEnabled), Requirement.isTrue(durabilityColor)))
+                .setSaveConsumer(newVal -> config.colorMode = newVal)
+                .build();
+
+        ColorStopMapListEntry colorStops =
+                        new ColorStopMapBuilder(entryBuilder, translate("option.colorStops"), config.colorsStops)
+                .setTooltip(translate("option.colorStops.tooltip"))
+                .setDefaultValue(new LinkedHashMap<>(ImmutableMap.of(100, 0x55ff55, 50, 0xffaa00, 15, 0xff5555)))
+                .setExpanded(true)
+                .setRequirement(Requirement.all(Requirement.isTrue(durabilityEnabled),
+                                                Requirement.isTrue(durabilityColor),
+                                                Requirement.not(Requirement.isValue(colorMode, ColorMode.NATIVE))))
+                .setSaveConsumer(newVal -> config.colorsStops = newVal)
+                .setCreateNewInstance(entry -> new ColorStopMapCell(35, 0x000000, entry))
+                .build();
+
         addEntries(
                 configBuilder.getOrCreateCategory(translate("durability")),
-                durabilityEnabled, durabilityMaximum, hideWhenRepaired, durabilityColor, style, position
+                durabilityEnabled, durabilityMaximum, hideWhenRepaired, position, style, empty,
+                durabilityColor, colorMode, colorStops
         );
 
         return configBuilder.build();
@@ -224,9 +252,11 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
 
     public static void saveConfig() {
         BLACKLISTED_HINTS.clear();
+        SORTED_STOPS.clear();
         var config = CleanerTooltips.config;
 
         config.hintBlacklist.forEach(s -> TooltipsUtil.getAttributeFromString(s).ifPresent(BLACKLISTED_HINTS::add));
+        SORTED_STOPS.putAll(config.colorsStops);
 
         CleanerTooltips.GROUP_GAP = config.attributeGap;
         CleanerTooltips.GAP = config.innerGap;

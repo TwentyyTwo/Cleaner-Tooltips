@@ -40,6 +40,10 @@
   "config.cleanertooltips.option.durabilityStyle.tooltip": "Ändere den Stil von der Haltbarkeit.",
   "config.cleanertooltips.option.durabilityPos": "Haltbarkeit Position",
   "config.cleanertooltips.option.durabilityPos.tooltip": "Ändere die Position von der Haltbarkeit.\nINLINE: Gleiche Reihe wie die Attribute. BELOW: Direkt unter den Attributen. BOTTOM: Zeigt sie am ende des Tooltips an.",
+  "config.cleanertooltips.option.durabilityColorMode": "Haltbarkeit Farben Modus",
+  "config.cleanertooltips.option.durabilityColorMode.tooltip": "Ändere wie die Haltbarkeitsfarbe sich ändern soll.\nDEFAULT: Farbe ändert sich wenn die Haltbarkeit unter einen Farbstopp fällt.\nLINEAR: Farbe ändert sich linear anhand der Farbstopps.\nNATIVE: gleiche Farbe wie der Haltbarkeitsbalken.",
+  "config.cleanertooltips.option.colorStops": "Farbstopps",
+  "config.cleanertooltips.option.colorStops.tooltip": "Eine liste von Farbstopps.",
 
   "config.cleanertooltips.attribute_id.empty": "Attribut ID kann nicht leer sein.",
   "config.cleanertooltips.attribute_id.not_found": "Attribut ID existiert nicht: %s",

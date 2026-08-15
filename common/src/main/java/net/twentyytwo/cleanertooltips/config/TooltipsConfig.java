@@ -24,10 +24,10 @@ public class TooltipsConfig {
     public boolean hintEnabled = true;
     public List<String> hintBlacklist = List.of("minecraft:player.mining_efficiency");
 
+    public GroupDisplay groupDisplay = GroupDisplay.ROWS;
+
     public int attributeGap = 8;
     public int innerGap = 3;
-
-    public GroupDisplay groupDisplay = GroupDisplay.ROWS;
 
     public boolean sharpnessFix = true;
     public boolean miningSpeed = true;
@@ -36,11 +36,11 @@ public class TooltipsConfig {
     public boolean durabilityEnabled = false;
     public boolean durabilityMaximum = true;
     public boolean hideWhenRepaired = false;
+    public Position durabilityPos = Position.INLINE;
+    public Style durabilityStyle = Style.DEFAULT;
+
     public boolean durabilityColor = true;
     public ColorMode colorMode = ColorMode.DEFAULT;
-
-    public Style durabilityStyle = Style.DEFAULT;
-    public Position durabilityPos = Position.INLINE;
 
     public Map<Integer, Integer> colorsStops = new LinkedHashMap<>(
             ImmutableMap.of(100, 0x55ff55, 50, 0xffaa00, 15, 0xff5555));

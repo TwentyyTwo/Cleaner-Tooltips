@@ -13,7 +13,7 @@ import me.shedaniel.clothconfig2.api.Requirement;
 import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
 import me.shedaniel.clothconfig2.gui.entries.EmptyEntry;
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
-import me.shedaniel.clothconfig2.gui.entries.IntegerSliderEntry;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
@@ -63,6 +63,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry iconsEnabled = entryBuilder
                 .startBooleanToggle(translate("option.iconsEnabled"), config.iconsEnabled)
                 .setTooltip(translate("option.iconsEnabled.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setSaveConsumer(newVal -> config.iconsEnabled = newVal)
                 .build();
@@ -70,6 +71,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry comparisonEnabled = entryBuilder
                 .startBooleanToggle(translate("option.comparisonEnabled"), config.comparisonEnabled)
                 .setTooltip(translate("option.comparisonEnabled.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.comparisonEnabled = newVal)
@@ -78,6 +80,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry comparisonArrow = entryBuilder
                 .startBooleanToggle(translate("option.comparisonArrow"), config.comparisonArrow)
                 .setTooltip(translate("option.comparisonArrow.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setRequirement(Requirement.all(Requirement.isTrue(iconsEnabled), Requirement.isTrue(comparisonEnabled)))
                 .setSaveConsumer(newVal -> config.comparisonArrow = newVal)
@@ -86,6 +89,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry onlyCompareShared = entryBuilder
                 .startBooleanToggle(translate("option.onlyCompareShared"), config.onlyCompareMutual)
                 .setTooltip(translate("option.onlyCompareShared.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(false)
                 .setRequirement(Requirement.all(Requirement.isTrue(iconsEnabled), Requirement.isTrue(comparisonEnabled)))
                 .setSaveConsumer(newVal -> config.onlyCompareMutual = newVal)
@@ -94,6 +98,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry hiddenHint = entryBuilder
                 .startBooleanToggle(translate("option.hintEnabled"), config.hintEnabled)
                 .setTooltip(translate("option.hintEnabled.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.hintEnabled = newVal)
@@ -115,18 +120,20 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setFilter(TooltipsClothConfig::isValidLocation)
                 .build();
 
-        IntegerSliderEntry attributeGap = entryBuilder
-                .startIntSlider(translate("option.attributeGap"), config.attributeGap, 0, 20)
+        ExtendedSliderEntry attributeGap = new ExtendedSliderBuilder(entryBuilder, translate("option.attributeGap"),
+                                                                     config.attributeGap, 0, 20)
                 .setTooltip(translate("option.attributeGap.tooltip"))
                 .setDefaultValue(8)
+                .setSuffix(Component.literal("px"))
                 .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.attributeGap = newVal)
                 .build();
 
-        IntegerSliderEntry innerGap = entryBuilder
-                .startIntSlider(translate("option.innerGap"), config.innerGap, 0, 20)
+        ExtendedSliderEntry innerGap = new ExtendedSliderBuilder(entryBuilder, translate("option.innerGap"),
+                                                                config.innerGap, 0, 20)
                 .setTooltip(translate("option.innerGap.tooltip"))
                 .setDefaultValue(3)
+                .setSuffix(Component.literal("px"))
                 .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.innerGap = newVal)
                 .build();
@@ -142,6 +149,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry sharpness = entryBuilder
                 .startBooleanToggle(translate("option.sharpnessFix"), config.sharpnessFix)
                 .setTooltip(translate("option.sharpnessFix.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setSaveConsumer(newVal -> config.sharpnessFix = newVal)
                 .build();
@@ -149,6 +157,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry miningSpeed = entryBuilder
                 .startBooleanToggle(translate("option.miningSpeed"), config.miningSpeed)
                 .setTooltip(translate("option.miningSpeed.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setSaveConsumer(newVal -> config.miningSpeed = newVal)
                 .build();
@@ -156,7 +165,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         addEntries(
                 configBuilder.getOrCreateCategory(translate("general")),
                 iconsEnabled, comparisonEnabled, comparisonArrow, onlyCompareShared, hiddenHint,
-                hintBlacklist, attributeGap, innerGap, groupDisplay, sharpness, miningSpeed
+                hintBlacklist, groupDisplay, attributeGap, innerGap, empty, sharpness, miningSpeed
         );
 
         // --------------------------------------------------
@@ -165,6 +174,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry durabilityEnabled = entryBuilder
                 .startBooleanToggle(translate("option.durabilityEnabled"), config.durabilityEnabled)
                 .setTooltip(translate("option.durabilityEnabled.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(false)
                 .setSaveConsumer(newVal -> config.durabilityEnabled = newVal)
                 .build();
@@ -180,6 +190,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry durabilityMaximum = entryBuilder
                 .startBooleanToggle(translate("option.durabilityMaximum"), config.durabilityMaximum)
                 .setTooltip(translate("option.durabilityMaximum.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setRequirement(Requirement.all(Requirement.isTrue(durabilityEnabled), Requirement.isValue(style, Style.DEFAULT)))
                 .setSaveConsumer(newVal -> config.durabilityMaximum = newVal)
@@ -188,6 +199,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry hideWhenRepaired = entryBuilder
                 .startBooleanToggle(translate("option.hideWhenRepaired"), config.hideWhenRepaired)
                 .setTooltip(translate("option.hideWhenRepaired.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(false)
                 .setRequirement(Requirement.isTrue(durabilityEnabled))
                 .setSaveConsumer(newVal -> config.hideWhenRepaired = newVal)
@@ -196,6 +208,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         BooleanListEntry durabilityColor = entryBuilder
                 .startBooleanToggle(translate("option.durabilityColor"), config.durabilityColor)
                 .setTooltip(translate("option.durabilityColor.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
                 .setRequirement(Requirement.isTrue(durabilityEnabled))
                 .setSaveConsumer(newVal -> config.durabilityColor = newVal)
@@ -240,6 +253,11 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
 
     private static Component translate(String key, Object... args) {
         return Component.translatable("config.cleanertooltips." + key, args);
+    }
+
+    private static Component toggleOnOff(boolean state) {
+        return state ? Component.translatable("text.cleanertooltips.toggle.enabled").withStyle(ChatFormatting.GREEN)
+                     : Component.translatable("text.cleanertooltips.toggle.disabled").withStyle(ChatFormatting.RED);
     }
 
     private static void addEntries(ConfigCategory category, AbstractConfigListEntry<?>... entries) {

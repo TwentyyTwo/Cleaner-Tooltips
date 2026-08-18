@@ -9,11 +9,14 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.Attribute;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -30,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
+import java.util.function.Predicate;
 
 public class CleanerTooltips {
 
@@ -141,6 +145,9 @@ public class CleanerTooltips {
 
     @SuppressWarnings("unused")
     public static class IconAttributeTooltip implements ClientTooltipComponent {
+        private static final Predicate<Holder<Attribute>> ATTRIBUTE_FILTER = attribute ->
+                BetterCombatHandler.isModLoaded && attribute.equals(Attributes.ENTITY_INTERACTION_RANGE);
+
         private final ItemStack stack;
         private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
         private final MutableComponent durabilityComponent;
@@ -168,12 +175,14 @@ public class CleanerTooltips {
         }
 
         public IconAttributeTooltip(ItemStack stack) {
-            CombinedAttributeModifiers modifiers = new CombinedAttributeModifiers(stack);
+            CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack, ATTRIBUTE_FILTER, m -> false);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
             final boolean[] anyTextureMissing = {false};
 
-            if (!config.onlyCompareMutual) modifiers.combine(comparedModifiers);
+            if (!config.onlyCompareMutual) {
+                modifiers = CombinedAttributeModifiers.combine(modifiers, comparedModifiers, false);
+            }
 
             ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder =
                     ImmutableListMultimap.builder();
@@ -219,7 +228,7 @@ public class CleanerTooltips {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
-            return new CombinedAttributeModifiers(comparedStack);
+            return CombinedAttributeModifiers.fromStack(comparedStack, ATTRIBUTE_FILTER, m -> false);
         }
 
         @Nullable
@@ -278,7 +287,6 @@ public class CleanerTooltips {
             return switch (config.groupDisplay) {
                 case ROWS -> getWidthRows(font, width);
                 case INLINE -> getWidthInline(font, width);
-                case PRIMARY -> getWidthPrimary(font, width);
             };
         }
 
@@ -323,18 +331,6 @@ public class CleanerTooltips {
             return width + (slotSize > 1 ? slotSize * (9 + GROUP_GAP) : 0);
         }
 
-        private int getWidthPrimary(Font font, int width) {
-            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
-                width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
-            }
-
-            if (this.anyTextureMissing && config.hintEnabled) {
-                width += font.width("[+]") + GROUP_GAP;
-            }
-
-            return width;
-        }
-
         @Override
         public void renderImage(@NotNull Font font, int x, int y,
                                 @NotNull GuiGraphics guiGraphics) {
@@ -355,7 +351,6 @@ public class CleanerTooltips {
             return switch (config.groupDisplay) {
                 case ROWS -> renderRows(font, guiGraphics, x, y);
                 case INLINE -> renderInline(font, guiGraphics, x, y);
-                case PRIMARY -> renderPrimary(font, guiGraphics, x, y);
             };
         }
 
@@ -401,14 +396,6 @@ public class CleanerTooltips {
                 for (var formattingData : entry.getValue()) {
                     x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
                 }
-            }
-
-            return this.anyTextureMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
-        }
-
-        private int renderPrimary(Font font, GuiGraphics guiGraphics, int x, int y) {
-            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
-                x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
             }
 
             return this.anyTextureMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;

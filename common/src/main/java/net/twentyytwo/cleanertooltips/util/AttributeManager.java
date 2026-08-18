@@ -63,33 +63,28 @@ public class AttributeManager
             if (manager.getResource(location).isPresent()) {
                 var attribute = BuiltInRegistries.ATTRIBUTE.getHolder(k).orElseThrow();
                 HOLDER_MAP.put(attribute, new DisplayTextureHolder(location, v.displayType(),
-                        v.priority(),
-                        v.isPriorityArmor()));
+                        v.priority()));
             }
         });
     }
 
     protected record IntermediateHolder(
             AttributeDisplayType displayType,
-            int priority,
-            boolean isPriorityArmor
+            int priority
     ) {
         public static final Codec<IntermediateHolder> CODEC = RecordCodecBuilder.create(
                 instance -> instance.group(
                 AttributeDisplayType.CODEC.fieldOf("display_type")
                         .forGetter(IntermediateHolder::displayType),
                 Codec.INT.fieldOf("priority")
-                        .forGetter(IntermediateHolder::priority),
-                Codec.BOOL.fieldOf("is_priority_armor")
-                        .forGetter(IntermediateHolder::isPriorityArmor)
+                        .forGetter(IntermediateHolder::priority)
         ).apply(instance, IntermediateHolder::new));
     }
 
     private record DisplayTextureHolder(
             ResourceLocation texture,
             AttributeDisplayType displayType,
-            int priority,
-            boolean isPriorityArmor
+            int priority
     ) {}
 
     public static AttributeDisplayType getDisplayType(Holder<Attribute> attribute) {
@@ -107,10 +102,4 @@ public class AttributeManager
         DisplayTextureHolder holder = HOLDER_MAP.get(attribute);
         return holder != null ? holder.priority() : 99;
     }
-
-    public static int getPriority(Holder<Attribute> attribute, boolean isArmor) {
-        DisplayTextureHolder holder = HOLDER_MAP.get(attribute);
-        return holder != null ? (holder.priority() + (isArmor ^ holder.isPriorityArmor() ? 1 : 0)) : 99;
-    }
-
 }

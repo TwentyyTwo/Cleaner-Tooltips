@@ -24,6 +24,7 @@ public class TooltipsConfig {
     public boolean hintEnabled = true;
     public List<String> hintBlacklist = List.of("minecraft:player.mining_efficiency");
 
+    public boolean customOrder = false;
     public GroupDisplay groupDisplay = GroupDisplay.ROWS;
 
     public int attributeGap = 8;
@@ -54,7 +55,7 @@ public class TooltipsConfig {
     }
 
     public enum GroupDisplay {
-        ROWS, INLINE, PRIMARY
+        ROWS, INLINE
     }
 
     public enum Position {

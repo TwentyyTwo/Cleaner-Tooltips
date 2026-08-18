@@ -28,9 +28,6 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
  * Collection of useful functions.
  */
 public class TooltipsUtil {
-    public static final ResourceLocation EFFICIENCY =
-            ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
-
     private static int tick = 0;
     private static boolean tickToggle = false;
 
@@ -119,12 +116,6 @@ public class TooltipsUtil {
             return MC.player.getAttributeBaseValue(attribute);
         }
         return 0;
-    }
-
-    public static <T> T[] shiftArray(final T[] array, int offset) {
-        T[] shiftedArray = array.clone();
-        for (int i = 0, l = array.length; i < l; i++) shiftedArray[i] = array[(i + offset) % l];
-        return shiftedArray;
     }
 
     /**

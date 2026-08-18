@@ -13,6 +13,7 @@ import me.shedaniel.clothconfig2.api.Requirement;
 import me.shedaniel.clothconfig2.gui.entries.BooleanListEntry;
 import me.shedaniel.clothconfig2.gui.entries.EmptyEntry;
 import me.shedaniel.clothconfig2.gui.entries.EnumListEntry;
+import me.shedaniel.clothconfig2.gui.entries.SubCategoryListEntry;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -73,7 +74,6 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setTooltip(translate("option.comparisonEnabled.tooltip"))
                 .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
-                .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.comparisonEnabled = newVal)
                 .build();
 
@@ -82,7 +82,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setTooltip(translate("option.comparisonArrow.tooltip"))
                 .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
-                .setRequirement(Requirement.all(Requirement.isTrue(iconsEnabled), Requirement.isTrue(comparisonEnabled)))
+                .setRequirement(Requirement.isTrue(comparisonEnabled))
                 .setSaveConsumer(newVal -> config.comparisonArrow = newVal)
                 .build();
 
@@ -91,8 +91,14 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setTooltip(translate("option.onlyCompareShared.tooltip"))
                 .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(false)
-                .setRequirement(Requirement.all(Requirement.isTrue(iconsEnabled), Requirement.isTrue(comparisonEnabled)))
+                .setRequirement(Requirement.isTrue(comparisonEnabled))
                 .setSaveConsumer(newVal -> config.onlyCompareMutual = newVal)
+                .build();
+
+        SubCategoryListEntry comparisonCategory = entryBuilder
+                .startSubCategory(translate("subcategory.comparison"),
+                                  List.of(comparisonEnabled, comparisonArrow, onlyCompareShared))
+                .setRequirement(Requirement.isTrue(iconsEnabled))
                 .build();
 
         BooleanListEntry hiddenHint = entryBuilder
@@ -100,7 +106,6 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setTooltip(translate("option.hintEnabled.tooltip"))
                 .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
                 .setDefaultValue(true)
-                .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.hintEnabled = newVal)
                 .build();
 
@@ -111,7 +116,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 entryBuilder, translate("option.hintBlacklist"), config.hintBlacklist)
                 .setTooltip(translate("option.hintBlacklist.tooltip"))
                 .setDefaultValue(List.of("minecraft:player.mining_efficiency"))
-                .setRequirement(Requirement.all(Requirement.isTrue(iconsEnabled), Requirement.isTrue(hiddenHint)))
+                .setRequirement(Requirement.isTrue(hiddenHint))
                 .setSaveConsumer(newVal -> config.hintBlacklist = newVal)
                 .setInsertInFront(true)
                 .setCellErrorSupplier(ATTRIBUTE_ID_VALIDATOR)
@@ -120,12 +125,24 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setFilter(TooltipsClothConfig::isValidLocation)
                 .build();
 
+        SubCategoryListEntry hintCategory = entryBuilder
+                .startSubCategory(translate("subcategory.hint"), List.of(hiddenHint, hintBlacklist))
+                .setRequirement(Requirement.isTrue(iconsEnabled))
+                .build();
+
+        BooleanListEntry customOrder = entryBuilder
+                .startBooleanToggle(translate("option.customOrder"), config.customOrder)
+                .setTooltip(translate("option.customOrder.tooltip"))
+                .setYesNoTextSupplier(TooltipsClothConfig::toggleOnOff)
+                .setDefaultValue(false)
+                .setSaveConsumer(newVal -> config.customOrder = newVal)
+                .build();
+
         ExtendedSliderEntry attributeGap = new ExtendedSliderBuilder(entryBuilder, translate("option.attributeGap"),
                                                                      config.attributeGap, 0, 20)
                 .setTooltip(translate("option.attributeGap.tooltip"))
                 .setDefaultValue(8)
                 .setSuffix(Component.literal("px"))
-                .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.attributeGap = newVal)
                 .build();
 
@@ -134,7 +151,6 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setTooltip(translate("option.innerGap.tooltip"))
                 .setDefaultValue(3)
                 .setSuffix(Component.literal("px"))
-                .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.innerGap = newVal)
                 .build();
 
@@ -142,8 +158,13 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .startEnumSelector(translate("option.groupDisplay"), GroupDisplay.class, config.groupDisplay)
                 .setTooltip(translate("option.groupDisplay.tooltip"))
                 .setDefaultValue(GroupDisplay.ROWS)
-                .setRequirement(Requirement.isTrue(iconsEnabled))
                 .setSaveConsumer(newVal -> config.groupDisplay = newVal)
+                .build();
+
+        SubCategoryListEntry renderCategory = entryBuilder
+                .startSubCategory(translate("subcategory.render"),
+                                  List.of(customOrder, groupDisplay, attributeGap, innerGap))
+                .setRequirement(Requirement.isTrue(iconsEnabled))
                 .build();
 
         BooleanListEntry sharpness = entryBuilder
@@ -164,8 +185,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
 
         addEntries(
                 configBuilder.getOrCreateCategory(translate("general")),
-                iconsEnabled, comparisonEnabled, comparisonArrow, onlyCompareShared, hiddenHint,
-                hintBlacklist, groupDisplay, attributeGap, innerGap, empty, sharpness, miningSpeed
+                iconsEnabled, comparisonCategory, hintCategory, renderCategory, sharpness, miningSpeed
         );
 
         // --------------------------------------------------

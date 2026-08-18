@@ -3,9 +3,7 @@ package net.twentyytwo.cleanertooltips.mixin;
 import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 import com.llamalad7.mixinextras.injector.v2.WrapWithCondition;
 import com.llamalad7.mixinextras.sugar.Local;
-import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.player.Player;
@@ -64,15 +62,6 @@ public abstract class ItemStackMixin {
                 tooltipAdder.accept(TooltipsUtil.getDiggingSpeedComponent(speed));
             }
         }
-    }
-
-    // Hide the mining efficiency attribute tooltip in favor of mining speed
-    @WrapWithCondition(method = "method_57370",
-                       at = @At(value = "INVOKE",
-                                target = "Lnet/minecraft/world/item/ItemStack;addModifierTooltip(Ljava/util/function/Consumer;Lnet/minecraft/world/entity/player/Player;Lnet/minecraft/core/Holder;Lnet/minecraft/world/entity/ai/attributes/AttributeModifier;)V"))
-    private boolean hideEfficiencyTooltip(ItemStack instance, Consumer<Component> tooltipAdder, Player player,
-                                          Holder<Attribute> attribute, AttributeModifier modifier) {
-        return !(config.miningSpeed && modifier.is(TooltipsUtil.EFFICIENCY));
     }
 
     // Fixes MC-271840

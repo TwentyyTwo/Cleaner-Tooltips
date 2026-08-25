@@ -16,7 +16,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -145,8 +145,8 @@ public class CleanerTooltips {
 
     @SuppressWarnings("unused")
     public static class IconAttributeTooltip implements ClientTooltipComponent {
-        private static final Predicate<Holder<Attribute>> ATTRIBUTE_FILTER = attribute ->
-                BetterCombatHandler.isModLoaded && attribute.equals(Attributes.ENTITY_INTERACTION_RANGE);
+        static final Predicate<Holder<Attribute>> ATTRIBUTE_FILTER = TooltipsConfig.BLACKLISTED_ATTRIBUTES::contains;
+        static final Predicate<AttributeModifier> MODIFIER_FILTER = IconAttributeTooltip::isBlacklisted;
 
         private final ItemStack stack;
         private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
@@ -175,7 +175,8 @@ public class CleanerTooltips {
         }
 
         public IconAttributeTooltip(ItemStack stack) {
-            CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack, ATTRIBUTE_FILTER, m -> false);
+            CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack, ATTRIBUTE_FILTER,
+                                                                                        MODIFIER_FILTER);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
             final boolean[] anyTextureMissing = {false};
@@ -228,7 +229,7 @@ public class CleanerTooltips {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
-            return CombinedAttributeModifiers.fromStack(comparedStack, ATTRIBUTE_FILTER, m -> false);
+            return CombinedAttributeModifiers.fromStack(comparedStack, ATTRIBUTE_FILTER, MODIFIER_FILTER);
         }
 
         @Nullable
@@ -258,6 +259,14 @@ public class CleanerTooltips {
             }
 
             return Comparison.NONE;
+        }
+
+        private static boolean isBlacklisted(AttributeModifier modifier) {
+            for (TooltipsConfig.RegexLocation location : TooltipsConfig.BLACKLISTED_MODIFIERS) {
+                if (location.matches(modifier.id())) return true;
+            }
+
+            return false;
         }
 
         @Override

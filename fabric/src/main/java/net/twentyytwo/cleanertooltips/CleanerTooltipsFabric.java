@@ -1,11 +1,14 @@
 package net.twentyytwo.cleanertooltips;
 
 import net.fabricmc.api.ClientModInitializer;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
 import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.packs.PackType;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
@@ -41,6 +44,15 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
             }
             return null;
         });
+
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
+                dispatcher.register(ClientCommandManager.literal("get_modifier_ids").executes(ctx -> {
+                    List<Component> modifierComponents = TooltipsUtil.getMainhandModifierComponents();
+
+                    modifierComponents.forEach(ctx.getSource()::sendFeedback);
+                    return modifierComponents.size();
+                }))
+        );
     }
 
     /**

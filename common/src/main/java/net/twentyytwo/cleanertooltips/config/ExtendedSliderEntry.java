@@ -1,7 +1,9 @@
 package net.twentyytwo.cleanertooltips.config;
 
 import com.google.common.collect.Lists;
+import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
+import me.shedaniel.clothconfig2.impl.builders.AbstractSliderFieldBuilder;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -126,5 +128,57 @@ public class ExtendedSliderEntry extends TooltipListEntry<Integer> {
         }
 
 
+    }
+
+    public static class Builder extends AbstractSliderFieldBuilder<Integer, ExtendedSliderEntry, Builder> {
+        protected Component prefix = Component.empty();
+        protected Component suffix = Component.empty();
+
+        protected Builder(ConfigEntryBuilder entryBuilder, Component fieldNameKey, int value, int min, int max) {
+            super(entryBuilder.getResetButtonKey(), fieldNameKey);
+            this.value = value;
+            this.min = min;
+            this.max = max;
+        }
+
+        public Builder setPrefix(Component prefix) {
+            this.prefix = prefix;
+            return this;
+        }
+
+        public Builder setSuffix(Component suffix) {
+            this.suffix = suffix;
+            return this;
+        }
+
+        public Component getPrefix() {
+            return prefix;
+        }
+
+        public Component getSuffix() {
+            return suffix;
+        }
+
+        @Override
+        public @NotNull ExtendedSliderEntry build() {
+            ExtendedSliderEntry entry = new ExtendedSliderEntry(
+                    this.getFieldNameKey(),
+                    this.min, this.max,
+                    this.prefix, this.suffix,
+                    this.value,
+                    this.getResetButtonKey(),
+                    this.defaultValue,
+                    this.getSaveConsumer(),
+                    null,
+                    this.isRequireRestart()
+            );
+
+            entry.setTooltipSupplier(() -> this.getTooltipSupplier().apply(entry.getValue()));
+            if (this.errorSupplier != null) {
+                entry.setErrorSupplier(() -> this.errorSupplier.apply(entry.getValue()));
+            }
+
+            return this.finishBuilding(entry);
+        }
     }
 }

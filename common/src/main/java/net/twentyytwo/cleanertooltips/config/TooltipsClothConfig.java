@@ -20,6 +20,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
+import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.AutoListListEntry.AutoListCell;
 import net.twentyytwo.cleanertooltips.config.ColorStopMapListEntry.ColorStopMapCell;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
@@ -112,7 +113,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         List<String> attributeIds = new TreeSet<>(BuiltInRegistries.ATTRIBUTE.keySet()).stream()
                 .map(ResourceLocation::toString).toList();
 
-        AutoListListEntry hintBlacklist = new AutoListBuilder(
+        AutoListListEntry hintBlacklist = new AutoListListEntry.Builder(
                 entryBuilder, translate("option.hintBlacklist"), config.hintBlacklist)
                 .setTooltip(translate("option.hintBlacklist.tooltip"))
                 .setDefaultValue(List.of("minecraft:player.mining_efficiency"))
@@ -138,7 +139,29 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setSaveConsumer(newVal -> config.customOrder = newVal)
                 .build();
 
-        ExtendedSliderEntry attributeGap = new ExtendedSliderBuilder(entryBuilder, translate("option.attributeGap"),
+        AutoListListEntry attributeBlacklist = new AutoListListEntry.Builder(
+                entryBuilder, translate("option.attributeIdBlacklist"), config.attributeIdBlacklist)
+                .setTooltip(translate("option.attributeIdBlacklist.tooltip"))
+                .setDefaultValue(BetterCombatHandler.isModLoaded
+                                         ? List.of("minecraft:player.entity_interaction_range") : List.of())
+                .setSaveConsumer(newVal -> config.attributeIdBlacklist = newVal)
+                .setInsertInFront(true)
+                .setCellErrorSupplier(ATTRIBUTE_ID_VALIDATOR)
+                .setSuggestions(attributeIds)
+                .setFilter(TooltipsClothConfig::isValidLocation)
+                .build();
+
+
+        FilterableListListEntry modifierBlacklist = new FilterableListListEntry.Builder(
+                entryBuilder, translate("option.modifierIdBlacklist"), config.modifierIdBlacklist)
+                .setTooltip(translate("option.modifierIdBlacklist.tooltip"))
+                .setDefaultValue(List.of("apotheosis:overworld/royalty_modifier_apothic_attributes.head_#"))
+                .setSaveConsumer(newVal -> config.modifierIdBlacklist = newVal)
+                .setInsertInFront(true)
+                .setFilter(TooltipsClothConfig::isValidLocationRegex)
+                .build();
+
+        ExtendedSliderEntry attributeGap = new ExtendedSliderEntry.Builder(entryBuilder, translate("option.attributeGap"),
                                                                      config.attributeGap, 0, 20)
                 .setTooltip(translate("option.attributeGap.tooltip"))
                 .setDefaultValue(8)
@@ -146,7 +169,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .setSaveConsumer(newVal -> config.attributeGap = newVal)
                 .build();
 
-        ExtendedSliderEntry innerGap = new ExtendedSliderBuilder(entryBuilder, translate("option.innerGap"),
+        ExtendedSliderEntry innerGap = new ExtendedSliderEntry.Builder(entryBuilder, translate("option.innerGap"),
                                                                 config.innerGap, 0, 20)
                 .setTooltip(translate("option.innerGap.tooltip"))
                 .setDefaultValue(3)
@@ -163,7 +186,8 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
 
         SubCategoryListEntry renderCategory = entryBuilder
                 .startSubCategory(translate("subcategory.render"),
-                                  List.of(customOrder, groupDisplay, attributeGap, innerGap))
+                                  List.of(customOrder, groupDisplay, attributeBlacklist,
+                                          modifierBlacklist, attributeGap, innerGap))
                 .setRequirement(Requirement.isTrue(iconsEnabled))
                 .build();
 
@@ -251,7 +275,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .build();
 
         ColorStopMapListEntry colorStops =
-                        new ColorStopMapBuilder(entryBuilder, translate("option.colorStops"), config.colorsStops)
+                        new ColorStopMapListEntry.Builder(entryBuilder, translate("option.colorStops"), config.colorsStops)
                 .setTooltip(translate("option.colorStops.tooltip"))
                 .setDefaultValue(new LinkedHashMap<>(ImmutableMap.of(100, 0x55ff55, 50, 0xffaa00, 15, 0xff5555)))
                 .setExpanded(true)
@@ -284,16 +308,27 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         Arrays.stream(entries).forEach(category::addEntry);
     }
 
+    private static boolean isValidLocationRegex(String text) {
+        return Pattern.compile("^[a-z0-9._-]*(:[a-z0-9._/#-]*)?$").matcher(text).matches();
+    }
+
     private static boolean isValidLocation(String text) {
         return Pattern.compile("^[a-z0-9._-]*(:[a-z0-9._/-]*)?$").matcher(text).matches();
     }
 
     public static void saveConfig() {
         BLACKLISTED_HINTS.clear();
+        BLACKLISTED_ATTRIBUTES.clear();
+        BLACKLISTED_MODIFIERS.clear();
         SORTED_STOPS.clear();
         var config = CleanerTooltips.config;
 
         config.hintBlacklist.forEach(s -> TooltipsUtil.getAttributeFromString(s).ifPresent(BLACKLISTED_HINTS::add));
+
+        config.attributeIdBlacklist
+                .forEach(s -> TooltipsUtil.getAttributeFromString(s).ifPresent(BLACKLISTED_ATTRIBUTES::add));
+        config.modifierIdBlacklist.forEach(s -> BLACKLISTED_MODIFIERS.add(RegexLocation.parse(s)));
+
         SORTED_STOPS.putAll(config.colorsStops);
 
         CleanerTooltips.GROUP_GAP = config.attributeGap;

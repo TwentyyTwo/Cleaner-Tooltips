@@ -1,6 +1,7 @@
 package net.twentyytwo.cleanertooltips.config;
 
 import com.google.common.collect.Lists;
+import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.widget.ColorDisplayWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
@@ -12,6 +13,7 @@ import net.minecraft.client.gui.narration.NarrationElementOutput;
 import net.minecraft.network.chat.Component;
 import net.twentyytwo.cleanertooltips.config.ColorStopMapListEntry.ColorStopMapCell;
 import net.twentyytwo.cleanertooltips.config.base.AbstractExtendedSlider;
+import net.twentyytwo.cleanertooltips.config.base.AbstractMapBuilder;
 import net.twentyytwo.cleanertooltips.config.base.AbstractMapListEntry;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -23,6 +25,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class ColorStopMapListEntry extends AbstractMapListEntry<Integer, Integer, ColorStopMapCell, ColorStopMapListEntry> {
@@ -287,6 +290,51 @@ public class ColorStopMapListEntry extends AbstractMapListEntry<Integer, Integer
             public boolean hasError() {
                 return this.getError() != null;
             }
+        }
+    }
+
+    public static class Builder extends AbstractMapBuilder<Integer, Integer, ColorStopMapListEntry, Builder> {
+        private Function<ColorStopMapListEntry, ColorStopMapCell> createNewInstance;
+
+        protected Builder(ConfigEntryBuilder entryBuilder, Component fieldNameKey, Map<Integer, Integer> value) {
+            super(entryBuilder.getResetButtonKey(), fieldNameKey);
+            this.value = value;
+        }
+
+        public Builder setCreateNewInstance(Function<ColorStopMapListEntry, ColorStopMapCell> createNewInstance) {
+            this.createNewInstance = createNewInstance;
+            return this;
+        }
+
+        @Override
+        public @NotNull ColorStopMapListEntry build() {
+            ColorStopMapListEntry entry = new ColorStopMapListEntry(
+                    this.getFieldNameKey(),
+                    this.value,
+                    null,
+                    this.defaultValue,
+                    this.getSaveConsumer(),
+                    this.getResetButtonKey(),
+                    this.isExpanded(),
+                    this.isRequireRestart(),
+                    this.isDeleteButtonEnabled(),
+                    this.isInsertInFront()
+            );
+
+            if (this.createNewInstance != null) {
+                entry.setCreateNewInstance(this.createNewInstance);
+            }
+
+            entry.setInsertButtonEnabled(this.isInsertButtonEnabled());
+            entry.setCellErrorSupplier(this.cellErrorSupplier);
+            entry.setTooltipSupplier(() -> this.getTooltipSupplier().apply(entry.getValue()));
+            entry.setRemoveTooltip(this.getRemoveTooltip());
+            entry.setAddTooltip(this.getAddTooltip());
+            if (this.errorSupplier != null) {
+                entry.setErrorSupplier(() -> this.errorSupplier.apply(entry.getValue()));
+            }
+
+            return this.finishBuilding(entry);
         }
     }
 }

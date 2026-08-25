@@ -1,6 +1,8 @@
 package net.twentyytwo.cleanertooltips.config;
 
+import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.AbstractTextFieldListListEntry;
+import me.shedaniel.clothconfig2.impl.builders.AbstractListBuilder;
 import net.minecraft.network.chat.Component;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,13 +12,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 @SuppressWarnings("UnstableApiUsage")
 public class AutoListListEntry extends AbstractTextFieldListListEntry<String, AutoListCell, AutoListListEntry> {
-    private final List<String> suggestions;
-    private final Predicate<String> filter;
 
     public AutoListListEntry(Component fieldName,
                              List<String> value,
@@ -43,19 +44,6 @@ public class AutoListListEntry extends AbstractTextFieldListListEntry<String, Au
                 insertInFront,
                 (value1, listListEntry) -> new AutoListCell(value1, listListEntry, suggestions, filter)
         );
-        this.suggestions = suggestions;
-        this.filter = filter;
-    }
-
-    public void reinitializeCells() {
-        List<String> values = this.getValue();
-        this.widgets.removeAll(this.cells);
-        this.cells.clear();
-        for (var s : values) {
-            AutoListCell cell = new AutoListCell(s, this, suggestions, filter);
-            this.cells.add(cell);
-        }
-        this.widgets.addAll(this.cells);
     }
 
     public AutoListListEntry self() {
@@ -95,6 +83,64 @@ public class AutoListListEntry extends AbstractTextFieldListListEntry<String, Au
 
         public Optional<Component> getError() {
             return Optional.empty();
+        }
+    }
+
+    public static class Builder extends AbstractListBuilder<String, AutoListListEntry, Builder> {
+        private Function<AutoListListEntry, AutoListCell> createNewInstance;
+        private List<String> suggestions;
+        private Predicate<String> filter;
+
+        public Builder(ConfigEntryBuilder entryBuilder, Component fieldNameKey, List<String> value) {
+            super(entryBuilder.getResetButtonKey(), fieldNameKey);
+            this.value = value;
+        }
+
+        public Builder setCreateNewInstance(Function<AutoListListEntry, AutoListCell> createNewInstance) {
+            this.createNewInstance = createNewInstance;
+            return this;
+        }
+
+        public Builder setSuggestions(List<String> suggestions) {
+            this.suggestions = suggestions;
+            return this;
+        }
+
+        public Builder setFilter(Predicate<String> filter) {
+            this.filter = filter;
+            return this;
+        }
+
+        public @NotNull AutoListListEntry build() {
+            AutoListListEntry entry = new AutoListListEntry(
+                    this.getFieldNameKey(),
+                    this.value,
+                    this.isExpanded(),
+                    null,
+                    this.getSaveConsumer(),
+                    this.defaultValue,
+                    this.getResetButtonKey(),
+                    this.isRequireRestart(),
+                    this.isDeleteButtonEnabled(),
+                    this.isInsertInFront(),
+                    this.suggestions,
+                    this.filter
+            );
+
+            if (this.createNewInstance != null) {
+                entry.setCreateNewInstance(this.createNewInstance);
+            }
+
+            entry.setInsertButtonEnabled(this.isInsertButtonEnabled());
+            entry.setCellErrorSupplier(this.cellErrorSupplier);
+            entry.setTooltipSupplier(() -> this.getTooltipSupplier().apply(entry.getValue()));
+            entry.setAddTooltip(this.getAddTooltip());
+            entry.setRemoveTooltip(this.getRemoveTooltip());
+            if (this.errorSupplier != null) {
+                entry.setErrorSupplier(() -> this.errorSupplier.apply(entry.getValue()));
+            }
+
+            return this.finishBuilding(entry);
         }
     }
 }

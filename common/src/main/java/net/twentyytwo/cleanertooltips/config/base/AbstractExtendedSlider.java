@@ -9,9 +9,6 @@ import java.text.DecimalFormat;
 
 /**
  * Slider widget implementation which allows inputting values in a certain range with optional step size.
- *
- * @implNote Note that {@link AbstractExtendedSlider#value} is the fractional progress of the slider from 0 to 1,
- *           whereas {@link AbstractExtendedSlider#getValue()} is the actual value from {@code minValue} to {@code maxValue}.
  */
 public abstract class AbstractExtendedSlider extends AbstractSliderButton {
     private final DecimalFormat format;

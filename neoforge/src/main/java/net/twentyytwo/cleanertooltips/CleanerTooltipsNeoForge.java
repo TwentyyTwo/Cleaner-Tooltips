@@ -1,6 +1,8 @@
 package net.twentyytwo.cleanertooltips;
 
 import com.mojang.datafixers.util.Either;
+import net.minecraft.commands.Commands;
+import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.EventPriority;
@@ -10,6 +12,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.GatherSkippedAttributeTooltipsEvent;
+import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterClientReloadListenersEvent;
 import net.neoforged.neoforge.client.event.RegisterClientTooltipComponentFactoriesEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -25,6 +28,7 @@ import net.twentyytwo.cleanertooltips.config.TooltipsClothConfig;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 
+import java.util.List;
 import java.util.function.Supplier;
 
 import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
@@ -87,5 +91,15 @@ public class CleanerTooltipsNeoForge {
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
         event.setSkipAll(TooltipsUtil.isViableForAttributes());
+    }
+
+    @SubscribeEvent()
+    public static void registerCommand(RegisterClientCommandsEvent event) {
+        event.getDispatcher().register(Commands.literal("get_modifier_ids").executes(ctx -> {
+            List<Component> modifierComponents = TooltipsUtil.getMainhandModifierComponents();
+
+            modifierComponents.forEach(c -> ctx.getSource().sendSuccess(() -> c, false));
+            return modifierComponents.size();
+        }));
     }
 }

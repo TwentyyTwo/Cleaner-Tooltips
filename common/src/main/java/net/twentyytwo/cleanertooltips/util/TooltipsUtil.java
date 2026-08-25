@@ -6,6 +6,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -18,6 +19,8 @@ import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -50,6 +53,18 @@ public class TooltipsUtil {
 
     public static Optional<Holder.Reference<Attribute>> getAttributeFromString(String s) {
         return BuiltInRegistries.ATTRIBUTE.getHolder(ResourceLocation.parse(s));
+    }
+
+    public static List<Component> getMainhandModifierComponents() {
+        ItemStack stack = MC.player != null ? MC.player.getMainHandItem() : ItemStack.EMPTY;
+
+        List<Component> modifierComponents = new ArrayList<>();
+        for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
+            stack.forEachModifier(slot, (attribute, modifier) ->
+                    modifierComponents.add(ComponentUtils.copyOnClickText(modifier.id().toString())));
+        }
+
+        return modifierComponents;
     }
 
     /**

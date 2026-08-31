@@ -8,6 +8,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
@@ -17,6 +18,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
@@ -31,7 +33,6 @@ import java.util.function.Predicate;
 
 import static net.minecraft.resources.ResourceLocation.withDefaultNamespace;
 import static net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE;
-import static net.twentyytwo.cleanertooltips.util.TooltipsUtil.getBaseValue;
 
 /**
  * This record aims to simplify working with attribute modifiers.
@@ -39,7 +40,7 @@ import static net.twentyytwo.cleanertooltips.util.TooltipsUtil.getBaseValue;
  * @see ItemAttributeModifiers
  */
 @SuppressWarnings({"unused", "UnusedReturnValue"})
-public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> modifiers) {
+public record CombinedAttributeModifiers(Multimap<String, Entry> modifiers) {
     public static final CombinedAttributeModifiers EMPTY = new CombinedAttributeModifiers(ImmutableListMultimap.of());
 
     private static final ResourceLocation SHARPNESS_BONUS_ID = CleanerTooltips.location("sharpness_bonus_damage");
@@ -50,7 +51,7 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
             .thenComparing((Entry e) -> e.attribute().toString(), String.CASE_INSENSITIVE_ORDER);
 
     public static CombinedAttributeModifiers fromStack(ItemStack stack) {
-        return fromStack(stack, p -> false, p -> false);
+        return fromStack(stack, AttributeHelper.ATTRIBUTE_FILTER, AttributeHelper.MODIFIER_FILTER);
     }
 
     /**
@@ -87,7 +88,9 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
 
             if (source.isEmpty()) continue;
 
-            builder.putAll(slot, Merger.merge(sortBaseModifiers(source), TooltipsUtil.isExclusive(slot)));
+            boolean isExclusive = slot == EquipmentSlotGroup.MAINHAND || slot == EquipmentSlotGroup.OFFHAND
+                    || slot == EquipmentSlotGroup.BODY;
+            builder.putAll(slot.getSerializedName(), Merger.merge(sortBaseModifiers(source), isExclusive));
         }
 
         return builder.build();
@@ -102,8 +105,8 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
 
     public static CombinedAttributeModifiers combine(CombinedAttributeModifiers primary,
                                                      CombinedAttributeModifiers secondary, boolean keepValues) {
-        Multimap<EquipmentSlotGroup, Entry> thisModifiers = primary.modifiers();
-        Multimap<EquipmentSlotGroup, Entry> thatModifiers = secondary.modifiers();
+        Multimap<String, Entry> thisModifiers = primary.modifiers();
+        Multimap<String, Entry> thatModifiers = secondary.modifiers();
 
         if (Collections.disjoint(thisModifiers.keySet(), thatModifiers.keySet())) return primary;
 
@@ -118,7 +121,7 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
                 // entries to the primary modifiers if none of them match based on stream predicate
                 Collection<Entry> entries = thisModifiers.get(slot);
                 for (Entry e : thatEntries) {
-                    if (entries.stream().noneMatch(e2 -> e.isComparableWith(e2, slot))) {
+                    if (entries.stream().noneMatch(e::isComparableWith)) {
                         builder.put(slot, keepValues ? e : e.withoutAmount());
                     }
                 }
@@ -139,8 +142,7 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
     }
 
     public static class Builder {
-        ImmutableListMultimap.Builder<EquipmentSlotGroup, Entry> entries =
-                ImmutableListMultimap.builder();
+        ImmutableListMultimap.Builder<String, Entry> entries = ImmutableListMultimap.builder();
 
         Builder() {}
 
@@ -149,23 +151,23 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
             return this;
         }
 
-        public Builder put(EquipmentSlotGroup slotGroup, Entry entry) {
+        public Builder put(String slotGroup, Entry entry) {
             this.entries.put(slotGroup, entry);
             return this;
         }
 
-        public Builder put(EquipmentSlotGroup slotGroup, Holder<Attribute> attribute,
-                           AttributeModifier modifier, AttributeDisplayType displayType) {
-            this.entries.put(slotGroup, new Entry(attribute, modifier, displayType));
+        public Builder put(String slotGroup, Holder<Attribute> attribute, AttributeModifier modifier,
+                           AttributeDisplayType displayType, boolean isExclusive) {
+            this.entries.put(slotGroup, new Entry(attribute, modifier, displayType, isExclusive));
             return this;
         }
 
-        public Builder putAll(Multimap<EquipmentSlotGroup, Entry> entries) {
+        public Builder putAll(Multimap<String, Entry> entries) {
             this.entries.putAll(entries);
             return this;
         }
 
-        public Builder putAll(EquipmentSlotGroup slot, Collection<Entry> entries) {
+        public Builder putAll(String slot, Collection<Entry> entries) {
             this.entries.putAll(slot, entries);
             return this;
         }
@@ -203,7 +205,7 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
         private static Collection<Entry> mergeSeparate(Multimap<Holder<Attribute>, AttributeModifier> source) {
             Collection<Entry> entries = new ArrayList<>(source.size());
             BiConsumer<Holder<Attribute>, AttributeModifier> adder = (a, m) ->
-                    entries.add(new Entry(a, m, AttributeManager.getDisplayType(a).verify(m)));
+                    entries.add(new Entry(a, m, AttributeManager.getDisplayType(a).verify(m), false));
 
             source.asMap().forEach((attribute, modifiers) -> {
                 if (modifiers.size() > 1) {
@@ -232,15 +234,15 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
                 var type = AttributeManager.getDisplayType(attribute);
 
                 if (modifiers.size() > 1) {
-                    double baseValue = getBaseValue(attribute);
+                    double baseValue = AttributeHelper.getBaseValue(attribute);
                     double amount = mergeValues(modifiers, baseValue);
                     if (amount + (type.hasBaseValue() ? baseValue : 0) != 0) {
-                        entries.add(new Entry(attribute, new AttributeModifier(MERGED_ID, amount, ADD_VALUE), type));
+                        entries.add(new Entry(attribute, new AttributeModifier(MERGED_ID, amount, ADD_VALUE), type, true));
                     }
                 } else {
-                    for (AttributeModifier modifier : modifiers) {
-                        if (modifier.amount() + (type.hasBaseValue() ? getBaseValue(attribute) : 0) != 0) {
-                            entries.add(new Entry(attribute, modifier, type));
+                    for (AttributeModifier m : modifiers) {
+                        if (m.amount() + (type.hasBaseValue() ? AttributeHelper.getBaseValue(attribute) : 0) != 0) {
+                            entries.add(new Entry(attribute, m, type, true));
                         }
                     }
                 }
@@ -265,10 +267,12 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
         }
     }
 
+    // isExclusive indicates whether this entry affects exclusively the item it is applied to.
     public record Entry(
             Holder<Attribute> attribute,
             AttributeModifier modifier,
-            AttributeDisplayType displayType
+            AttributeDisplayType displayType,
+            boolean isExclusive
     ) {
 
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create(
@@ -277,13 +281,15 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
                         AttributeModifier.MAP_CODEC.forGetter(Entry::modifier),
                         AttributeDisplayType.CODEC
                                 .optionalFieldOf("display_type", AttributeDisplayType.NUMBER)
-                                .forGetter(Entry::displayType)
+                                .forGetter(Entry::displayType),
+                        Codec.BOOL.fieldOf("is_exclusive").forGetter(Entry::isExclusive)
                 ).apply(instance, Entry::new));
         public static final StreamCodec<RegistryFriendlyByteBuf, Entry> STREAM_CODEC =
                 StreamCodec.composite(
                         Attribute.STREAM_CODEC, Entry::attribute,
                         AttributeModifier.STREAM_CODEC, Entry::modifier,
                         AttributeDisplayType.STREAM_CODEC, Entry::displayType,
+                        ByteBufCodecs.BOOL, Entry::isExclusive,
                         Entry::new
                 );
 
@@ -299,13 +305,15 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
             return this.modifier.operation().equals(that.modifier().operation());
         }
 
-        public boolean isComparableWith(Entry that, EquipmentSlotGroup slot) {
-            return this.matchesAttribute(that) && (TooltipsUtil.isExclusive(slot) || this.matchesOperation(that));
+        public boolean isComparableWith(Entry that) {
+            return this.matchesAttribute(that)
+                    && ((this.isExclusive && that.isExclusive) || this.matchesOperation(that));
         }
 
         public Entry withoutAmount() {
             return new Entry(
-                    this.attribute, new AttributeModifier(modifier.id(), 0, modifier.operation()), this.displayType
+                    this.attribute, new AttributeModifier(modifier.id(), 0, modifier.operation()),
+                    this.displayType, this.isExclusive
             );
         }
 
@@ -314,7 +322,7 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
             double comparedValue = thatValue;
 
             if (this.displayType().hasBaseValue()) {
-                value += getBaseValue(this.attribute);
+                value += AttributeHelper.getBaseValue(this.attribute);
                 comparedValue += thatBaseValue;
             }
 
@@ -322,7 +330,7 @@ public record CombinedAttributeModifiers(Multimap<EquipmentSlotGroup, Entry> mod
         }
 
         public Comparison getComparison(Entry that) {
-            return getComparison(that.modifier().amount(), getBaseValue(that.attribute()));
+            return getComparison(that.modifier().amount(), AttributeHelper.getBaseValue(that.attribute()));
         }
 
         public Comparison getComparison() {

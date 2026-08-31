@@ -11,6 +11,7 @@ import net.twentyytwo.cleanertooltips.AttributeFormattingData;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 
@@ -19,7 +20,7 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.formatting;
 
 public class BetterCombatHandler {
 
-    public static final boolean isModLoaded = Services.getInstance().isModLoaded("bettercombat");
+    public static final boolean isModLoaded = Services.PLATFORM.isModLoaded("bettercombat");
 
     private static final ResourceLocation INTERACTION_RANGE =
             CleanerTooltips.location("textures/gui/attribute/entity_interaction_range.png");
@@ -29,7 +30,7 @@ public class BetterCombatHandler {
     }
 
     public static AttributeFormattingData getRangeData(ItemStack stack) {
-        double baseValue = TooltipsUtil.getBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
+        double baseValue = AttributeHelper.getBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
         double value = getTotalRange(stack, baseValue);
 
         Comparison comparison = getComparison(stack, baseValue, value);

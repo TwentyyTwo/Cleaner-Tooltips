@@ -1,7 +1,8 @@
 package net.twentyytwo.cleanertooltips;
 
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
@@ -9,14 +10,10 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
-import net.minecraft.core.Holder;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
-import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -25,6 +22,7 @@ import net.twentyytwo.cleanertooltips.config.TooltipsConfig.Position;
 import net.twentyytwo.cleanertooltips.config.TooltipsClothConfig;
 import net.twentyytwo.cleanertooltips.config.TooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
@@ -33,29 +31,24 @@ import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
-import java.util.function.Predicate;
 
 public class CleanerTooltips {
 
     public static final String MOD_ID = "cleanertooltips";
-    public static final Minecraft MC = Minecraft.getInstance();
-    public static final KeyMapping hideTooltip = new KeyMapping(
-            "key.cleanertooltips.hide_tooltip",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_V,
-            KeyMapping.CATEGORY_INVENTORY
-    );
+    public static final KeyMapping HIDE_TOOLTIP = new KeyMapping("key.cleanertooltips.hide_tooltip",
+                                                                 InputConstants.Type.KEYSYM,
+                                                                 GLFW.GLFW_KEY_V,
+                                                                 KeyMapping.CATEGORY_INVENTORY);
 
     public static TooltipsConfig config = TooltipsClothConfig.init();
 
     public static int GAP; // The gap between the icon and the value
     public static int GROUP_GAP; // The gap between attributes
 
-    private static final String PATH = "textures/gui/attribute/";
-    private static final ResourceLocation DURABILITY_ICON = location(PATH + "durability.png");
-    private static final ResourceLocation DIGGING_SPEED = location(PATH + "digging_speed.png");
-    private static final ResourceLocation HIGHER = location(PATH + "higher.png");
-    private static final ResourceLocation LOWER = location(PATH + "lower.png");
+    private static final ResourceLocation DURABILITY_ICON = location("textures/gui/attribute/durability.png");
+    private static final ResourceLocation   DIGGING_SPEED = location("textures/gui/attribute/digging_speed.png");
+    private static final ResourceLocation          HIGHER = location("textures/gui/attribute/higher.png");
+    private static final ResourceLocation           LOWER = location("textures/gui/attribute/lower.png");
 
     public static void init() {
         TooltipsClothConfig.saveConfig();
@@ -143,40 +136,17 @@ public class CleanerTooltips {
     public record IconAttributeComponent(ItemStack stack) implements TooltipComponent {
     }
 
-    @SuppressWarnings("unused")
-    public static class IconAttributeTooltip implements ClientTooltipComponent {
-        static final Predicate<Holder<Attribute>> ATTRIBUTE_FILTER = TooltipsConfig.BLACKLISTED_ATTRIBUTES::contains;
-        static final Predicate<AttributeModifier> MODIFIER_FILTER = IconAttributeTooltip::isBlacklisted;
+    public record IconAttributeTooltip(ItemStack stack,
+                                       Multimap<String, AttributeFormattingData> formattingDataMap,
+                                       MutableComponent durabilityComponent,
+                                       boolean anyTextureMissing) implements ClientTooltipComponent {
 
-        private final ItemStack stack;
-        private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
-        private final MutableComponent durabilityComponent;
-        private final AttributeFormattingData miningSpeedData;
-
-        private final boolean anyTextureMissing;
-
-        public ItemStack getStack() {
-            return this.stack;
+        public static IconAttributeTooltip fromComponent(IconAttributeComponent component) {
+            return fromStack(component.stack());
         }
 
-        public IconAttributeTooltip(ItemStack stack,
-                ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap,
-                MutableComponent durabilityComponent, AttributeFormattingData miningSpeedData,
-                boolean anyTextureMissing) {
-            this.stack = stack;
-            this.groupFormattingDataMap = groupFormattingDataMap;
-            this.durabilityComponent = durabilityComponent;
-            this.miningSpeedData = miningSpeedData;
-            this.anyTextureMissing = anyTextureMissing;
-        }
-
-        public IconAttributeTooltip(IconAttributeComponent component) {
-            this(component.stack());
-        }
-
-        public IconAttributeTooltip(ItemStack stack) {
-            CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack, ATTRIBUTE_FILTER,
-                                                                                        MODIFIER_FILTER);
+        public static IconAttributeTooltip fromStack(ItemStack stack) {
+            CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
             final boolean[] anyTextureMissing = {false};
@@ -185,13 +155,12 @@ public class CleanerTooltips {
                 modifiers = CombinedAttributeModifiers.combine(modifiers, comparedModifiers, false);
             }
 
-            ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder =
-                    ImmutableListMultimap.builder();
+            ImmutableMultimap.Builder<String, AttributeFormattingData> builder = ImmutableListMultimap.builder();
             modifiers.modifiers().forEach((slot, entry) -> {
                 Comparison comparison = Comparison.NONE;
                 if (comparedModifiers.modifiers().containsKey(slot)) {
                     comparison = comparedModifiers.modifiers().get(slot).stream()
-                            .filter(e -> entry.isComparableWith(e, slot))
+                            .filter(entry::isComparableWith)
                             .findFirst()
                             .map(entry::getComparison)
                             .orElse(entry.getComparison());
@@ -205,17 +174,15 @@ public class CleanerTooltips {
                 }
             });
 
-            EquipmentSlotGroup mainhand = EquipmentSlotGroup.MAINHAND;
+            AttributeFormattingData miningData = getMiningSpeedData(stack);
+            if (miningData != null) builder.put("mainhand", miningData);
+
             if (BetterCombatHandler.isModLoaded && BetterCombatHandler.hasAttributes(stack)
-                    && modifiers.modifiers().containsKey(mainhand)) {
-                builder.put(mainhand, BetterCombatHandler.getRangeData(stack));
+                    && modifiers.modifiers().containsKey("mainhand")) {
+                builder.put("mainhand", BetterCombatHandler.getRangeData(stack));
             }
 
-            this.stack = stack;
-            this.groupFormattingDataMap = builder.build();
-            this.durabilityComponent = durabilityFormatting(stack);
-            this.miningSpeedData = getMiningSpeedData(stack);
-            this.anyTextureMissing = anyTextureMissing[0];
+            return new IconAttributeTooltip(stack, builder.build(), durabilityFormatting(stack), anyTextureMissing[0]);
         }
 
         private static CombinedAttributeModifiers getComparedModifiers(ItemStack stack) {
@@ -225,11 +192,11 @@ public class CleanerTooltips {
 
             var comparedStack = TooltipsUtil.getEquippedStack(stack);
             if (comparedStack.isEmpty() || comparedStack.equals(stack)
-                    || !TooltipsUtil.hasAttributes(comparedStack)) {
+                    || !AttributeHelper.hasAttributes(comparedStack)) {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
-            return CombinedAttributeModifiers.fromStack(comparedStack, ATTRIBUTE_FILTER, MODIFIER_FILTER);
+            return CombinedAttributeModifiers.fromStack(comparedStack);
         }
 
         @Nullable
@@ -261,30 +228,18 @@ public class CleanerTooltips {
             return Comparison.NONE;
         }
 
-        private static boolean isBlacklisted(AttributeModifier modifier) {
-            for (TooltipsConfig.RegexLocation location : TooltipsConfig.BLACKLISTED_MODIFIERS) {
-                if (location.matches(modifier.id())) return true;
-            }
-
-            return false;
-        }
-
         @Override
         public int getHeight() {
             return config.groupDisplay == TooltipsConfig.GroupDisplay.ROWS
-                    ? Math.max(10, groupFormattingDataMap.asMap().size() * 10) : 10;
+                    ? Math.max(10, formattingDataMap.asMap().size() * 10) : 10;
         }
 
         @Override
         public int getWidth(@NotNull Font font) {
             int width = 0;
 
-            if (miningSpeedData != null) {
-                width += miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
-            }
-
             if (TooltipsUtil.canAddDurabilityTooltip(stack) && config.durabilityPos == Position.INLINE) {
-                width += MC.font.width(durabilityComponent) + GROUP_GAP + GAP + 9;
+                width += Minecraft.getInstance().font.width(durabilityComponent) + GROUP_GAP + GAP + 9;
             }
 
             width = calculateAttributeWidth(font, width);
@@ -305,7 +260,7 @@ public class CleanerTooltips {
 
             boolean firstIteration = true;
 
-            var dataMap = groupFormattingDataMap.asMap();
+            var dataMap = formattingDataMap.asMap();
             for (var collection : dataMap.values()) {
                 int rowWidth = 0;
                 for (var formattingData : collection) {
@@ -328,7 +283,7 @@ public class CleanerTooltips {
         }
 
         private int getWidthInline(Font font, int width) {
-            for (var formattingData : groupFormattingDataMap.values()) {
+            for (var formattingData : formattingDataMap.values()) {
                 width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
             }
 
@@ -336,7 +291,7 @@ public class CleanerTooltips {
                 width += font.width("[+]") + GROUP_GAP;
             }
 
-            int slotSize = groupFormattingDataMap.asMap().size();
+            int slotSize = formattingDataMap.asMap().size();
             return width + (slotSize > 1 ? slotSize * (9 + GROUP_GAP) : 0);
         }
 
@@ -345,14 +300,10 @@ public class CleanerTooltips {
                                 @NotNull GuiGraphics guiGraphics) {
             int groupX = renderAttributeModifiers(font, guiGraphics, x, y);
 
-            if (miningSpeedData != null) {
-                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1);
-            }
-
             if (TooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durabilityPos == Position.INLINE) {
                 guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
-                guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
+                guiGraphics.drawString(Minecraft.getInstance().font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
 
@@ -370,7 +321,7 @@ public class CleanerTooltips {
 
             boolean firstIteration = true;
 
-            var dataMap = groupFormattingDataMap.asMap();
+            var dataMap = formattingDataMap.asMap();
             for (var entry : dataMap.entrySet()) {
                 if (dataMap.size() > 1) {
                     var icon = getSlotIcon(entry.getKey());
@@ -395,7 +346,7 @@ public class CleanerTooltips {
         }
 
         private int renderInline(Font font, GuiGraphics guiGraphics, int x, int y) {
-            var dataMap = groupFormattingDataMap.asMap();
+            var dataMap = formattingDataMap.asMap();
             for (var entry : dataMap.entrySet()) {
                 if (dataMap.size() > 1) {
                     var icon = getSlotIcon(entry.getKey());
@@ -423,7 +374,7 @@ public class CleanerTooltips {
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
             var component = entry.text().withStyle(entry.getFormatting());
-            guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
+            guiGraphics.drawString(Minecraft.getInstance().font, component, x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
         }
@@ -437,15 +388,6 @@ public class CleanerTooltips {
             return x;
         }
 
-        private int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y) {
-            guiGraphics.blit(miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
-            renderComparisonArrow(guiGraphics, miningSpeedData.comparison(), x, y);
-            var component = miningSpeedData.text().withStyle(miningSpeedData.getFormatting());
-            guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
-
-            return x + miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
-        }
-
         private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison,
                                            int x, int y) {
             if (config.comparisonArrow && !comparison.equals(Comparison.NONE)) {
@@ -455,10 +397,10 @@ public class CleanerTooltips {
             }
         }
 
-        private ResourceLocation getSlotIcon(EquipmentSlotGroup slotGroup) {
-            String texturePath = "textures/gui/slot/" + slotGroup.getSerializedName() + ".png";
+        private ResourceLocation getSlotIcon(String slotGroup) {
+            String texturePath = "textures/gui/slot/" + slotGroup + ".png";
             ResourceLocation resourceLocation = location(texturePath);
-            return MC.getResourceManager().getResource(resourceLocation).isEmpty()
+            return Minecraft.getInstance().getResourceManager().getResource(resourceLocation).isEmpty()
                     ? location("textures/gui/slot/any.png")
                     : resourceLocation;
         }
@@ -490,14 +432,14 @@ public class CleanerTooltips {
 
         @Override
         public int getWidth(@NotNull Font font) {
-            return MC.font.width(text) + 9 + GAP;
+            return Minecraft.getInstance().font.width(text) + 9 + GAP;
         }
 
         @Override
         public void renderImage(@NotNull Font font, int x, int y,
                                 @NotNull GuiGraphics guiGraphics) {
             guiGraphics.blit(DURABILITY_ICON , x, y - 1, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, text, x + 9 + GAP, y, -1);
+            guiGraphics.drawString(Minecraft.getInstance().font, text, x + 9 + GAP, y, -1);
         }
     }
 

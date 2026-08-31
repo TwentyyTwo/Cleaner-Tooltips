@@ -7,6 +7,7 @@ import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent
 import net.minecraft.world.item.ItemStack;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconAttributeTooltip;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
@@ -24,14 +25,14 @@ public abstract class TextUtilsMixin {
     private static List<ClientTooltipComponent> addMissingComponent(
             List<ClientTooltipComponent> original, @Local(argsOnly = true) ItemStack stack) {
         if (stack != null && !stack.isEmpty()) {
-            boolean shouldAddAttributes = TooltipsUtil.canAddAttributeTooltip(stack);
+            boolean shouldAddAttributes = AttributeHelper.canAddIconAttributes(stack);
             boolean shouldAddDurability = TooltipsUtil.canAddDurabilityTooltip(stack);
 
             if (!(shouldAddAttributes || shouldAddDurability)) return original;
 
             int index = original.isEmpty() ? 0 : 1;
             if (shouldAddAttributes) {
-                original.add(index, new IconAttributeTooltip(stack));
+                original.add(index, IconAttributeTooltip.fromStack(stack));
                 index++;
             }
 

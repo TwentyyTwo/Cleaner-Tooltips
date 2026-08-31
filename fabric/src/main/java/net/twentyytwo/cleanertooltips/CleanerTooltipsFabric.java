@@ -28,7 +28,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         CleanerTooltips.init();
-        KeyBindingHelper.registerKeyBinding(CleanerTooltips.hideTooltip);
+        KeyBindingHelper.registerKeyBinding(CleanerTooltips.HIDE_TOOLTIP);
 
         ResourceManagerHelper.get(PackType.CLIENT_RESOURCES)
                 .registerReloadListener(new FabricAttributeManager());
@@ -38,7 +38,7 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
         // or IconDurabilityComponent to IconDurabilityTooltip
         TooltipComponentCallback.EVENT.register(data -> {
             if (data instanceof IconAttributeComponent component) {
-                return new IconAttributeTooltip(component);
+                return IconAttributeTooltip.fromComponent(component);
             } else if (data instanceof IconDurabilityComponent component) {
                 return new IconDurabilityTooltip(component);
             }
@@ -71,9 +71,9 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
         List<ClientTooltipComponent> newList = new ArrayList<>(components);
         for (int i = 0; i < newList.size(); i++) {
             if (newList.get(i) instanceof IconAttributeTooltip tooltip) {
-                if (TooltipsUtil.isDamageable(tooltip.getStack())) {
+                if (TooltipsUtil.isDamageable(tooltip.stack())) {
                     int index = position == Position.BELOW ? i + 1 : newList.size();
-                    newList.add(index, new IconDurabilityTooltip(tooltip.getStack()));
+                    newList.add(index, new IconDurabilityTooltip(tooltip.stack()));
                 }
                 return newList;
             } else if (newList.get(i) instanceof IconDurabilityTooltip) {

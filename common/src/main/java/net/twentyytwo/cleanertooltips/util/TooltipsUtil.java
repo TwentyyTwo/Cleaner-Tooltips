@@ -1,6 +1,7 @@
 package net.twentyytwo.cleanertooltips.util;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -9,6 +10,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.ItemStack;
@@ -16,16 +18,14 @@ import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.twentyytwo.cleanertooltips.services.Services;
+import net.twentyytwo.cleanertooltips.CleanerTooltips;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 
 /**
  * Collection of useful functions.
@@ -47,8 +47,8 @@ public class TooltipsUtil {
     }
 
     public static ItemStack getEquippedStack(ItemStack stack) {
-        assert MC.player != null;
-        return MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+        var player = Minecraft.getInstance().player;
+        return player != null ? player.getItemBySlot(player.getEquipmentSlotForItem(stack)) : ItemStack.EMPTY;
     }
 
     public static Optional<Holder.Reference<Attribute>> getAttributeFromString(String s) {
@@ -56,13 +56,12 @@ public class TooltipsUtil {
     }
 
     public static List<Component> getMainhandModifierComponents() {
-        ItemStack stack = MC.player != null ? MC.player.getMainHandItem() : ItemStack.EMPTY;
+        var player = Minecraft.getInstance().player;
+        ItemStack stack = player != null ? player.getMainHandItem() : ItemStack.EMPTY;
 
         List<Component> modifierComponents = new ArrayList<>();
-        for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
-            stack.forEachModifier(slot, (attribute, modifier) ->
-                    modifierComponents.add(ComponentUtils.copyOnClickText(modifier.id().toString())));
-        }
+        Arrays.stream(EquipmentSlotGroup.values()).forEach(slot -> stack.forEachModifier(slot, (a, m) ->
+                modifierComponents.add(ComponentUtils.copyOnClickText(m.id().toString()))));
 
         return modifierComponents;
     }
@@ -73,9 +72,8 @@ public class TooltipsUtil {
      * @return      the additional attack damage
      */
     public static float getSharpnessBonus(ItemStack stack) {
-        assert MC.player != null;
         float bonus = 0;
-        if (config.sharpnessFix) {
+        if (CleanerTooltips.config.sharpnessFix) {
             var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
             for (var entry : enchantments.entrySet()) {
                 Enchantment enchantment = entry.getKey().value();
@@ -83,7 +81,7 @@ public class TooltipsUtil {
 
                 for (var effect : effects) {
                     if (effect.requirements().isEmpty()) {
-                        bonus = effect.effect().process(entry.getIntValue(), MC.player.getRandom(), bonus);
+                        bonus = effect.effect().process(entry.getIntValue(), RandomSource.create(), bonus);
                     }
                 }
             }
@@ -126,11 +124,20 @@ public class TooltipsUtil {
         return diggingSpeed[0];
     }
 
-    public static double getBaseValue(Holder<Attribute> attribute) {
-        if (MC.player != null && MC.player.getAttributes().hasAttribute(attribute)) {
-            return MC.player.getAttributeBaseValue(attribute);
+    public static boolean hasDiggingSpeed(ItemStack stack) {
+        Tool tool = stack.get(DataComponents.TOOL);
+        if (tool == null || tool.rules().isEmpty()) return false;
+
+        for (var rule : tool.rules()) {
+            var key = rule.blocks().unwrapKey();
+            if (key.isPresent() && key.get().location().getPath().equals("sword_efficient")) {
+                return false;
+            }
+
+            if (rule.speed().isPresent()) return true;
         }
-        return 0;
+
+        return false;
     }
 
     /**
@@ -166,49 +173,11 @@ public class TooltipsUtil {
         return !iterator1.hasNext() && !iterator2.hasNext();
     }
 
-    public static boolean isViableForAttributes() {
-        return MC.player != null && config.iconsEnabled && !Services.getInstance().isKeyDown();
-    }
-
-    public static boolean hasAttributes(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return false;
-
-        boolean[] found = new boolean[]{false};
-        for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
-            if (found[0]) break;
-            stack.forEachModifier(slot, (attribute, modifier) -> {
-                if (found[0]) return;
-                if (AttributeManager.getTexture(attribute) == null) return;
-                if (modifier.amount() != 0) {
-                    found[0] = true;
-                } else if (AttributeManager.getDisplayType(attribute).hasBaseValue()
-                        && modifier.amount() + getBaseValue(attribute) != 0) {
-                    found[0] = true;
-                }
-            });
-        }
-        return found[0];
-    }
-
-    public static boolean canAddAttributeTooltip(ItemStack stack) {
-        return isViableForAttributes() && hasAttributes(stack);
-    }
-
     public static boolean isDamageable(ItemStack stack) {
-        return !config.hideWhenRepaired ? stack.isDamageableItem() : stack.isDamaged();
+        return !CleanerTooltips.config.hideWhenRepaired ? stack.isDamageableItem() : stack.isDamaged();
     }
 
     public static boolean canAddDurabilityTooltip(ItemStack stack) {
-        return config.durabilityEnabled && isDamageable(stack);
-    }
-
-    // Returns whether the provided slot group applies to only the item it is on (exclusive),
-    // or if it applies to more items that it is on (nonexclusive).
-    // Essentially, if an entries slot group is exclusive, every modifier operation can be combined
-    // into one modifier, otherwise they are separated.
-    public static boolean isExclusive(EquipmentSlotGroup slotGroup) {
-        return slotGroup == EquipmentSlotGroup.MAINHAND
-                || slotGroup == EquipmentSlotGroup.OFFHAND
-                || slotGroup == EquipmentSlotGroup.BODY;
+        return CleanerTooltips.config.durabilityEnabled && isDamageable(stack);
     }
 }

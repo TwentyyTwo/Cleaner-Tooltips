@@ -9,6 +9,8 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.AttributeTooltipContext;
 import net.neoforged.neoforge.common.util.AttributeUtil;
+import net.twentyytwo.cleanertooltips.CleanerTooltips;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -18,16 +20,13 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.function.Consumer;
 
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
-
 @Mixin(AttributeUtil.class)
 public abstract class AttributeUtilMixin {
 
     @Inject(method = "applyModifierTooltips", at = @At("TAIL"))
     private static void addMiningSpeedTooltip(ItemStack stack, Consumer<Component> tooltip,
                                               AttributeTooltipContext ctx, CallbackInfo ci) {
-        if (config.miningSpeed && stack != null && !stack.isEmpty()) {
+        if (CleanerTooltips.config.miningSpeed && stack != null && !stack.isEmpty()) {
             float speed = TooltipsUtil.getDiggingSpeed(stack);
             if (speed > 0.0f) {
                 tooltip.accept(TooltipsUtil.getDiggingSpeedComponent(speed));
@@ -43,8 +42,8 @@ public abstract class AttributeUtilMixin {
                                              @Local(argsOnly = true) ItemStack stack,
                                              @Local(name = "attr") Holder<Attribute> attr,
                                              @Local(name = "entityBase") double entityBase) {
-        return MC.player != null && attr.value().getBaseId() == Item.BASE_ATTACK_DAMAGE_ID
-                ? base - entityBase + MC.player.getAttributeBaseValue(Attributes.ATTACK_DAMAGE)
+        return attr.value().getBaseId() == Item.BASE_ATTACK_DAMAGE_ID
+                ? base - entityBase + AttributeHelper.getBaseValue(Attributes.ATTACK_DAMAGE)
                 + TooltipsUtil.getSharpnessBonus(stack)
                 : base;
     }

@@ -25,6 +25,7 @@ import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityComponent;
 import net.twentyytwo.cleanertooltips.CleanerTooltips.IconDurabilityTooltip;
 import net.twentyytwo.cleanertooltips.config.TooltipsConfig.Position;
 import net.twentyytwo.cleanertooltips.config.TooltipsClothConfig;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 
@@ -45,7 +46,7 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void registerKeybind(RegisterKeyMappingsEvent event) {
-        event.register(CleanerTooltips.hideTooltip);
+        event.register(CleanerTooltips.HIDE_TOOLTIP);
     }
 
     @SubscribeEvent()
@@ -60,7 +61,7 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void registerTooltips(RegisterClientTooltipComponentFactoriesEvent event) {
-        event.register(IconAttributeComponent.class, IconAttributeTooltip::new);
+        event.register(IconAttributeComponent.class, IconAttributeTooltip::fromComponent);
         event.register(IconDurabilityComponent.class, IconDurabilityTooltip::new);
     }
 
@@ -90,7 +91,7 @@ public class CleanerTooltipsNeoForge {
 
     @SubscribeEvent()
     public static void hideDefaultAttributes(GatherSkippedAttributeTooltipsEvent event) {
-        event.setSkipAll(TooltipsUtil.isViableForAttributes());
+        event.setSkipAll(AttributeHelper.isViableForIcons());
     }
 
     @SubscribeEvent()

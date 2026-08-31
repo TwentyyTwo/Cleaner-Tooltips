@@ -3,9 +3,8 @@ package net.twentyytwo.cleanertooltips.services;
 import com.mojang.blaze3d.platform.InputConstants;
 import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.client.Minecraft;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
-
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 public class FabricPlatformService implements PlatformService {
 
@@ -16,7 +15,7 @@ public class FabricPlatformService implements PlatformService {
 
     @Override
     public boolean isKeyDown() {
-        int key = KeyBindingHelper.getBoundKeyOf(CleanerTooltips.hideTooltip).getValue();
-        return key != -1 && InputConstants.isKeyDown(MC.getWindow().getWindow(), key);
+        int key = KeyBindingHelper.getBoundKeyOf(CleanerTooltips.HIDE_TOOLTIP).getValue();
+        return key != -1 && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key);
     }
 }

@@ -200,7 +200,7 @@ public class CleanerTooltips {
                 ResourceLocation texture = AttributeManager.getTexture(entry.attribute());
                 if (texture != null) {
                     builder.put(slot, new AttributeFormattingData(entry, texture, comparison));
-                } else if (!TooltipsConfig.BLACKLISTED_HINTS.contains(entry.attribute())) {
+                } else {
                     anyTextureMissing[0] = true;
                 }
             });

@@ -17,6 +17,7 @@ import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.twentyytwo.cleanertooltips.mixin.AttributeAccessor;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
 import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
@@ -326,7 +327,8 @@ public record CombinedAttributeModifiers(Multimap<String, Entry> modifiers) {
                 comparedValue += thatBaseValue;
             }
 
-            return Comparison.getComparison(value, comparedValue);
+            Attribute.Sentiment sentiment = ((AttributeAccessor) this.attribute.value()).getSentiment();
+            return Comparison.getComparison(value, comparedValue, sentiment != Attribute.Sentiment.NEGATIVE);
         }
 
         public Comparison getComparison(Entry that) {

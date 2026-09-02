@@ -20,24 +20,21 @@
     "priority": 0
   },
   "minecraft:generic.gravity": {
-    "display_type": "PERCENTAGE",
-    "priority": 99
+    "display_type": "PERCENTAGE"
   },
   "minecraft:generic.knockback_resistance": {
     "display_type": "PERCENTAGE",
     "priority": 0
   },
   "minecraft:generic.luck": {
-    "display_type": "PERCENTAGE",
-    "priority": 99
+    "display_type": "PERCENTAGE"
   },
   "minecraft:generic.max_health": {
     "display_type": "DIFFERENCE",
     "priority": 2
   },
   "minecraft:generic.movement_speed": {
-    "display_type": "PERCENTAGE",
-    "priority": 99
+    "display_type": "PERCENTAGE"
   },
   "minecraft:player.block_interaction_range": {
     "display_type": "DIFFERENCE",

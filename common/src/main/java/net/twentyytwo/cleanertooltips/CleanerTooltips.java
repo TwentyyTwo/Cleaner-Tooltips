@@ -14,6 +14,7 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.FastColor;
+import net.minecraft.world.entity.ai.attributes.Attribute.Sentiment;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
@@ -59,19 +60,24 @@ public class CleanerTooltips {
     }
 
     public static MutableComponent formatting(double value, double baseValue,
-                                              AttributeDisplayType displayType) {
+                                              AttributeDisplayType displayType, Sentiment sentiment) {
         return switch (displayType) {
             case BOOLEAN -> Component.literal(value > 0.0 ? "Enabled" : "Disabled")
                     .withStyle(ChatFormatting.WHITE);
             case DIFFERENCE -> Component.literal((value > 0 ? "+" : "") + format(value))
-                    .withStyle(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
+                    .withStyle(getColorWithSentiment(value, sentiment));
             case MULTIPLIER -> Component.literal(format((value + baseValue) / baseValue) + "x")
                     .withStyle(ChatFormatting.WHITE);
             case PERCENTAGE -> Component.literal((value > 0 ? "+" : "") + format(value * 100)
-                    .formatted(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE) + "%");
+                    .formatted(getColorWithSentiment(value, sentiment)) + "%");
             case null, default -> Component.literal(format(value + baseValue))
-                    .withStyle((value + baseValue) < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
+                    .withStyle(getColorWithSentiment(value + baseValue, sentiment));
         };
+    }
+
+    private static ChatFormatting getColorWithSentiment(double value, Sentiment sentiment) {
+        return sentiment == Sentiment.NEGATIVE ? (value > 0 ? ChatFormatting.RED : ChatFormatting.WHITE)
+                                               : (value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
     }
 
     private static String format(double value) {
@@ -221,7 +227,7 @@ public class CleanerTooltips {
                         && stack.getItem().getClass().equals(comparedStack.getItem().getClass())) {
                     float comparedSpeed = TooltipsUtil.getDiggingSpeed(comparedStack);
                     if (comparedSpeed <= 0.0f) return Comparison.NONE;
-                    return Comparison.getComparison(speed, comparedSpeed);
+                    return Comparison.getComparison(speed, comparedSpeed, true);
                 }
             }
 
@@ -373,8 +379,8 @@ public class CleanerTooltips {
                                             int x, int y) {
             guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
-            var component = entry.text().withStyle(entry.getFormatting());
-            guiGraphics.drawString(Minecraft.getInstance().font, component, x + 9 + GAP, y + 1, -1);
+            entry.applyComparison();
+            guiGraphics.drawString(Minecraft.getInstance().font, entry.text(), x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
         }

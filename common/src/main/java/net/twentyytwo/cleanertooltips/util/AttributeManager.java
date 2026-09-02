@@ -76,7 +76,7 @@ public class AttributeManager
                 instance -> instance.group(
                 AttributeDisplayType.CODEC.fieldOf("display_type")
                         .forGetter(IntermediateHolder::displayType),
-                Codec.INT.fieldOf("priority")
+                Codec.INT.optionalFieldOf("priority", 1000)
                         .forGetter(IntermediateHolder::priority)
         ).apply(instance, IntermediateHolder::new));
     }
@@ -100,6 +100,6 @@ public class AttributeManager
 
     public static int getPriority(Holder<Attribute> attribute) {
         DisplayTextureHolder holder = HOLDER_MAP.get(attribute);
-        return holder != null ? holder.priority() : 99;
+        return holder != null ? holder.priority() : 1000;
     }
 }

@@ -125,6 +125,8 @@ public class TooltipsUtil {
     }
 
     public static boolean hasDiggingSpeed(ItemStack stack) {
+        if (!CleanerTooltips.config.miningSpeed) return false;
+
         Tool tool = stack.get(DataComponents.TOOL);
         if (tool == null || tool.rules().isEmpty()) return false;
 

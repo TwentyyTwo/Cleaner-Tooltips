@@ -5,6 +5,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.network.chat.TextColor;
 import net.minecraft.resources.ResourceLocation;
+import net.twentyytwo.cleanertooltips.mixin.AttributeAccessor;
 import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 
@@ -23,9 +24,11 @@ public record AttributeFormattingData(MutableComponent text,
 
     public AttributeFormattingData(CombinedAttributeModifiers.Entry entry, ResourceLocation icon,
                                    Comparison comparison) {
-        this(CleanerTooltips.formatting(entry.modifier().amount(),
-                                        AttributeHelper.getBaseValue(entry.attribute()),
-                                        entry.displayType()), icon, comparison);
+        this(CleanerTooltips.formatting(
+                entry.modifier().amount(),
+                AttributeHelper.getBaseValue(entry.attribute()),
+                entry.displayType(),((AttributeAccessor) entry.attribute().value()).getSentiment()
+        ), icon, comparison);
     }
 
     public AttributeFormattingData(MutableComponent text, ResourceLocation icon,
@@ -33,12 +36,12 @@ public record AttributeFormattingData(MutableComponent text,
         this(text, Minecraft.getInstance().font.width(text), icon, comparison);
     }
 
-    public ChatFormatting getFormatting() {
-        return switch (this.comparison()) {
-            case HIGHER -> ChatFormatting.GREEN;
-            case LOWER -> isAlreadyRed() ? ChatFormatting.DARK_RED : ChatFormatting.RED;
-            default -> ChatFormatting.WHITE;
-        };
+    public void applyComparison() {
+        if (this.comparison == Comparison.HIGHER) {
+            this.text.withStyle(ChatFormatting.GREEN);
+        } else if (this.comparison == Comparison.LOWER) {
+            this.text.withStyle(isAlreadyRed() ? ChatFormatting.DARK_RED : ChatFormatting.RED);
+        }
     }
 
     private boolean isAlreadyRed() {

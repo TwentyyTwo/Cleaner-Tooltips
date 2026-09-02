@@ -5,6 +5,7 @@ import net.bettercombat.logic.WeaponRegistry;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.Attribute.Sentiment;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.twentyytwo.cleanertooltips.AttributeFormattingData;
@@ -34,7 +35,7 @@ public class BetterCombatHandler {
         double value = getTotalRange(stack, baseValue);
 
         Comparison comparison = getComparison(stack, baseValue, value);
-        MutableComponent text = formatting(value, baseValue, AttributeDisplayType.NUMBER);
+        MutableComponent text = formatting(value, baseValue, AttributeDisplayType.NUMBER, Sentiment.POSITIVE);
         return new AttributeFormattingData(text, INTERACTION_RANGE, comparison);
     }
 
@@ -67,7 +68,7 @@ public class BetterCombatHandler {
             if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                     && hasAttributes(comparedStack)) {
                 double comparedValue = getTotalRange(comparedStack, baseValue);
-                return Comparison.getComparison(value, comparedValue);
+                return Comparison.getComparison(value, comparedValue, true);
             }
         }
         return Comparison.NONE;

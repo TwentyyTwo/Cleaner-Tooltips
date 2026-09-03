@@ -1,13 +1,16 @@
 package net.twentyytwo.cleanertooltips.util;
 
 import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.ComponentUtils;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.ItemStack;
@@ -15,21 +18,19 @@ import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
-import net.twentyytwo.cleanertooltips.services.Services;
+import net.twentyytwo.cleanertooltips.CleanerTooltips;
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.config;
 
 /**
  * Collection of useful functions.
  */
 public class TooltipsUtil {
-    public static final ResourceLocation EFFICIENCY =
-            ResourceLocation.withDefaultNamespace("enchantment.efficiency/mainhand");
-
     private static int tick = 0;
     private static boolean tickToggle = false;
 
@@ -45,15 +46,24 @@ public class TooltipsUtil {
         return tickToggle;
     }
 
-    public static Optional<Holder.Reference<Attribute>> resolveAttribute(String s) {
-        // parse automatically adds the minecraft namespace if missing
-        var location = ResourceLocation.parse(s);
-        return BuiltInRegistries.ATTRIBUTE.get(location);
+    public static ItemStack getEquippedStack(ItemStack stack) {
+        var player = Minecraft.getInstance().player;
+        return player != null ? player.getItemBySlot(player.getEquipmentSlotForItem(stack)) : ItemStack.EMPTY;
     }
 
-    public static ItemStack getEquippedStack(ItemStack stack) {
-        assert MC.player != null;
-        return MC.player.getItemBySlot(MC.player.getEquipmentSlotForItem(stack));
+    public static Optional<Holder.Reference<Attribute>> getAttributeFromString(String s) {
+        return BuiltInRegistries.ATTRIBUTE.get(ResourceLocation.parse(s));
+    }
+
+    public static List<Component> getMainhandModifierComponents() {
+        var player = Minecraft.getInstance().player;
+        ItemStack stack = player != null ? player.getMainHandItem() : ItemStack.EMPTY;
+
+        List<Component> modifierComponents = new ArrayList<>();
+        Arrays.stream(EquipmentSlotGroup.values()).forEach(slot -> stack.forEachModifier(slot, (a, m) ->
+                modifierComponents.add(ComponentUtils.copyOnClickText(m.id().toString()))));
+
+        return modifierComponents;
     }
 
     /**
@@ -62,9 +72,8 @@ public class TooltipsUtil {
      * @return      the additional attack damage
      */
     public static float getSharpnessBonus(ItemStack stack) {
-        assert MC.player != null;
         float bonus = 0;
-        if (config.general.sharpness) {
+        if (CleanerTooltips.config.sharpnessFix) {
             var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
             for (var entry : enchantments.entrySet()) {
                 Enchantment enchantment = entry.getKey().value();
@@ -72,7 +81,7 @@ public class TooltipsUtil {
 
                 for (var effect : effects) {
                     if (effect.requirements().isEmpty()) {
-                        bonus = effect.effect().process(entry.getIntValue(), MC.player.getRandom(), bonus);
+                        bonus = effect.effect().process(entry.getIntValue(), RandomSource.create(), bonus);
                     }
                 }
             }
@@ -80,10 +89,10 @@ public class TooltipsUtil {
         return bonus;
     }
 
-    public static MutableComponent getDiggingSpeedComponent(ItemStack stack) {
+    public static MutableComponent getDiggingSpeedComponent(float speed) {
         return CommonComponents.space()
                 .append(Component.translatable("text.cleanertooltips.mining_speed",
-                        DecimalFormat.getInstance().format(getDiggingSpeed(stack))))
+                        DecimalFormat.getInstance().format(speed)))
                 .withStyle(ChatFormatting.DARK_GREEN);
     }
 
@@ -93,7 +102,14 @@ public class TooltipsUtil {
             return 0.0f;
         }
         final float[] diggingSpeed = {0.0f};
-        for (var rule : tool.rules()) rule.speed().ifPresent(f -> diggingSpeed[0] = f);
+        for (var rule : tool.rules()) {
+            var key = rule.blocks().unwrapKey();
+            if (key.isPresent() && key.get().location().getPath().equals("sword_efficient")) {
+                return 0.0f;
+            }
+
+            rule.speed().ifPresent(f -> diggingSpeed[0] = f);
+        }
 
         var enchantments = stack.getOrDefault(DataComponents.ENCHANTMENTS, ItemEnchantments.EMPTY);
         for (var entry : enchantments.entrySet()) {
@@ -108,48 +124,62 @@ public class TooltipsUtil {
         return diggingSpeed[0];
     }
 
-    public static double getBaseValue(Holder<Attribute> attribute) {
-        if (MC.player != null && MC.player.getAttributes().hasAttribute(attribute)) {
-            return MC.player.getAttributeBaseValue(attribute);
+    public static boolean hasDiggingSpeed(ItemStack stack) {
+        if (!CleanerTooltips.config.miningSpeed) return false;
+
+        Tool tool = stack.get(DataComponents.TOOL);
+        if (tool == null || tool.rules().isEmpty()) return false;
+
+        for (var rule : tool.rules()) {
+            var key = rule.blocks().unwrapKey();
+            if (key.isPresent() && key.get().location().getPath().equals("sword_efficient")) {
+                return false;
+            }
+
+            if (rule.speed().isPresent()) return true;
         }
-        return 0;
+
+        return false;
     }
 
-    public static boolean isViableForAttributes() {
-        return MC.player != null && config.general.enabled && !Services.getInstance().isKeyDown();
-    }
-
-    public static boolean hasAttributes(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) return false;
-
-        boolean[] found = new boolean[]{false};
-        for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
-            if (found[0]) break;
-            stack.forEachModifier(slot, (attribute, modifier) -> {
-                if (found[0]) return;
-                if (AttributeManager.getTexture(attribute) == null) return;
-                if (modifier.amount() != 0) {
-                    found[0] = true;
-                } else if (AttributeManager.getDisplayType(attribute).hasBaseValue()
-                        && modifier.amount() + getBaseValue(attribute) != 0) {
-                    found[0] = true;
-                }
-            });
+    /**
+     * Compares two maps with each other for equality. Returns {@code true}
+     * if both maps represent the same mappings and in the same order.
+     * @param m1    a map
+     * @param m2    a map to be compared with {@code m1} for equality
+     * @return      {@code true} if both maps are equal to each other
+     * @see         java.util.AbstractMap#equals(Object)
+     * @see         java.util.AbstractMap.SimpleEntry#equals(Object)
+     */
+    public static boolean equalsOrdered(Map<?, ?> m1, Map<?, ?> m2) {
+        if (m1 == m2) {
+            return true;
         }
-        return found[0];
+
+        if (m1 == null || m2 == null || m1.size() != m2.size()) {
+            return false;
+        }
+
+        var iterator1 = m1.entrySet().iterator();
+        var iterator2 = m2.entrySet().iterator();
+
+        while (iterator1.hasNext() && iterator2.hasNext()) {
+            Map.Entry<?, ?> entry1 = iterator1.next();
+            Map.Entry<?, ?> entry2 = iterator2.next();
+
+            if (!entry1.equals(entry2)) {
+                return false;
+            }
+        }
+
+        return !iterator1.hasNext() && !iterator2.hasNext();
     }
 
-    public static boolean canAddAttributeTooltip(ItemStack stack) {
-        return isViableForAttributes() && hasAttributes(stack);
+    public static boolean isDamageable(ItemStack stack) {
+        return !CleanerTooltips.config.hideWhenRepaired ? stack.isDamageableItem() : stack.isDamaged();
     }
 
     public static boolean canAddDurabilityTooltip(ItemStack stack) {
-        return config.durability.durabilityEnabled && stack.isDamageableItem();
-    }
-
-    public static boolean separateOperations(EquipmentSlotGroup slotGroup) {
-        return slotGroup != EquipmentSlotGroup.MAINHAND
-                && slotGroup != EquipmentSlotGroup.OFFHAND
-                && slotGroup != EquipmentSlotGroup.BODY;
+        return CleanerTooltips.config.durabilityEnabled && isDamageable(stack);
     }
 }

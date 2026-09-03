@@ -3,7 +3,7 @@ package net.twentyytwo.cleanertooltips.mixin;
 import net.bettercombat.client.WeaponAttributeTooltip;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
-import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Pseudo;
 import org.spongepowered.asm.mixin.injection.At;
@@ -23,7 +23,7 @@ public class WeaponAttributeTooltipMixin {
     )
     private static void onModifyTooltip(ItemStack itemStack, List<Component> lines,
                                         CallbackInfo ci) {
-        if (TooltipsUtil.canAddAttributeTooltip(itemStack)) {
+        if (AttributeHelper.canAddIconAttributes(itemStack)) {
             ci.cancel();
         }
     }

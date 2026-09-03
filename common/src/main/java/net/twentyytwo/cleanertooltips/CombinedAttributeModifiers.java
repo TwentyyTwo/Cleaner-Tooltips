@@ -1,27 +1,25 @@
 package net.twentyytwo.cleanertooltips;
 
-import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.LinkedListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
-import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
-import net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation;
-import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.minecraft.world.item.equipment.Equippable;
-import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
+import net.twentyytwo.cleanertooltips.mixin.AttributeAccessor;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.Comparison;
@@ -30,87 +28,114 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Map;
+import java.util.function.BiConsumer;
+import java.util.function.Predicate;
 
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.location;
-import static net.twentyytwo.cleanertooltips.util.TooltipsUtil.getBaseValue;
+import static net.minecraft.resources.ResourceLocation.withDefaultNamespace;
+import static net.minecraft.world.entity.ai.attributes.AttributeModifier.Operation.ADD_VALUE;
 
 /**
- * A record containing data to simplify working with attribute modifiers.
+ * This record aims to simplify working with attribute modifiers.
  *
- * @param modifiers the map of attribute modifiers
  * @see ItemAttributeModifiers
  */
-public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry> modifiers) {
-    public static final CombinedAttributeModifiers EMPTY =
-            new CombinedAttributeModifiers(ImmutableListMultimap.of());
+@SuppressWarnings({"unused", "UnusedReturnValue"})
+public record CombinedAttributeModifiers(Multimap<String, Entry> modifiers) {
+    public static final CombinedAttributeModifiers EMPTY = new CombinedAttributeModifiers(ImmutableListMultimap.of());
+
+    private static final ResourceLocation SHARPNESS_BONUS_ID = CleanerTooltips.location("sharpness_bonus_damage");
+    private static final ResourceLocation BASE_ENTITY_REACH_ID = withDefaultNamespace("base_entity_reach");
+
+    private static final Comparator<Entry> ENTRY_COMPARATOR = Comparator
+            .comparing((Entry e) -> AttributeManager.getPriority(e.attribute()))
+            .thenComparing((Entry e) -> e.attribute().toString(), String.CASE_INSENSITIVE_ORDER);
 
     public static CombinedAttributeModifiers fromStack(ItemStack stack) {
-        Builder builder = builder().orderValues(stack.getItem() instanceof ArmorItem);
-        EquipmentSlotGroup primaryGroup = getPrimaryGroup(stack);
-        double sharpnessBonus = TooltipsUtil.getSharpnessBonus(stack);
+        return fromStack(stack, AttributeHelper.ATTRIBUTE_FILTER, AttributeHelper.MODIFIER_FILTER);
+    }
 
-        ListMultimap<Holder<Attribute>, AttributeModifier> source = ArrayListMultimap.create();
-        EquipmentSlotGroup[] values = EquipmentSlotGroup.values();
-        for (int i = 0, length = values.length; i < length; i++) {
-            EquipmentSlotGroup slot = values[(i + primaryGroup.ordinal()) % length];
+    /**
+     * Returns a {@code CombinedAttributeModifiers} object with the given parameters.
+     * <p>
+     * Note: This method automatically creates an additional entry representing the attack damage bonus
+     * by the sharpness enchantment, if a modifier with the {@link Item#BASE_ATTACK_DAMAGE_ID} id is present.
+     *
+     * @param stack             the {@code ItemStack} whose attribute modifiers are used
+     * @param attributeFilter   a predicate which returns {@code true} for attributes to be ignored
+     * @param modifierFilter    a predicate which returns {@code true} for modifiers to be ignored
+     */
+    public static CombinedAttributeModifiers fromStack(ItemStack stack,
+                                                       Predicate<Holder<Attribute>> attributeFilter,
+                                                       Predicate<AttributeModifier> modifierFilter) {
+        Builder builder = builder();
 
-            stack.forEachModifier(slot, source::put);
-            if (BetterCombatHandler.isModLoaded && BetterCombatHandler.hasAttributes(stack)) {
-                source.removeAll(Attributes.ENTITY_INTERACTION_RANGE);
-            }
+        if (CleanerTooltips.config.customOrder) builder.orderValues();
 
-            builder.putAll(slot, Merger.merge(source,
-                    TooltipsUtil.separateOperations(slot),
-                    sharpnessBonus));
-            source.clear();
+        for (EquipmentSlotGroup slot : EquipmentSlotGroup.values()) {
+            Multimap<Holder<Attribute>, AttributeModifier> source = LinkedListMultimap.create();
+
+            stack.forEachModifier(slot, (k, v) -> {
+                if (attributeFilter.test(k) || modifierFilter.test(v)) return;
+
+                source.put(k, v);
+
+                // Add the sharpness bonus if the base attack damage modifier id is present
+                if (v.is(Item.BASE_ATTACK_DAMAGE_ID)) {
+                    double damage = TooltipsUtil.getSharpnessBonus(stack);
+                    if (damage > 0) source.put(k, new AttributeModifier(SHARPNESS_BONUS_ID, damage, ADD_VALUE));
+                }
+            });
+
+            if (source.isEmpty()) continue;
+
+            boolean isExclusive = slot == EquipmentSlotGroup.MAINHAND || slot == EquipmentSlotGroup.OFFHAND
+                    || slot == EquipmentSlotGroup.BODY;
+            builder.putAll(slot.getSerializedName(), Merger.merge(sortBaseModifiers(source), isExclusive));
         }
+
         return builder.build();
     }
 
-    private static EquipmentSlotGroup getPrimaryGroup(ItemStack stack) {
-        Equippable equippable = stack.get(DataComponents.EQUIPPABLE);
-        if (equippable != null) {
-            return EquipmentSlotGroup.bySlot(equippable.slot());
-        }
-        return EquipmentSlotGroup.MAINHAND;
+    private static Multimap<Holder<Attribute>, AttributeModifier> sortBaseModifiers(
+            Multimap<Holder<Attribute>, AttributeModifier> map) {
+        return map.entries().stream()
+                  .sorted(Comparator.comparing(e -> !isBaseModifier(e.getValue())))
+                  .collect(Multimaps.toMultimap(Map.Entry::getKey, Map.Entry::getValue, LinkedListMultimap::create));
     }
 
-    public CombinedAttributeModifiers combine(CombinedAttributeModifiers other,
-                                              boolean isArmor,
-                                              boolean copyValues) {
-        ListMultimap<EquipmentSlotGroup, Entry> otherModifiers = other.modifiers();
-        if (otherModifiers.isEmpty()
-                || Collections.disjoint(this.modifiers.keySet(), otherModifiers.keySet())) {
-            return this;
-        }
+    public static CombinedAttributeModifiers combine(CombinedAttributeModifiers primary,
+                                                     CombinedAttributeModifiers secondary, boolean keepValues) {
+        Multimap<String, Entry> thisModifiers = primary.modifiers();
+        Multimap<String, Entry> thatModifiers = secondary.modifiers();
 
-        Builder builder = builder().orderValues(isArmor).putAll(this.modifiers);
-        otherModifiers.asMap().forEach((slot, entries) -> {
-            boolean keepOperationsSeparate = TooltipsUtil.separateOperations(slot);
+        if (Collections.disjoint(thisModifiers.keySet(), thatModifiers.keySet())) return primary;
 
-            if (!this.modifiers.containsKey(slot)) {
-                for (Entry e : entries) {
-                    builder.put(slot, copyValues ? e : e.withoutAmount());
-                }
+        Builder builder = builder().putAll(thisModifiers);
+        thatModifiers.asMap().forEach((slot, thatEntries) -> {
+            if (!thisModifiers.containsKey(slot)) {
+                // If the primary modifiers don't contain this slot of the secondary modifiers,
+                // add all the entries of that slot unconditionally
+                for (Entry e : thatEntries) builder.put(slot, keepValues ? e : e.withoutAmount());
             } else {
-                Collection<Entry> thisEntries = this.modifiers.get(slot);
-                for (Entry entry : entries) {
-                    boolean found = false;
-                    for (Entry thisEntry : thisEntries) {
-                        if (entry.matchesAttribute(thisEntry.attribute())
-                                && (!keepOperationsSeparate
-                                || entry.matchesOperation(thisEntry.modifier()))) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        builder.put(slot, copyValues ? entry : entry.withoutAmount());
+                // Compare each of the secondary entries against the primary entries, and add missing
+                // entries to the primary modifiers if none of them match based on stream predicate
+                Collection<Entry> entries = thisModifiers.get(slot);
+                for (Entry e : thatEntries) {
+                    if (entries.stream().noneMatch(e::isComparableWith)) {
+                        builder.put(slot, keepValues ? e : e.withoutAmount());
                     }
                 }
             }
         });
+
         return builder.build();
+    }
+
+    private static boolean isBaseModifier(AttributeModifier modifier) {
+        return modifier.is(Item.BASE_ATTACK_DAMAGE_ID)
+                || modifier.is(Item.BASE_ATTACK_SPEED_ID)
+                || modifier.is(BASE_ENTITY_REACH_ID);
     }
 
     public static Builder builder() {
@@ -118,47 +143,32 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
     }
 
     public static class Builder {
-        ImmutableListMultimap.Builder<EquipmentSlotGroup, Entry> entries =
-                ImmutableListMultimap.builder();
+        ImmutableListMultimap.Builder<String, Entry> entries = ImmutableListMultimap.builder();
 
         Builder() {}
 
-        public Builder orderValues(boolean isArmor) {
-            this.entries.orderValuesBy(Comparator.comparing((Entry e) ->
-                            AttributeManager.getFullPriority(e.attribute(), isArmor))
-                    .thenComparing((Entry e) ->
-                            e.attribute().toString(), String.CASE_INSENSITIVE_ORDER));
+        public Builder orderValues() {
+            this.entries.orderValuesBy(ENTRY_COMPARATOR);
             return this;
         }
 
-        public Builder put(EquipmentSlotGroup slotGroup, Entry entry) {
+        public Builder put(String slotGroup, Entry entry) {
             this.entries.put(slotGroup, entry);
             return this;
         }
 
-        public Builder put(EquipmentSlotGroup slotGroup, Holder<Attribute> attribute,
-                           AttributeModifier modifier, AttributeDisplayType displayType) {
-            this.entries.put(slotGroup, new Entry(attribute, modifier, displayType));
+        public Builder put(String slotGroup, Holder<Attribute> attribute, AttributeModifier modifier,
+                           AttributeDisplayType displayType, boolean isExclusive) {
+            this.entries.put(slotGroup, new Entry(attribute, modifier, displayType, isExclusive));
             return this;
         }
 
-        public Builder putAny(Holder<Attribute> attribute, AttributeModifier modifier,
-                              AttributeDisplayType displayType) {
-            this.entries.put(EquipmentSlotGroup.ANY, new Entry(attribute, modifier, displayType));
-            return this;
-        }
-
-        public Builder putAny(Entry entry) {
-            this.entries.put(EquipmentSlotGroup.ANY, entry);
-            return this;
-        }
-
-        public Builder putAll(ListMultimap<EquipmentSlotGroup, Entry> entries) {
+        public Builder putAll(Multimap<String, Entry> entries) {
             this.entries.putAll(entries);
             return this;
         }
 
-        public Builder putAll(EquipmentSlotGroup slot, Collection<Entry> entries) {
+        public Builder putAll(String slot, Collection<Entry> entries) {
             this.entries.putAll(slot, entries);
             return this;
         }
@@ -173,9 +183,8 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
     }
 
     public static class Merger {
-        static ResourceLocation mergedId = location("merged_modifier");
-        ListMultimap<Holder<Attribute>, AttributeModifier> sourceEntries =
-                ArrayListMultimap.create();
+        static final ResourceLocation MERGED_ID = CleanerTooltips.location("merged_modifier");
+        Multimap<Holder<Attribute>, AttributeModifier> sourceEntries = LinkedListMultimap.create();
 
         Merger() {}
 
@@ -184,78 +193,70 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
             return this;
         }
 
-        public Collection<Entry> merge(boolean keepOperationsSeparate,
-                                       double sharpnessBonus) {
-            return merge(this.sourceEntries, keepOperationsSeparate, sharpnessBonus);
+        public Collection<Entry> merge(boolean exclusiveSlot) {
+            return merge(this.sourceEntries, exclusiveSlot);
         }
 
-        public static Collection<Entry> merge(
-                ListMultimap<Holder<Attribute>, AttributeModifier> source,
-                boolean keepOperationsSeparate,
-                double sharpnessBonus) {
-            return keepOperationsSeparate
-                    ? mergeSeparate(source)
-                    : mergeCombined(source, sharpnessBonus);
+        public static Collection<Entry> merge(Multimap<Holder<Attribute>, AttributeModifier> source,
+                                              boolean exclusiveSlot) {
+            return exclusiveSlot ? mergeCombined(source) : mergeSeparate(source);
         }
 
-        private static Collection<Entry> mergeSeparate(
-                ListMultimap<Holder<Attribute>, AttributeModifier> source) {
+        // Merges modifiers with the same operation
+        private static Collection<Entry> mergeSeparate(Multimap<Holder<Attribute>, AttributeModifier> source) {
             Collection<Entry> entries = new ArrayList<>(source.size());
-            source.asMap().forEach((attribute, modifiers) -> {
-                AttributeDisplayType displayType = AttributeManager.getDisplayType(attribute);
+            BiConsumer<Holder<Attribute>, AttributeModifier> adder = (a, m) ->
+                    entries.add(new Entry(a, m, AttributeManager.getDisplayType(a).verify(m), false));
 
+            source.asMap().forEach((attribute, modifiers) -> {
                 if (modifiers.size() > 1) {
-                    double[] mergedAmounts = new double[3];
-                    for (AttributeModifier modifier : modifiers) {
-                        mergedAmounts[modifier.operation().id()] += modifier.amount();
-                    }
+                    // First, gather the modifier amounts and sort them based on operation
+                    double[] amounts = new double[3];
+                    for (var m : modifiers) amounts[m.operation().id()] += m.amount();
+                    // Then add an entry to the list for every non-zero modifier amount
                     for (int i = 0; i < 3; i++) {
-                        if (mergedAmounts[i] > 0.0) {
-                            var operation = Operation.values()[i];
-                            entries.add(new Entry(attribute,
-                                    new AttributeModifier(mergedId, mergedAmounts[i], operation),
-                                    i == 0 ? displayType : AttributeDisplayType.PERCENTAGE));
+                        if (amounts[i] > 0.0) {
+                            adder.accept(attribute, new AttributeModifier(MERGED_ID, amounts[i], ADD_VALUE));
                         }
                     }
                 } else {
-                    var modifier = modifiers.iterator().next();
-                    displayType = !modifier.operation().equals(Operation.ADD_VALUE)
-                            ? AttributeDisplayType.PERCENTAGE
-                            : displayType;
-                    if (modifier.amount() != 0) {
-                        entries.add(new Entry(attribute, modifier, displayType));
+                    for (AttributeModifier modifier : modifiers) {
+                        if (modifier.amount() != 0) adder.accept(attribute, modifier);
                     }
                 }
             });
             return entries;
         }
 
-        private static Collection<Entry> mergeCombined(
-                ListMultimap<Holder<Attribute>, AttributeModifier> source, double sharpnessBonus) {
+        // Merges modifiers regardless of their operations
+        private static Collection<Entry> mergeCombined(Multimap<Holder<Attribute>, AttributeModifier> source) {
             Collection<Entry> entries = new ArrayList<>(source.keySet().size());
             source.asMap().forEach((attribute, modifiers) -> {
                 var type = AttributeManager.getDisplayType(attribute);
 
-                double baseValue = getBaseValue(attribute);
-                double mergedAmount = getMergedValue(modifiers, baseValue, sharpnessBonus);
-                if (type.hasBaseValue() ? baseValue + mergedAmount != 0 : mergedAmount != 0) {
-                    entries.add(new Entry(attribute,
-                            new AttributeModifier(mergedId, mergedAmount, Operation.ADD_VALUE),
-                            type));
+                if (modifiers.size() > 1) {
+                    double baseValue = AttributeHelper.getBaseValue(attribute);
+                    double amount = mergeValues(modifiers, baseValue);
+                    if (amount + (type.hasBaseValue() ? baseValue : 0) != 0) {
+                        entries.add(new Entry(attribute, new AttributeModifier(MERGED_ID, amount, ADD_VALUE), type, true));
+                    }
+                } else {
+                    for (AttributeModifier m : modifiers) {
+                        if (m.amount() + (type.hasBaseValue() ? AttributeHelper.getBaseValue(attribute) : 0) != 0) {
+                            entries.add(new Entry(attribute, m, type, true));
+                        }
+                    }
                 }
             });
             return entries;
         }
 
-        private static double getMergedValue(Collection<AttributeModifier> modifiers,
-                                             double baseValue, double sharpnessAmount) {
+        private static double mergeValues(Collection<AttributeModifier> modifiers, double baseValue) {
             double totalAddValue = baseValue;
             double totalBaseMultiplier = 1;
             double totalMultiplier = 1;
 
-            boolean shouldAddSharpness = false;
             for (AttributeModifier modifier : modifiers) {
-                if (modifier.is(Item.BASE_ATTACK_DAMAGE_ID)) shouldAddSharpness = true;
                 switch (modifier.operation()) {
                     case ADD_VALUE -> totalAddValue += modifier.amount();
                     case ADD_MULTIPLIED_BASE -> totalBaseMultiplier += modifier.amount();
@@ -263,15 +264,16 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
                 }
             }
 
-            double sum = ((totalAddValue * totalBaseMultiplier) * totalMultiplier) - baseValue;
-            return shouldAddSharpness ? sum + sharpnessAmount : sum;
+            return ((totalAddValue * totalBaseMultiplier) * totalMultiplier) - baseValue;
         }
     }
 
+    // isExclusive indicates whether this entry affects exclusively the item it is applied to.
     public record Entry(
             Holder<Attribute> attribute,
             AttributeModifier modifier,
-            AttributeDisplayType displayType
+            AttributeDisplayType displayType,
+            boolean isExclusive
     ) {
 
         public static final Codec<Entry> CODEC = RecordCodecBuilder.create(
@@ -280,49 +282,61 @@ public record CombinedAttributeModifiers(ListMultimap<EquipmentSlotGroup, Entry>
                         AttributeModifier.MAP_CODEC.forGetter(Entry::modifier),
                         AttributeDisplayType.CODEC
                                 .optionalFieldOf("display_type", AttributeDisplayType.NUMBER)
-                                .forGetter(Entry::displayType)
-        ).apply(instance, Entry::new));
+                                .forGetter(Entry::displayType),
+                        Codec.BOOL.fieldOf("is_exclusive").forGetter(Entry::isExclusive)
+                ).apply(instance, Entry::new));
         public static final StreamCodec<RegistryFriendlyByteBuf, Entry> STREAM_CODEC =
                 StreamCodec.composite(
                         Attribute.STREAM_CODEC, Entry::attribute,
                         AttributeModifier.STREAM_CODEC, Entry::modifier,
                         AttributeDisplayType.STREAM_CODEC, Entry::displayType,
+                        ByteBufCodecs.BOOL, Entry::isExclusive,
                         Entry::new
-        );
+                );
 
-        public boolean matchesAttribute(Holder<Attribute> otherAttribute) {
-            return this.attribute.equals(otherAttribute);
+        public boolean matchesAttribute(Entry that) {
+            return this.attribute.equals(that.attribute());
         }
 
-        public boolean matchesModifier(AttributeModifier otherModifier) {
-            return this.modifier.equals(otherModifier);
+        public boolean matchesModifier(Entry that) {
+            return this.modifier.equals(that.modifier());
         }
 
-        public boolean matchesOperation(AttributeModifier otherModifier) {
-            return this.modifier.operation().equals(otherModifier.operation());
+        public boolean matchesOperation(Entry that) {
+            return this.modifier.operation().equals(that.modifier().operation());
+        }
+
+        public boolean isComparableWith(Entry that) {
+            return this.matchesAttribute(that)
+                    && ((this.isExclusive && that.isExclusive) || this.matchesOperation(that));
         }
 
         public Entry withoutAmount() {
-            return new Entry(this.attribute(),
-                    new AttributeModifier(this.modifier().id(), 0, this.modifier().operation()),
-                    this.displayType());
+            return new Entry(
+                    this.attribute, new AttributeModifier(modifier.id(), 0, modifier.operation()),
+                    this.displayType, this.isExclusive
+            );
         }
 
-        public Comparison getComparison(Entry comparedEntry) {
-            return getComparison(comparedEntry.modifier().amount(),
-                    getBaseValue(comparedEntry.attribute()));
-        }
-
-        public Comparison getComparison(double otherValue, double otherBaseValue) {
+        public Comparison getComparison(double thatValue, double thatBaseValue) {
             double value = this.modifier().amount();
-            double comparedValue = otherValue;
+            double comparedValue = thatValue;
 
             if (this.displayType().hasBaseValue()) {
-                value += getBaseValue(this.attribute);
-                comparedValue += otherBaseValue;
+                value += AttributeHelper.getBaseValue(this.attribute);
+                comparedValue += thatBaseValue;
             }
 
-            return Comparison.getComparison(value, comparedValue);
+            Attribute.Sentiment sentiment = ((AttributeAccessor) this.attribute.value()).getSentiment();
+            return Comparison.getComparison(value, comparedValue, sentiment != Attribute.Sentiment.NEGATIVE);
+        }
+
+        public Comparison getComparison(Entry that) {
+            return getComparison(that.modifier().amount(), AttributeHelper.getBaseValue(that.attribute()));
+        }
+
+        public Comparison getComparison() {
+            return getComparison(0, 0);
         }
     }
 }

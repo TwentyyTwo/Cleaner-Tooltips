@@ -20,8 +20,8 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
-import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.ColorStopMapListEntry.ColorStopMapCell;
+import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 
 import java.util.Arrays;
@@ -115,7 +115,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         AutoListListEntry attributeBlacklist = new AutoListListEntry.Builder(
                 entryBuilder, translate("option.attributeIdBlacklist"), config.attributeIdBlacklist)
                 .setTooltip(translate("option.attributeIdBlacklist.tooltip"))
-                .setDefaultValue(BetterCombatHandler.isModLoaded
+                .setDefaultValue(Services.PLATFORM.isModLoaded("bettercombat")
                                          ? List.of("minecraft:player.entity_interaction_range") : List.of())
                 .setSaveConsumer(newVal -> config.attributeIdBlacklist = newVal)
                 .setInsertInFront(true)
@@ -127,8 +127,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         FilterableListListEntry modifierBlacklist = new FilterableListListEntry.Builder(
                 entryBuilder, translate("option.modifierIdBlacklist"), config.modifierIdBlacklist)
                 .setTooltip(translate("option.modifierIdBlacklist.tooltip"))
-                .setDefaultValue(List.of("minecraft:enchantment.efficiency/mainhand",
-                                         "apotheosis:overworld/royalty_modifier_apothic_attributes.head_#"))
+                .setDefaultValue(List.of("minecraft:enchantment.efficiency/mainhand"))
                 .setSaveConsumer(newVal -> config.modifierIdBlacklist = newVal)
                 .setInsertInFront(true)
                 .setFilter(TooltipsClothConfig::isValidLocationRegex)

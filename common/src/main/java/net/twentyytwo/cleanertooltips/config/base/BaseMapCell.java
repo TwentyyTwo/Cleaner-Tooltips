@@ -38,6 +38,9 @@ public abstract class BaseMapCell extends AbstractContainerEventHandler implemen
                                 boolean isSelected,
                                 float delta);
 
+    public void updateBounds(boolean expanded, int x, int y, int entryWidth, int entryHeight) {
+    }
+
     public void updateSelected(boolean isSelected) {
     }
 

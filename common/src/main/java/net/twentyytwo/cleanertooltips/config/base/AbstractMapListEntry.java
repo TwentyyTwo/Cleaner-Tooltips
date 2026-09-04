@@ -1,5 +1,6 @@
 package net.twentyytwo.cleanertooltips.config.base;
 
+import me.shedaniel.math.Rectangle;
 import net.minecraft.network.chat.Component;
 import net.twentyytwo.cleanertooltips.config.base.AbstractMapListEntry.AbstractMapCell;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
@@ -89,6 +90,7 @@ public abstract class AbstractMapListEntry<K, V, C extends AbstractMapCell<K, V,
     public abstract static class AbstractMapCell<K, V, SELF extends AbstractMapCell<K, V, SELF, OUTER_SELF>, OUTER_SELF extends AbstractMapListEntry<K, V, SELF, OUTER_SELF>>
             extends BaseMapCell {
         protected final OUTER_SELF mapListEntry;
+        protected final Rectangle cellBounds = new Rectangle();
 
         public AbstractMapCell(@Nullable K key, @Nullable V value, OUTER_SELF mapListEntry) {
             this.mapListEntry = mapListEntry;
@@ -99,5 +101,19 @@ public abstract class AbstractMapListEntry<K, V, C extends AbstractMapCell<K, V,
         public abstract K getKey();
 
         public abstract V getValue();
+
+        @Override
+        public void updateBounds(boolean expanded, int x, int y, int entryWidth, int entryHeight) {
+            if (expanded) {
+                this.cellBounds.setBounds(x, y, entryWidth, entryHeight);
+            } else {
+                this.cellBounds.setBounds(0, 0, 0, 0);
+            }
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            return cellBounds.contains(mouseX, mouseY);
+        }
     }
 }

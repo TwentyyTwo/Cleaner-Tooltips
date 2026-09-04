@@ -340,6 +340,13 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
                         cell.getCellHeight(), mouseX, mouseY, getParent().getFocused() != null &&
                         getParent().getFocused().equals(this) && getFocused() != null && getFocused().equals(cell),
                         delta);
+                cell.updateBounds(true, x + 14, yy, entryWidth - 14, cell.getCellHeight());
+                yy += cell.getCellHeight();
+            }
+        } else {
+            int yy = y + 24;
+            for (BaseMapCell cell : this.cells) {
+                cell.updateBounds(false, x + 14, yy, entryWidth - 14, cell.getCellHeight());
                 yy += cell.getCellHeight();
             }
         }
@@ -357,6 +364,19 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
 
     public boolean insertInFront() {
         return this.insertInFront;
+    }
+
+    @Override
+    public boolean isMouseOver(double mouseX, double mouseY) {
+        if (super.isMouseOver(mouseX, mouseY)) return true;
+
+        if (isExpanded()) {
+            for (BaseMapCell cell : this.cells) {
+                if (cell.isMouseOver(mouseX, mouseY)) return true;
+            }
+        }
+
+        return false;
     }
 
     public class MapLabelWidget implements GuiEventListener {
@@ -416,6 +436,11 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
         @Override
         public boolean isFocused() {
             return false;
+        }
+
+        @Override
+        public boolean isMouseOver(double mouseX, double mouseY) {
+            return rectangle.contains(mouseX, mouseY) && !resetWidget.isMouseOver(mouseX, mouseY);
         }
     }
 }

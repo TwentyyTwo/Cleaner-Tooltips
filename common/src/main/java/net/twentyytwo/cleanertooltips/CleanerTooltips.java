@@ -1,10 +1,9 @@
 package net.twentyytwo.cleanertooltips;
 
 import com.google.common.collect.ImmutableListMultimap;
-import com.google.common.collect.ListMultimap;
+import com.google.common.collect.ImmutableMultimap;
+import com.google.common.collect.Multimap;
 import com.mojang.blaze3d.platform.InputConstants;
-import me.shedaniel.autoconfig.AutoConfig;
-import me.shedaniel.autoconfig.serializer.GsonConfigSerializer;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -14,14 +13,16 @@ import net.minecraft.client.renderer.RenderType;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.world.InteractionResult;
-import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.util.ARGB;
+import net.minecraft.world.entity.ai.attributes.Attribute.Sentiment;
 import net.minecraft.world.inventory.tooltip.TooltipComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.ItemAttributeModifiers;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.PosValues;
+import net.twentyytwo.cleanertooltips.config.TooltipsConfig.Position;
+import net.twentyytwo.cleanertooltips.config.TooltipsClothConfig;
+import net.twentyytwo.cleanertooltips.config.TooltipsConfig;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.AttributeManager;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import net.twentyytwo.cleanertooltips.util.ClientIconComponent;
@@ -32,41 +33,26 @@ import org.lwjgl.glfw.GLFW;
 
 import java.text.DecimalFormat;
 
-import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.blacklistedHints;
-import static net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig.configHolder;
-
 public class CleanerTooltips {
 
-    public static Minecraft MC = Minecraft.getInstance();
-
     public static final String MOD_ID = "cleanertooltips";
-    public static final KeyMapping hideTooltip = new KeyMapping(
-            "key.cleanertooltips.hide_tooltip",
-            InputConstants.Type.KEYSYM,
-            GLFW.GLFW_KEY_V,
-            KeyMapping.CATEGORY_INVENTORY
-    );
+    public static final KeyMapping HIDE_TOOLTIP = new KeyMapping("key.cleanertooltips.hide_tooltip",
+                                                                 InputConstants.Type.KEYSYM,
+                                                                 GLFW.GLFW_KEY_V,
+                                                                 KeyMapping.CATEGORY_INVENTORY);
 
-    public static CleanerTooltipsConfig config;
+    public static TooltipsConfig config = TooltipsClothConfig.init();
 
-    private static final int GAP = 3; // The gap between the icon and the value
-    private static final int GROUP_GAP = 8; // The gap between attributes
+    public static int GAP; // The gap between the icon and the value
+    public static int GROUP_GAP; // The gap between attributes
 
-    private static final String PATH = "textures/gui/attribute/";
-    private static final ResourceLocation DURABILITY_ICON = location(PATH + "durability.png");
-    private static final ResourceLocation DIGGING_SPEED = location(PATH + "digging_speed.png");
-    private static final ResourceLocation HIGHER = location(PATH + "higher.png");
-    private static final ResourceLocation LOWER = location(PATH + "lower.png");
+    private static final ResourceLocation DURABILITY_ICON = location("textures/gui/attribute/durability.png");
+    private static final ResourceLocation   DIGGING_SPEED = location("textures/gui/attribute/digging_speed.png");
+    private static final ResourceLocation          HIGHER = location("textures/gui/attribute/higher.png");
+    private static final ResourceLocation           LOWER = location("textures/gui/attribute/lower.png");
 
     public static void init() {
-        configHolder = AutoConfig.register(CleanerTooltipsConfig.class, GsonConfigSerializer::new);
-        configHolder.registerSaveListener((holder, configInstance) -> {
-            config = configInstance;
-            config.onConfigSave();
-            return InteractionResult.SUCCESS;
-        });
-        config = AutoConfig.getConfigHolder(CleanerTooltipsConfig.class).getConfig();
-        config.onConfigSave();
+        TooltipsClothConfig.saveConfig();
     }
 
     public static ResourceLocation location(String path) {
@@ -74,19 +60,24 @@ public class CleanerTooltips {
     }
 
     public static MutableComponent formatting(double value, double baseValue,
-                                              AttributeDisplayType displayType) {
+                                              AttributeDisplayType displayType, Sentiment sentiment) {
         return switch (displayType) {
             case BOOLEAN -> Component.literal(value > 0.0 ? "Enabled" : "Disabled")
                     .withStyle(ChatFormatting.WHITE);
             case DIFFERENCE -> Component.literal((value > 0 ? "+" : "") + format(value))
-                    .withStyle(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
+                    .withStyle(getColorWithSentiment(value, sentiment));
             case MULTIPLIER -> Component.literal(format((value + baseValue) / baseValue) + "x")
                     .withStyle(ChatFormatting.WHITE);
             case PERCENTAGE -> Component.literal((value > 0 ? "+" : "") + format(value * 100)
-                    .formatted(value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE) + "%");
+                    .formatted(getColorWithSentiment(value, sentiment)) + "%");
             case null, default -> Component.literal(format(value + baseValue))
-                    .withStyle((value + baseValue) < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
+                    .withStyle(getColorWithSentiment(value + baseValue, sentiment));
         };
+    }
+
+    private static ChatFormatting getColorWithSentiment(double value, Sentiment sentiment) {
+        return sentiment == Sentiment.NEGATIVE ? (value > 0 ? ChatFormatting.RED : ChatFormatting.WHITE)
+                                               : (value < 0 ? ChatFormatting.RED : ChatFormatting.WHITE);
     }
 
     private static String format(double value) {
@@ -96,109 +87,113 @@ public class CleanerTooltips {
     private static MutableComponent durabilityFormatting(ItemStack stack) {
         int maxDurability = stack.getMaxDamage();
         int curDurability = maxDurability - stack.getDamageValue();
-        float diff = (float) curDurability / maxDurability;
+        int percentage = Math.round(((float) curDurability / maxDurability) * 100);
 
-        ChatFormatting durabilityColor = !config.durability.durabilityColor
-                || curDurability == maxDurability ? ChatFormatting.GRAY
-                : diff >= 0.5f ? ChatFormatting.GREEN
-                : diff >= 0.15f ? ChatFormatting.GOLD
-                : ChatFormatting.RED;
+        int durabilityColor = getDurabilityColor(stack, percentage);
 
-        var remain = Component.literal(String.valueOf(curDurability)).withStyle(durabilityColor);
-        if (!config.durability.maximumDurability) {
-            return remain;
+        switch (config.durabilityStyle) {
+            case PERCENTAGE -> {
+                return Component.literal(String.format("%d%%", percentage)).withColor(durabilityColor);
+            }
+            case null, default -> {
+                var remain = Component.literal(String.valueOf(curDurability)).withColor(durabilityColor);
+                if (!config.durabilityMaximum) return remain;
+
+                return remain.append(Component.literal(String.format(" / %s", maxDurability))
+                        .withStyle(ChatFormatting.DARK_GRAY));
+            }
+        }
+    }
+
+    private static int getDurabilityColor(ItemStack stack, int percentage) {
+        if (!config.durabilityColor || !stack.isDamaged()) {
+            return 0xAAAAAA;
         }
 
-        return remain.append(Component.translatable("text.cleanertooltips.total_durability", maxDurability)
-                .withStyle(ChatFormatting.DARK_GRAY));
+        switch (config.colorMode) {
+            case LINEAR -> {
+                if (TooltipsConfig.SORTED_STOPS.isEmpty()) return 0xAAAAAA;
+
+                if (percentage <= TooltipsConfig.SORTED_STOPS.firstKey()) {
+                    return TooltipsConfig.SORTED_STOPS.firstEntry().getValue();
+                } else if (percentage >= TooltipsConfig.SORTED_STOPS.lastKey()) {
+                    return TooltipsConfig.SORTED_STOPS.lastEntry().getValue();
+                }
+
+                var lower = TooltipsConfig.SORTED_STOPS.floorEntry(percentage);
+                var upper = TooltipsConfig.SORTED_STOPS.ceilingEntry(percentage);
+
+                float delta = (float) (percentage - lower.getKey()) / (upper.getKey() - lower.getKey());
+
+                return ARGB.lerp(delta, lower.getValue(), upper.getValue());
+            }
+            case NATIVE -> {
+                return stack.getBarColor();
+            }
+            case null, default -> {
+                for (var e : TooltipsConfig.SORTED_STOPS.entrySet()) {
+                    if (percentage <= e.getKey()) return e.getValue();
+                }
+                return 0xAAAAAA;
+            }
+        }
     }
 
     public record IconAttributeComponent(ItemStack stack) implements TooltipComponent {
     }
 
-    public static class IconAttributeTooltip implements ClientIconComponent {
-        private final ItemStack stack;
-        private final ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap;
-        private final MutableComponent durabilityComponent;
-        private final AttributeFormattingData miningSpeedData;
+    public record IconAttributeTooltip(ItemStack stack,
+                                       Multimap<String, AttributeFormattingData> formattingDataMap,
+                                       MutableComponent durabilityComponent,
+                                       boolean anyTextureMissing) implements ClientIconComponent {
 
-        private final boolean anyTextureMissing;
-
-        public ItemStack getStack() {
-            return this.stack;
+        public static IconAttributeTooltip fromComponent(IconAttributeComponent component) {
+            return fromStack(component.stack());
         }
 
-        public IconAttributeTooltip(ItemStack stack,
-                ListMultimap<EquipmentSlotGroup, AttributeFormattingData> groupFormattingDataMap,
-                MutableComponent durabilityComponent, AttributeFormattingData miningSpeedData,
-                boolean anyTextureMissing) {
-            this.stack = stack;
-            this.groupFormattingDataMap = groupFormattingDataMap;
-            this.durabilityComponent = durabilityComponent;
-            this.miningSpeedData = miningSpeedData;
-            this.anyTextureMissing = anyTextureMissing;
-        }
-
-        public IconAttributeTooltip(IconAttributeComponent component) {
-            this(component.stack());
-        }
-
-        public IconAttributeTooltip(ItemStack stack) {
+        public static IconAttributeTooltip fromStack(ItemStack stack) {
             CombinedAttributeModifiers modifiers = CombinedAttributeModifiers.fromStack(stack);
             CombinedAttributeModifiers comparedModifiers = getComparedModifiers(stack);
 
             final boolean[] anyTextureMissing = {false};
 
-            if (!config.advanced.onlyCompareShared) {
-                boolean isArmor = TooltipsUtil.isArmor(stack);
-                modifiers = modifiers.combine(comparedModifiers, isArmor, false);
+            if (!config.onlyCompareMutual) {
+                modifiers = CombinedAttributeModifiers.combine(modifiers, comparedModifiers, false);
             }
 
-            ImmutableListMultimap.Builder<EquipmentSlotGroup, AttributeFormattingData> builder =
-                    ImmutableListMultimap.builder();
+            ImmutableMultimap.Builder<String, AttributeFormattingData> builder = ImmutableListMultimap.builder();
             modifiers.modifiers().forEach((slot, entry) -> {
                 Comparison comparison = Comparison.NONE;
                 if (comparedModifiers.modifiers().containsKey(slot)) {
-                    boolean keepOperationsSeparate = TooltipsUtil.separateOperations(slot);
                     comparison = comparedModifiers.modifiers().get(slot).stream()
-                            .filter(e -> {
-                                boolean baseCheck = entry.matchesAttribute(e.attribute());
-                                return keepOperationsSeparate
-                                        ? baseCheck && entry.matchesOperation(e.modifier())
-                                        : baseCheck;
-                            })
+                            .filter(entry::isComparableWith)
                             .findFirst()
                             .map(entry::getComparison)
-                            .orElseGet(() -> entry.getComparison(0, 0));
+                            .orElse(entry.getComparison());
                 }
 
-                var attribute = entry.attribute();
-                MutableComponent text = formatting(entry.modifier().amount(),
-                        TooltipsUtil.getBaseValue(attribute), entry.displayType());
-
-                ResourceLocation texture = AttributeManager.getTexture(attribute);
+                ResourceLocation texture = AttributeManager.getTexture(entry.attribute());
                 if (texture != null) {
-                    builder.put(slot, new AttributeFormattingData(text, attribute, comparison));
-                } else if (!blacklistedHints.contains(attribute)) {
+                    builder.put(slot, new AttributeFormattingData(entry, texture, comparison));
+                } else {
                     anyTextureMissing[0] = true;
                 }
             });
 
-            this.stack = stack;
-            this.groupFormattingDataMap = builder.build();
-            this.durabilityComponent = durabilityFormatting(stack);
-            this.miningSpeedData = getMiningSpeedData(stack);
-            this.anyTextureMissing = anyTextureMissing[0];
+            AttributeFormattingData miningData = getMiningSpeedData(stack);
+            if (miningData != null) builder.put("mainhand", miningData);
+
+            return new IconAttributeTooltip(stack, builder.build(), durabilityFormatting(stack), anyTextureMissing[0]);
         }
 
         private static CombinedAttributeModifiers getComparedModifiers(ItemStack stack) {
-            if (!config.general.compareAttributes) {
+            if (!config.comparisonEnabled) {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
             var comparedStack = TooltipsUtil.getEquippedStack(stack);
             if (comparedStack.isEmpty() || comparedStack.equals(stack)
-                    || !TooltipsUtil.hasAttributes(comparedStack)) {
+                    || !AttributeHelper.hasAttributes(comparedStack)) {
                 return CombinedAttributeModifiers.EMPTY;
             }
 
@@ -207,7 +202,7 @@ public class CleanerTooltips {
 
         @Nullable
         private static AttributeFormattingData getMiningSpeedData(ItemStack stack) {
-            if (config.general.miningSpeed) {
+            if (config.miningSpeed) {
                 float speed = TooltipsUtil.getDiggingSpeed(stack);
                 if (speed <= 0.0f) return null;
 
@@ -220,14 +215,14 @@ public class CleanerTooltips {
         }
 
         private static Comparison getMiningSpeedComparison(ItemStack stack, float speed) {
-            if (config.general.compareAttributes) {
+            if (config.comparisonEnabled) {
                 var comparedStack = TooltipsUtil.getEquippedStack(stack);
 
                 if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                         && stack.getItem().getClass().equals(comparedStack.getItem().getClass())) {
                     float comparedSpeed = TooltipsUtil.getDiggingSpeed(comparedStack);
                     if (comparedSpeed <= 0.0f) return Comparison.NONE;
-                    return Comparison.getComparison(speed, comparedSpeed);
+                    return Comparison.getComparison(speed, comparedSpeed, true);
                 }
             }
 
@@ -236,23 +231,17 @@ public class CleanerTooltips {
 
         @Override
         public int getHeight(@NotNull Font font) {
-            return config.advanced.groupDisplay == CleanerTooltipsConfig.GroupDisplay.ROWS
-                    ? Math.max(10, groupFormattingDataMap.asMap().size() * 10)
-                    : 10;
+            return config.groupDisplay == TooltipsConfig.GroupDisplay.ROWS
+                    ? Math.max(10, formattingDataMap.asMap().size() * 10) : 10;
         }
 
         @Override
         public int getWidth(@NotNull Font font) {
             int width = 0;
 
-            width += miningSpeedData != null
-                    ? miningSpeedData.textWidth() + GROUP_GAP + GAP + 9
-                    : 0;
-
-            width += (TooltipsUtil.canAddDurabilityTooltip(stack)
-                    && config.durability.durabilityPos == PosValues.INLINE)
-                    ? MC.font.width(durabilityComponent) + 9 + GAP + GROUP_GAP
-                    : 0;
+            if (TooltipsUtil.canAddDurabilityTooltip(stack) && config.durabilityPos == Position.INLINE) {
+                width += Minecraft.getInstance().font.width(durabilityComponent) + GROUP_GAP + GAP + 9;
+            }
 
             width = calculateAttributeWidth(font, width);
 
@@ -260,10 +249,9 @@ public class CleanerTooltips {
         }
 
         private int calculateAttributeWidth(Font font, int width) {
-            return switch (config.advanced.groupDisplay) {
+            return switch (config.groupDisplay) {
                 case ROWS -> getWidthRows(font, width);
                 case INLINE -> getWidthInline(font, width);
-                case PRIMARY -> getWidthPrimary(font, width);
             };
         }
 
@@ -273,7 +261,7 @@ public class CleanerTooltips {
 
             boolean firstIteration = true;
 
-            var dataMap = groupFormattingDataMap.asMap();
+            var dataMap = formattingDataMap.asMap();
             for (var collection : dataMap.values()) {
                 int rowWidth = 0;
                 for (var formattingData : collection) {
@@ -287,7 +275,7 @@ public class CleanerTooltips {
                 biggestRowWidth = Math.max(rowWidth, biggestRowWidth);
             }
 
-            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
+            if (this.anyTextureMissing && config.hintEnabled) {
                 firstRowWidth += font.width("[+]") + GROUP_GAP;
             }
 
@@ -296,28 +284,16 @@ public class CleanerTooltips {
         }
 
         private int getWidthInline(Font font, int width) {
-            for (var formattingData : groupFormattingDataMap.values()) {
+            for (var formattingData : formattingDataMap.values()) {
                 width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
             }
 
-            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
+            if (this.anyTextureMissing && config.hintEnabled) {
                 width += font.width("[+]") + GROUP_GAP;
             }
 
-            int slotSize = groupFormattingDataMap.asMap().size();
+            int slotSize = formattingDataMap.asMap().size();
             return width + (slotSize > 1 ? slotSize * (9 + GROUP_GAP) : 0);
-        }
-
-        private int getWidthPrimary(Font font, int width) {
-            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
-                width += formattingData.textWidth() + 9 + GAP + GROUP_GAP;
-            }
-
-            if (this.anyTextureMissing && config.general.hiddenAttributesHint) {
-                width += font.width("[+]") + GROUP_GAP;
-            }
-
-            return width;
         }
 
         @Override
@@ -325,22 +301,17 @@ public class CleanerTooltips {
                                 @NotNull GuiGraphics guiGraphics) {
             int groupX = renderAttributeModifiers(font, guiGraphics, x, y);
 
-            if (miningSpeedData != null) {
-                groupX = renderMiningTooltip(guiGraphics, groupX, y - 1);
-            }
-
             if (TooltipsUtil.canAddDurabilityTooltip(stack)
-                    && config.durability.durabilityPos == PosValues.INLINE) {
+                    && config.durabilityPos == Position.INLINE) {
                 guiGraphics.blit(RenderType::guiTextured, DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
-                guiGraphics.drawString(MC.font, durabilityComponent, groupX + 9 + GAP, y, -1);
+                guiGraphics.drawString(Minecraft.getInstance().font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
 
         private int renderAttributeModifiers(Font font, GuiGraphics guiGraphics, int x, int y) {
-            return switch (config.advanced.groupDisplay) {
+            return switch (config.groupDisplay) {
                 case ROWS -> renderRows(font, guiGraphics, x, y);
                 case INLINE -> renderInline(font, guiGraphics, x, y);
-                case PRIMARY -> renderPrimary(font, guiGraphics, x, y);
             };
         }
 
@@ -351,7 +322,7 @@ public class CleanerTooltips {
 
             boolean firstIteration = true;
 
-            var dataMap = groupFormattingDataMap.asMap();
+            var dataMap = formattingDataMap.asMap();
             for (var entry : dataMap.entrySet()) {
                 if (dataMap.size() > 1) {
                     var icon = getSlotIcon(entry.getKey());
@@ -376,7 +347,7 @@ public class CleanerTooltips {
         }
 
         private int renderInline(Font font, GuiGraphics guiGraphics, int x, int y) {
-            var dataMap = groupFormattingDataMap.asMap();
+            var dataMap = formattingDataMap.asMap();
             for (var entry : dataMap.entrySet()) {
                 if (dataMap.size() > 1) {
                     var icon = getSlotIcon(entry.getKey());
@@ -386,14 +357,6 @@ public class CleanerTooltips {
                 for (var formattingData : entry.getValue()) {
                     x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
                 }
-            }
-
-            return this.anyTextureMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
-        }
-
-        private int renderPrimary(Font font, GuiGraphics guiGraphics, int x, int y) {
-            for (var formattingData : groupFormattingDataMap.asMap().values().iterator().next()) {
-                x = renderAttributeIconPair(guiGraphics, formattingData, x, y - 1);
             }
 
             return this.anyTextureMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
@@ -411,14 +374,14 @@ public class CleanerTooltips {
                                             int x, int y) {
             guiGraphics.blit(RenderType::guiTextured, entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
-            var component = entry.text().withStyle(entry.getFormatting());
-            guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
+            entry.applyComparison();
+            guiGraphics.drawString(Minecraft.getInstance().font, entry.text(), x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
         }
 
         private int renderHiddenHint(Font font, GuiGraphics guiGraphics, int x, int y) {
-            if (config.general.hiddenAttributesHint) {
+            if (config.hintEnabled) {
                 var component = Component.literal("[+]").withStyle(ChatFormatting.YELLOW);
                 guiGraphics.drawString(font, component, x, y, -1);
                 x += font.width("[+]") + GROUP_GAP;
@@ -426,28 +389,19 @@ public class CleanerTooltips {
             return x;
         }
 
-        private int renderMiningTooltip(GuiGraphics guiGraphics, int x, int y) {
-            guiGraphics.blit(RenderType::guiTextured, miningSpeedData.icon(), x, y, 0, 0, 9, 9, 9, 9);
-            renderComparisonArrow(guiGraphics, miningSpeedData.comparison(), x, y);
-            var component = miningSpeedData.text().withStyle(miningSpeedData.getFormatting());
-            guiGraphics.drawString(MC.font, component, x + 9 + GAP, y + 1, -1);
-
-            return x + miningSpeedData.textWidth() + GROUP_GAP + GAP + 9;
-        }
-
         private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison,
                                            int x, int y) {
-            if (config.general.comparisonArrow && !comparison.equals(Comparison.NONE)) {
+            if (config.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
                 int height = TooltipsUtil.getTickToggle() ? y : y - 1;
                 guiGraphics.blit(RenderType::guiTextured, arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
             }
         }
 
-        private ResourceLocation getSlotIcon(EquipmentSlotGroup slotGroup) {
-            String texturePath = "textures/gui/slot/" + slotGroup.getSerializedName() + ".png";
+        private ResourceLocation getSlotIcon(String slotGroup) {
+            String texturePath = "textures/gui/slot/" + slotGroup + ".png";
             ResourceLocation resourceLocation = location(texturePath);
-            return MC.getResourceManager().getResource(resourceLocation).isEmpty()
+            return Minecraft.getInstance().getResourceManager().getResource(resourceLocation).isEmpty()
                     ? location("textures/gui/slot/any.png")
                     : resourceLocation;
         }
@@ -479,14 +433,14 @@ public class CleanerTooltips {
 
         @Override
         public int getWidth(@NotNull Font font) {
-            return MC.font.width(text) + 9 + GAP;
+            return Minecraft.getInstance().font.width(text) + 9 + GAP;
         }
 
         @Override
         public void renderImage(@NotNull Font font, int x, int y, int width, int height,
                                 @NotNull GuiGraphics guiGraphics) {
             guiGraphics.blit(RenderType::guiTextured, DURABILITY_ICON, x, y - 1, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(MC.font, text, x + 9 + GAP, y, -1);
+            guiGraphics.drawString(Minecraft.getInstance().font, text, x + 9 + GAP, y, -1);
         }
     }
 

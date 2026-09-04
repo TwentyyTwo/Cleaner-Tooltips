@@ -1,10 +1,9 @@
 package net.twentyytwo.cleanertooltips.services;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import net.minecraft.client.Minecraft;
 import net.neoforged.fml.ModList;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
-
-import static net.twentyytwo.cleanertooltips.CleanerTooltips.MC;
 
 public class NeoforgePlatformService implements PlatformService {
 
@@ -15,7 +14,7 @@ public class NeoforgePlatformService implements PlatformService {
 
     @Override
     public boolean isKeyDown() {
-        return InputConstants.isKeyDown(MC.getWindow().getWindow(),
-                CleanerTooltips.hideTooltip.getKey().getValue());
+        int key = CleanerTooltips.HIDE_TOOLTIP.getKey().getValue();
+        return key != -1 && InputConstants.isKeyDown(Minecraft.getInstance().getWindow().getWindow(), key);
     }
 }

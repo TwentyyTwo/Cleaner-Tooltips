@@ -293,7 +293,6 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
                        int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
         super.render(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
 
-        RenderSystem.setShaderTexture(0, CONFIG_TEXTURE);
         RenderSystem.setShaderColor(1.0f, 1.0f, 1.0f, 1.0f);
 
         BaseMapCell focused = !isExpanded() || getFocused() == null

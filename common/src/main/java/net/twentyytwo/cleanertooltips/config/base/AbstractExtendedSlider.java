@@ -1,9 +1,11 @@
 package net.twentyytwo.cleanertooltips.config.base;
 
 import net.minecraft.client.gui.components.AbstractSliderButton;
+import net.minecraft.client.input.KeyEvent;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.util.Mth;
-import org.lwjgl.glfw.GLFW;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.DecimalFormat;
 
@@ -118,20 +120,20 @@ public abstract class AbstractExtendedSlider extends AbstractSliderButton {
     }
 
     @Override
-    public void onClick(double mouseX, double mouseY) {
-        this.setValueFromMouse(mouseX);
+    public void onClick(@NotNull MouseButtonEvent event, boolean doubleClick) {
+        this.setValueFromMouse(event.x());
     }
 
     @Override
-    protected void onDrag(double mouseX, double mouseY, double dragX, double dragY) {
-        super.onDrag(mouseX, mouseY, dragX, dragY);
-        this.setValueFromMouse(mouseX);
+    protected void onDrag(@NotNull MouseButtonEvent event, double dragX, double dragY) {
+        super.onDrag(event, dragX, dragY);
+        this.setValueFromMouse(event.x());
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        boolean isLeft = keyCode == GLFW.GLFW_KEY_LEFT;
-        if (isLeft || keyCode == GLFW.GLFW_KEY_RIGHT) {
+    public boolean keyPressed(@NotNull KeyEvent keyEvent) {
+        boolean isLeft = keyEvent.isLeft();
+        if (isLeft || keyEvent.isRight()) {
             if (this.minValue > this.maxValue) isLeft = !isLeft;
 
             float f = isLeft ? -1.0f : 1.0f;

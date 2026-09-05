@@ -11,6 +11,7 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.narration.NarratableEntry;
+import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
@@ -379,12 +380,12 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
         protected Rectangle rectangle = new Rectangle();
 
         @Override
-        public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        public boolean mouseClicked(@NotNull MouseButtonEvent event, boolean doubleClick) {
             if (!isEnabled()) {
                 return false;
-            } else if (resetWidget.isMouseOver(mouseX, mouseY)) {
+            } else if (resetWidget.isMouseOver(event.x(), event.y())) {
                 return false;
-            } else if (isInsideCreateNew(mouseX, mouseY)) {
+            } else if (isInsideCreateNew(event.x(), event.y())) {
                 setExpanded(true);
 
                 C cell;
@@ -400,7 +401,7 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
                 playClickSound();
 
                 return true;
-            } else if (isDeleteButtonEnabled() && isInsideDelete(mouseX, mouseY)) {
+            } else if (isDeleteButtonEnabled() && isInsideDelete(event.x(), event.y())) {
                 GuiEventListener focused = getFocused();
                 if (isExpanded() && focused instanceof BaseMapCell) {
                     ((BaseMapCell) focused).onDelete();
@@ -412,7 +413,7 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
                     playClickSound();
                 }
                 return true;
-            } else if (rectangle.contains(mouseX, mouseY)) {
+            } else if (rectangle.contains(event.x(), event.y())) {
                 setExpanded(!expanded);
                 playClickSound();
                 return true;

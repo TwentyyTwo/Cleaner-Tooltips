@@ -2,9 +2,11 @@ package net.twentyytwo.cleanertooltips.config;
 
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
+import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
 import net.twentyytwo.cleanertooltips.mixin.EditBoxAccessor;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
@@ -52,21 +54,21 @@ public class AutoEditBox extends EditBox {
     }
 
     @Override
-    public boolean keyPressed(int keyCode, int scanCode, int modifiers) {
-        if (keyCode == GLFW.GLFW_KEY_TAB && (modifiers & GLFW.GLFW_MOD_SHIFT) != 0) {
+    public boolean keyPressed(@NotNull KeyEvent keyEvent) {
+        if (keyEvent.key() == GLFW.GLFW_KEY_TAB && (keyEvent.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0) {
             if (handleShiftTab(this)) return true;
-        } else if (keyCode == GLFW.GLFW_KEY_TAB) {
+        } else if (keyEvent.key() == GLFW.GLFW_KEY_TAB) {
             if (handleTab(this)) return true;
-        } else if (keyCode == GLFW.GLFW_KEY_DOWN || keyCode == GLFW.GLFW_KEY_RIGHT) {
+        } else if (keyEvent.key() == GLFW.GLFW_KEY_DOWN || keyEvent.key() == GLFW.GLFW_KEY_RIGHT) {
             shiftAmount++;
             this.onValueChange(this.getValue(), true);
             return true;
-        } else if (keyCode == GLFW.GLFW_KEY_UP || keyCode == GLFW.GLFW_KEY_LEFT) {
+        } else if (keyEvent.key() == GLFW.GLFW_KEY_UP || keyEvent.key() == GLFW.GLFW_KEY_LEFT) {
             shiftAmount--;
             this.onValueChange(this.getValue(), true);
             return true;
         }
-        return super.keyPressed(keyCode, scanCode, modifiers);
+        return super.keyPressed(keyEvent);
     }
 
     private static boolean handleTab(EditBox box) {

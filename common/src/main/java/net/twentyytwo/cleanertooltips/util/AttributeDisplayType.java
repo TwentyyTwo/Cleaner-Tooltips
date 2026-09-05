@@ -6,6 +6,7 @@ import io.netty.buffer.ByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.util.ByIdMap;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
 import java.util.function.IntFunction;
 
@@ -44,6 +45,10 @@ public enum AttributeDisplayType {
 
     public boolean hasBaseValue() {
         return this == NUMBER || this == MULTIPLIER;
+    }
+
+    public AttributeDisplayType verify(AttributeModifier modifier) {
+        return modifier.operation() == AttributeModifier.Operation.ADD_VALUE ? this : PERCENTAGE;
     }
 
     public static final IntFunction<AttributeDisplayType> BY_ID = ByIdMap

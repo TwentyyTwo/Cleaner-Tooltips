@@ -2,12 +2,11 @@ package net.twentyytwo.cleanertooltips;
 
 import com.terraformersmc.modmenu.api.ConfigScreenFactory;
 import com.terraformersmc.modmenu.api.ModMenuApi;
-import me.shedaniel.autoconfig.AutoConfigClient;
-import net.twentyytwo.cleanertooltips.config.CleanerTooltipsConfig;
+import net.twentyytwo.cleanertooltips.config.TooltipsClothConfig;
 
 public class ModMenuApiImpl implements ModMenuApi {
     @Override
     public ConfigScreenFactory<?> getModConfigScreenFactory() {
-        return parent -> AutoConfigClient.getConfigScreen(CleanerTooltipsConfig.class, parent).get();
+        return TooltipsClothConfig::getConfigScreen;
     }
 }

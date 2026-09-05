@@ -15,7 +15,7 @@ public abstract class BaseMapCell extends AbstractContainerEventHandler implemen
     }
 
     public final int getPreferredTextColor() {
-        return this.getConfigError().isPresent() ? 0xff5555 : 0xe0e0e0;
+        return this.getConfigError().isPresent() ? 0xffff5555 : 0xffe0e0e0;
     }
 
     public final Optional<Component> getConfigError() {

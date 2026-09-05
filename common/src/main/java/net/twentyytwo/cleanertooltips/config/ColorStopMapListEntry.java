@@ -146,7 +146,7 @@ public class ColorStopMapListEntry extends AbstractMapListEntry<Integer, Integer
         }
 
         protected void textFieldPreRender(EditBox widget) {
-            widget.setTextColor(getConfigError().isPresent() ? 0xff5555 : 0xe0e0e0);
+            widget.setTextColor(getConfigError().isPresent() ? 0xffff5555 : 0xffe0e0e0);
         }
 
         @Override

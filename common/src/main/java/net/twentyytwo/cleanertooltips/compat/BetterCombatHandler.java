@@ -5,12 +5,14 @@ import net.bettercombat.logic.WeaponRegistry;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.Attribute.Sentiment;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.twentyytwo.cleanertooltips.AttributeFormattingData;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.services.Services;
 import net.twentyytwo.cleanertooltips.util.AttributeDisplayType;
+import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 
@@ -19,7 +21,7 @@ import static net.twentyytwo.cleanertooltips.CleanerTooltips.formatting;
 
 public class BetterCombatHandler {
 
-    public static final boolean isModLoaded = Services.getInstance().isModLoaded("bettercombat");
+    public static final boolean isModLoaded = Services.PLATFORM.isModLoaded("bettercombat");
 
     private static final ResourceLocation INTERACTION_RANGE =
             CleanerTooltips.location("textures/gui/attribute/entity_interaction_range.png");
@@ -29,11 +31,11 @@ public class BetterCombatHandler {
     }
 
     public static AttributeFormattingData getRangeData(ItemStack stack) {
-        double baseValue = TooltipsUtil.getBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
+        double baseValue = AttributeHelper.getBaseValue(Attributes.ENTITY_INTERACTION_RANGE);
         double value = getTotalRange(stack, baseValue);
 
         Comparison comparison = getComparison(stack, baseValue, value);
-        MutableComponent text = formatting(value, baseValue, AttributeDisplayType.NUMBER);
+        MutableComponent text = formatting(value, baseValue, AttributeDisplayType.NUMBER, Sentiment.POSITIVE);
         return new AttributeFormattingData(text, INTERACTION_RANGE, comparison);
     }
 
@@ -60,13 +62,13 @@ public class BetterCombatHandler {
     }
 
     private static Comparison getComparison(ItemStack stack, double baseValue, double value) {
-        if (config.general.compareAttributes) {
+        if (config.comparisonEnabled) {
             var comparedStack = TooltipsUtil.getEquippedStack(stack);
 
             if (!comparedStack.isEmpty() && !comparedStack.equals(stack)
                     && hasAttributes(comparedStack)) {
                 double comparedValue = getTotalRange(comparedStack, baseValue);
-                return Comparison.getComparison(value, comparedValue);
+                return Comparison.getComparison(value, comparedValue, true);
             }
         }
         return Comparison.NONE;

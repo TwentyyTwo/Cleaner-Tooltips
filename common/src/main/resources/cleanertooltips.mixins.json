@@ -6,6 +6,8 @@
   "compatibilityLevel": "JAVA_18",
   "mixins": [],
   "client": [
+    "AttributeAccessor",
+    "EditBoxAccessor",
     "WeaponAttributeTooltipMixin"
   ],
   "server": [],

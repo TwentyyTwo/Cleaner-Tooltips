@@ -15,9 +15,9 @@ dependencies {
 
     api "me.shedaniel.cloth:cloth-config-fabric:${cloth_config_version}"
 
-    compileOnly "com.terraformersmc:modmenu:18.0.0"
-    compileOnly "maven.modrinth:better-combat:3.2.2+26.1.2-fabric"
-    compileOnly "maven.modrinth:legendary-tooltips:1.6.1"
+    compileOnly "maven.modrinth:modmenu:20.0.1"
+    compileOnly "maven.modrinth:better-combat:3.2.2+26.2-fabric"
+    compileOnly "maven.modrinth:legendary-tooltips:1.6.2.1"
 }
 
 loom {

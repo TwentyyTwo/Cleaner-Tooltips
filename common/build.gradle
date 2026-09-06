@@ -30,8 +30,8 @@ dependencies {
 
     api "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 
-    compileOnly "maven.modrinth:better-combat:3.2.2+26.1.2-neoforge"
-    compileOnly "maven.modrinth:legendary-tooltips:ZaJ1nyhV"
+    compileOnly "maven.modrinth:better-combat:3.2.2+26.2-neoforge"
+    compileOnly "maven.modrinth:legendary-tooltips:Sdm37JVS"
 }
 
 configurations {

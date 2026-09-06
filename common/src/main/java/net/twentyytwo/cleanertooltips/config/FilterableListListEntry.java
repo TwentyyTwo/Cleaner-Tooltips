@@ -3,12 +3,15 @@ package net.twentyytwo.cleanertooltips.config;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.AbstractTextFieldListListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractListBuilder;
+import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.twentyytwo.cleanertooltips.config.FilterableListListEntry.FilterableListCell;
+import net.twentyytwo.cleanertooltips.config.base.FilterableEditBox;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -55,7 +58,15 @@ public class FilterableListListEntry extends AbstractTextFieldListListEntry<Stri
 
         public FilterableListCell(@Nullable String value, FilterableListListEntry listListEntry, Predicate<String> filter) {
             super(value, listListEntry);
-            //this.widget.setFilter(filter);
+
+            String finalValue = substituteDefault(value);
+            this.widget = new FilterableEditBox(Minecraft.getInstance().font, 100, 18, Component.empty());
+            ((FilterableEditBox) this.widget).setFilter(filter);
+            this.widget.setMaxLength(Integer.MAX_VALUE);
+            this.widget.setBordered(false);
+            this.widget.setValue(Objects.toString(finalValue));
+            this.widget.moveCursorToStart(false);
+            this.widget.setResponder(s -> this.widget.setTextColor(this.getPreferredTextColor()));
         }
 
         @Override

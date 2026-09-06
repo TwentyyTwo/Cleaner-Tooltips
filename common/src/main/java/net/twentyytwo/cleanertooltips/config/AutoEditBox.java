@@ -4,6 +4,7 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.network.chat.Component;
+import net.twentyytwo.cleanertooltips.config.base.FilterableEditBox;
 import net.twentyytwo.cleanertooltips.mixin.EditBoxAccessor;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -12,13 +13,13 @@ import org.lwjgl.glfw.GLFW;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class AutoEditBox extends EditBox {
+public class AutoEditBox extends FilterableEditBox {
     private final List<String> suggestions;
     private String previousSuggestion = "";
     private int shiftAmount = 0;
 
     public AutoEditBox(List<String> suggestions) {
-        super(Minecraft.getInstance().font, 0, 0, 100, 18, Component.empty());
+        super(Minecraft.getInstance().font, 100, 18, Component.empty());
         this.suggestions = suggestions;
         this.onValueChange(this.getValue());
     }

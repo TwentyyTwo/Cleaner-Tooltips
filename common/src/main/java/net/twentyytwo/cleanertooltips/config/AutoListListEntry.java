@@ -61,7 +61,7 @@ public class AutoListListEntry extends AbstractTextFieldListListEntry<String, Au
 
             // Replace the EditBox with our custom AutoEditBox class.
             this.widget = new AutoEditBox(suggestions);
-            //this.widget.setFilter(filter);
+            this.getWidget().setFilter(filter);
             this.widget.setMaxLength(Integer.MAX_VALUE);
             this.widget.setBordered(false);
             this.widget.setValue(Objects.toString(this.substituteDefault(value)));

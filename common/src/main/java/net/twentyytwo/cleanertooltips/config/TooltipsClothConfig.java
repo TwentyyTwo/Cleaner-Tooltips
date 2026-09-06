@@ -18,7 +18,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.config.ColorStopMapListEntry.ColorStopMapCell;
 import net.twentyytwo.cleanertooltips.services.Services;
@@ -40,7 +40,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         if (str == null || str.trim().isEmpty()) {
             return Optional.of(translate("attribute_id.empty"));
         }
-        ResourceLocation id = ResourceLocation.parse(str);
+        Identifier id = Identifier.parse(str);
         if (!BuiltInRegistries.ATTRIBUTE.containsKey(id)) {
             return Optional.of(translate("attribute_id.not_found", str));
         }
@@ -110,7 +110,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
                 .build();
 
         List<String> attributeIds = new TreeSet<>(BuiltInRegistries.ATTRIBUTE.keySet()).stream()
-                .map(ResourceLocation::toString).toList();
+                .map(Identifier::toString).toList();
 
         AutoListListEntry attributeBlacklist = new AutoListListEntry.Builder(
                 entryBuilder, translate("option.attributeIdBlacklist"), config.attributeIdBlacklist)

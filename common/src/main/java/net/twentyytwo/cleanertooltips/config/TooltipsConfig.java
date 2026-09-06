@@ -2,7 +2,7 @@ package net.twentyytwo.cleanertooltips.config;
 
 import com.google.common.collect.ImmutableMap;
 import net.minecraft.core.Holder;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.twentyytwo.cleanertooltips.services.Services;
 
@@ -101,7 +101,7 @@ public class TooltipsConfig {
             return regex.toString();
         }
 
-        public boolean matches(ResourceLocation location) {
+        public boolean matches(Identifier location) {
             return location.getNamespace().equals(this.namespace) && location.getPath().matches(this.regexPath);
         }
     }

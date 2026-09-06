@@ -15,7 +15,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import org.jetbrains.annotations.NotNull;
@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 @SuppressWarnings({"deprecation", "UnstableApiUsage", "unused"})
 public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends BaseMapEntry<K, V, C, SELF>>
         extends TooltipListEntry<Map<K, V>> implements Expandable {
-    protected static final ResourceLocation CONFIG_TEXTURE = ResourceLocation
+    protected static final Identifier CONFIG_TEXTURE = Identifier
             .fromNamespaceAndPath("cloth-config2", "textures/gui/cloth_config.png");
 
     protected final @NotNull List<C> cells;

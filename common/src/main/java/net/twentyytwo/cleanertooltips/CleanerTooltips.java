@@ -8,7 +8,7 @@ import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
@@ -303,25 +303,25 @@ public class CleanerTooltips {
         }
 
         @Override
-        public void renderImage(@NotNull Font font, int x, int y, int width, int height,
-                                @NotNull GuiGraphics guiGraphics) {
+        public void extractImage(@NotNull Font font, int x, int y, int width, int height,
+                                 @NotNull GuiGraphicsExtractor guiGraphics) {
             int groupX = renderAttributeModifiers(font, guiGraphics, x, y);
 
             if (TooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durabilityPos == Position.INLINE) {
                 guiGraphics.blit(RenderPipelines.GUI_TEXTURED, DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
-                guiGraphics.drawString(Minecraft.getInstance().font, durabilityComponent, groupX + 9 + GAP, y, -1);
+                guiGraphics.text(Minecraft.getInstance().font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
 
-        private int renderAttributeModifiers(Font font, GuiGraphics guiGraphics, int x, int y) {
+        private int renderAttributeModifiers(Font font, GuiGraphicsExtractor guiGraphics, int x, int y) {
             return switch (config.groupDisplay) {
                 case ROWS -> renderRows(font, guiGraphics, x, y);
                 case INLINE -> renderInline(font, guiGraphics, x, y);
             };
         }
 
-        private int renderRows(Font font, GuiGraphics guiGraphics, int x, int y) {
+        private int renderRows(Font font, GuiGraphicsExtractor guiGraphics, int x, int y) {
             int groupX = x;
             int groupY = y - 1;
             int firstGroupX = x;
@@ -352,7 +352,7 @@ public class CleanerTooltips {
                     : firstGroupX;
         }
 
-        private int renderInline(Font font, GuiGraphics guiGraphics, int x, int y) {
+        private int renderInline(Font font, GuiGraphicsExtractor guiGraphics, int x, int y) {
             var dataMap = formattingDataMap.asMap();
             for (var entry : dataMap.entrySet()) {
                 if (dataMap.size() > 1) {
@@ -368,34 +368,34 @@ public class CleanerTooltips {
             return this.anyTextureMissing ? renderHiddenHint(font, guiGraphics, x, y) : x;
         }
 
-        private int renderSlotGroupIcon(GuiGraphics guiGraphics,
+        private int renderSlotGroupIcon(GuiGraphicsExtractor guiGraphics,
                                         Identifier icon,
                                         int x, int y) {
             guiGraphics.blit(RenderPipelines.GUI_TEXTURED, icon, x, y, 0, 0, 9, 9, 9, 9);
             return x + 9 + GROUP_GAP;
         }
 
-        private int renderAttributeIconPair(GuiGraphics guiGraphics,
+        private int renderAttributeIconPair(GuiGraphicsExtractor guiGraphics,
                                             AttributeFormattingData entry,
                                             int x, int y) {
             guiGraphics.blit(RenderPipelines.GUI_TEXTURED, entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
             entry.applyComparison();
-            guiGraphics.drawString(Minecraft.getInstance().font, entry.text(), x + 9 + GAP, y + 1, -1);
+            guiGraphics.text(Minecraft.getInstance().font, entry.text(), x + 9 + GAP, y + 1, -1);
 
             return x + entry.textWidth() + 9 + GAP + GROUP_GAP;
         }
 
-        private int renderHiddenHint(Font font, GuiGraphics guiGraphics, int x, int y) {
+        private int renderHiddenHint(Font font, GuiGraphicsExtractor guiGraphics, int x, int y) {
             if (config.hintEnabled) {
                 var component = Component.literal("[+]").withStyle(ChatFormatting.YELLOW);
-                guiGraphics.drawString(font, component, x, y, -1);
+                guiGraphics.text(font, component, x, y, -1);
                 x += font.width("[+]") + GROUP_GAP;
             }
             return x;
         }
 
-        private void renderComparisonArrow(GuiGraphics guiGraphics, Comparison comparison,
+        private void renderComparisonArrow(GuiGraphicsExtractor guiGraphics, Comparison comparison,
                                            int x, int y) {
             if (config.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 Identifier arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
@@ -443,10 +443,10 @@ public class CleanerTooltips {
         }
 
         @Override
-        public void renderImage(@NotNull Font font, int x, int y, int width, int height,
-                                @NotNull GuiGraphics guiGraphics) {
+        public void extractImage(@NotNull Font font, int x, int y, int width, int height,
+                                 @NotNull GuiGraphicsExtractor guiGraphics) {
             guiGraphics.blit(RenderPipelines.GUI_TEXTURED, DURABILITY_ICON, x, y - 1, 0, 0, 9, 9, 9, 9);
-            guiGraphics.drawString(Minecraft.getInstance().font, text, x + 9 + GAP, y, -1);
+            guiGraphics.text(Minecraft.getInstance().font, text, x + 9 + GAP, y, -1);
         }
     }
 

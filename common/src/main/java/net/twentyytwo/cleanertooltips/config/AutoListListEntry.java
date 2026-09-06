@@ -46,6 +46,10 @@ public class AutoListListEntry extends AbstractTextFieldListListEntry<String, Au
         );
     }
 
+    @Override
+    public void setFocused(boolean focused) {
+    }
+
     public AutoListListEntry self() {
         return this;
     }
@@ -57,12 +61,18 @@ public class AutoListListEntry extends AbstractTextFieldListListEntry<String, Au
 
             // Replace the EditBox with our custom AutoEditBox class.
             this.widget = new AutoEditBox(suggestions);
-            this.widget.setFilter(filter);
+            //this.widget.setFilter(filter);
             this.widget.setMaxLength(Integer.MAX_VALUE);
             this.widget.setBordered(false);
             this.widget.setValue(Objects.toString(this.substituteDefault(value)));
             this.widget.moveCursorToStart(false);
             this.widget.setResponder(getWidget()::onValueChange);
+        }
+
+        @Override
+        public void updateSelected(boolean isSelected) {
+            super.updateSelected(isSelected);
+            widget.setFocused(isSelected);
         }
 
         public AutoEditBox getWidget() {

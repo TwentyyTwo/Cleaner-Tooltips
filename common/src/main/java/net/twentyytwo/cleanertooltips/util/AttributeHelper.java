@@ -38,7 +38,7 @@ public class AttributeHelper {
         boolean[] hasViableAttribute = {false};
         for (var slot : EquipmentSlotGroup.values()) {
             if (hasViableAttribute[0]) break; // short-circuit to prevent unnecessary calculations
-            stack.forEachModifier(slot, (attribute, modifier, display) -> {
+            stack.forEachModifier(slot, (attribute, modifier, _) -> {
                 if (hasViableAttribute[0] || AttributeManager.getTexture(attribute) == null
                         || ATTRIBUTE_FILTER.test(attribute) || MODIFIER_FILTER.test(modifier)) {
                     return;

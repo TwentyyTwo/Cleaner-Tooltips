@@ -41,7 +41,7 @@ public class CleanerTooltipsNeoForge {
     public CleanerTooltipsNeoForge(ModContainer container) {
         CleanerTooltips.init();
         container.registerExtensionPoint(IConfigScreenFactory.class, (Supplier<IConfigScreenFactory>)
-                () -> (client, parent) -> TooltipsClothConfig.getConfigScreen(parent));
+                () -> (_, parent) -> TooltipsClothConfig.getConfigScreen(parent));
     }
 
     @SubscribeEvent()

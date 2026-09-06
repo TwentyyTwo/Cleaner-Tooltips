@@ -27,7 +27,7 @@ public abstract class TooltipDecorMixin {
             at = @At("MIXINEXTRAS:EXPRESSION")
     )
     private static boolean addIconCondition(boolean original,
-            @Local(argsOnly = true) List<ClientTooltipComponent> components,
+            @Local(argsOnly = true, name = "components") List<ClientTooltipComponent> components,
             @Local(name = "i") int i) {
         return original || (components.get(i) instanceof ClientIconComponent);
     }

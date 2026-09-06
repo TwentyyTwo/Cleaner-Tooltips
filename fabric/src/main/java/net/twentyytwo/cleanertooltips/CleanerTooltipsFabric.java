@@ -1,11 +1,11 @@
 package net.twentyytwo.cleanertooltips;
 
 import net.fabricmc.api.ClientModInitializer;
-import net.fabricmc.fabric.api.client.command.v2.ClientCommandManager;
 import net.fabricmc.fabric.api.client.command.v2.ClientCommandRegistrationCallback;
+import net.fabricmc.fabric.api.client.command.v2.ClientCommands;
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents;
-import net.fabricmc.fabric.api.client.keybinding.v1.KeyBindingHelper;
-import net.fabricmc.fabric.api.client.rendering.v1.TooltipComponentCallback;
+import net.fabricmc.fabric.api.client.keymapping.v1.KeyMappingHelper;
+import net.fabricmc.fabric.api.client.rendering.v1.ClientTooltipComponentCallback;
 import net.fabricmc.fabric.api.resource.v1.ResourceLoader;
 import net.minecraft.client.gui.screens.inventory.tooltip.ClientTooltipComponent;
 import net.minecraft.network.chat.Component;
@@ -29,16 +29,16 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
     @Override
     public void onInitializeClient() {
         CleanerTooltips.init();
-        KeyBindingHelper.registerKeyBinding(CleanerTooltips.HIDE_TOOLTIP);
+        KeyMappingHelper.registerKeyMapping(CleanerTooltips.HIDE_TOOLTIP);
 
-        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloader(
+        ResourceLoader.get(PackType.CLIENT_RESOURCES).registerReloadListener(
                 location("attribute_display.json"), new AttributeManager()
         );
-        ClientTickEvents.START_CLIENT_TICK.register(client -> TooltipsUtil.onTick());
+        ClientTickEvents.START_CLIENT_TICK.register(_ -> TooltipsUtil.onTick());
 
         // Register a mapping of IconAttributeComponent to IconAttributeModifierTooltip
         // or IconDurabilityComponent to IconDurabilityTooltip
-        TooltipComponentCallback.EVENT.register(data -> {
+        ClientTooltipComponentCallback.EVENT.register(data -> {
             if (data instanceof IconAttributeComponent component) {
                 return IconAttributeTooltip.fromComponent(component);
             } else if (data instanceof IconDurabilityComponent component) {
@@ -47,8 +47,8 @@ public class CleanerTooltipsFabric implements ClientModInitializer {
             return null;
         });
 
-        ClientCommandRegistrationCallback.EVENT.register((dispatcher, registryAccess) ->
-                dispatcher.register(ClientCommandManager.literal("get_modifier_ids").executes(ctx -> {
+        ClientCommandRegistrationCallback.EVENT.register((dispatcher, _) ->
+                dispatcher.register(ClientCommands.literal("get_modifier_ids").executes(ctx -> {
                     List<Component> modifierComponents = TooltipsUtil.getMainhandModifierComponents();
 
                     modifierComponents.forEach(ctx.getSource()::sendFeedback);

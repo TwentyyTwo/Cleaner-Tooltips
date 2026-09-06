@@ -5,7 +5,7 @@ import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
 import me.shedaniel.clothconfig2.impl.builders.AbstractSliderFieldBuilder;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -88,13 +88,13 @@ public class ExtendedSliderEntry extends TooltipListEntry<Integer> {
     }
 
     @Override
-    public void render(GuiGraphics graphics,
-                       int index, int y, int x,
-                       int entryWidth, int entryHeight,
-                       int mouseX, int mouseY,
-                       boolean isHovered,
-                       float delta) {
-        super.render(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
+    public void extractRenderState(GuiGraphicsExtractor graphics,
+                                   int index, int y, int x,
+                                   int entryWidth, int entryHeight,
+                                   int mouseX, int mouseY,
+                                   boolean isHovered,
+                                   float delta) {
+        super.extractRenderState(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
 
         this.resetButton.active = this.isEditable() && this.getDefaultValue().isPresent()
                 && this.defaultValue.get() != this.value.get();
@@ -106,11 +106,11 @@ public class ExtendedSliderEntry extends TooltipListEntry<Integer> {
         this.sliderWidget.setX(x + entryWidth - 150);
         this.sliderWidget.setY(y);
 
-        graphics.drawString(Minecraft.getInstance().font, this.getDisplayedFieldName().getVisualOrderText(),
+        graphics.text(Minecraft.getInstance().font, this.getDisplayedFieldName().getVisualOrderText(),
                             x, y + 6, this.getPreferredTextColor());
 
-        this.resetButton.render(graphics, mouseX, mouseY, delta);
-        this.sliderWidget.render(graphics, mouseX, mouseY, delta);
+        this.resetButton.extractRenderState(graphics, mouseX, mouseY, delta);
+        this.sliderWidget.extractRenderState(graphics, mouseX, mouseY, delta);
     }
 
     protected class Slider extends AbstractExtendedSlider {

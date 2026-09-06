@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import me.shedaniel.clothconfig2.api.ConfigEntryBuilder;
 import me.shedaniel.clothconfig2.gui.widget.ColorDisplayWidget;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
@@ -96,10 +96,11 @@ public class ColorStopMapListEntry extends AbstractMapListEntry<Integer, Integer
             this.sliderWidget = new Slider(0, 0, 152, 20, 0, 100, key);
             this.colorField = new EditBox(Minecraft.getInstance().font, 0, 0, 148, 18, Component.empty()) {
                 @Override
-                public void renderWidget(@NotNull GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+                public void extractWidgetRenderState(@NotNull GuiGraphicsExtractor guiGraphics,
+                                                     int mouseX, int mouseY, float partialTick) {
                     setFocused(isSelected && ColorStopMapCell.this.getFocused() == this);
                     textFieldPreRender(this);
-                    super.renderWidget(guiGraphics, mouseX, mouseY, partialTick);
+                    super.extractWidgetRenderState(guiGraphics, mouseX, mouseY, partialTick);
                 }
             };
             this.colorField.setValue(getHexColorString(value));
@@ -150,12 +151,12 @@ public class ColorStopMapListEntry extends AbstractMapListEntry<Integer, Integer
         }
 
         @Override
-        public void render(GuiGraphics graphics,
-                           int index, int y, int x,
-                           int entryWidth, int entryHeight,
-                           int mouseX, int mouseY,
-                           boolean isSelected,
-                           float delta) {
+        public void extractRenderState(GuiGraphicsExtractor graphics,
+                                       int index, int y, int x,
+                                       int entryWidth, int entryHeight,
+                                       int mouseX, int mouseY,
+                                       boolean isSelected,
+                                       float delta) {
             int cellIndex = mapListEntry.cells.indexOf(this);
 
             this.downButton.active = mapListEntry.isEditable() && cellIndex < mapListEntry.cells.size() - 1;
@@ -182,11 +183,11 @@ public class ColorStopMapListEntry extends AbstractMapListEntry<Integer, Integer
             this.sliderWidget.setX(x);
             this.sliderWidget.setY(y);
 
-            this.downButton.render(graphics, mouseX, mouseY, delta);
-            this.upButton.render(graphics, mouseX, mouseY, delta);
-            this.colorField.render(graphics, mouseX, mouseY, delta);
-            this.colorDisplay.render(graphics, mouseX, mouseY, delta);
-            this.sliderWidget.render(graphics, mouseX, mouseY, delta);
+            this.downButton.extractRenderState(graphics, mouseX, mouseY, delta);
+            this.upButton.extractRenderState(graphics, mouseX, mouseY, delta);
+            this.colorField.extractRenderState(graphics, mouseX, mouseY, delta);
+            this.colorDisplay.extractRenderState(graphics, mouseX, mouseY, delta);
+            this.sliderWidget.extractRenderState(graphics, mouseX, mouseY, delta);
         }
 
         @Override

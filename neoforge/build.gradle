@@ -11,8 +11,8 @@ repositories {
 dependencies {
     api "me.shedaniel.cloth:cloth-config-neoforge:${cloth_config_version}"
 
-    compileOnly "maven.modrinth:better-combat:3.0.1+1.21.11-neoforge"
-    compileOnly "maven.modrinth:legendary-tooltips:1.6.0"
+    compileOnly "maven.modrinth:better-combat:3.2.2+26.1.2-neoforge"
+    compileOnly "maven.modrinth:legendary-tooltips:1.6.1"
 }
 
 neoForge {
@@ -21,10 +21,6 @@ neoForge {
     def at = project(':common').file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
         accessTransformers.from(at.absolutePath)
-    }
-    parchment {
-        minecraftVersion = parchment_minecraft
-        mappingsVersion = parchment_version
     }
     runs {
         configureEach {

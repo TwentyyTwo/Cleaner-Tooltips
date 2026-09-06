@@ -43,6 +43,10 @@ public class FilterableListListEntry extends AbstractTextFieldListListEntry<Stri
     }
 
     @Override
+    public void setFocused(boolean focused) {
+    }
+
+    @Override
     public FilterableListListEntry self() {
         return this;
     }
@@ -51,7 +55,13 @@ public class FilterableListListEntry extends AbstractTextFieldListListEntry<Stri
 
         public FilterableListCell(@Nullable String value, FilterableListListEntry listListEntry, Predicate<String> filter) {
             super(value, listListEntry);
-            this.widget.setFilter(filter);
+            //this.widget.setFilter(filter);
+        }
+
+        @Override
+        public void updateSelected(boolean isSelected) {
+            super.updateSelected(isSelected);
+            widget.setFocused(isSelected);
         }
 
         @Override

@@ -6,7 +6,7 @@ import me.shedaniel.clothconfig2.api.ReferenceProvider;
 import me.shedaniel.clothconfig2.gui.entries.TooltipListEntry;
 import me.shedaniel.math.Rectangle;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -289,9 +289,9 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
     }
 
     @Override
-    public void render(GuiGraphics graphics, int index, int y, int x,
+    public void extractRenderState(GuiGraphicsExtractor graphics, int index, int y, int x,
                        int entryWidth, int entryHeight, int mouseX, int mouseY, boolean isHovered, float delta) {
-        super.render(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
+        super.extractRenderState(graphics, index, y, x, entryWidth, entryHeight, mouseX, mouseY, isHovered, delta);
 
         BaseMapCell focused = !isExpanded() || getFocused() == null
                 || !(getFocused() instanceof BaseMapCell) ? null : (BaseMapCell) getFocused();
@@ -317,11 +317,11 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
         resetWidget.setX(x + entryWidth - resetWidget.getWidth());
         resetWidget.setY(y);
         resetWidget.active = isEditable() && getDefaultValue().isPresent() && !isMatchDefault();
-        resetWidget.render(graphics, mouseX, mouseY, delta);
+        resetWidget.extractRenderState(graphics, mouseX, mouseY, delta);
 
         int offset = (isInsertButtonEnabled() || isDeleteButtonEnabled() ? 6 : 0)
                 + (isInsertButtonEnabled() ? 9 : 0) + (isDeleteButtonEnabled() ? 9 : 0);
-        graphics.drawString(
+        graphics.text(
                 Minecraft.getInstance().font,
                 getDisplayedFieldName().getVisualOrderText(),
                 x + offset, y + 6,
@@ -332,7 +332,7 @@ public abstract class BaseMapEntry<K, V, C extends BaseMapCell, SELF extends Bas
         if (isExpanded()) {
             int yy = y + 24;
             for (BaseMapCell cell : this.cells) {
-                cell.render(
+                cell.extractRenderState(
                         graphics, -1, yy, x + 14, entryWidth - 14,
                         cell.getCellHeight(), mouseX, mouseY, getParent().getFocused() != null &&
                         getParent().getFocused().equals(this) && getFocused() != null && getFocused().equals(cell),

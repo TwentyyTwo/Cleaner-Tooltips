@@ -60,7 +60,7 @@ public class TooltipsUtil {
         ItemStack stack = player != null ? player.getMainHandItem() : ItemStack.EMPTY;
 
         List<Component> modifierComponents = new ArrayList<>();
-        Arrays.stream(EquipmentSlotGroup.values()).forEach(slot -> stack.forEachModifier(slot, (a, m, d) ->
+        Arrays.stream(EquipmentSlotGroup.values()).forEach(slot -> stack.forEachModifier(slot, (_, m, _) ->
                 modifierComponents.add(ComponentUtils.copyOnClickText(m.id().toString()))));
 
         return modifierComponents;

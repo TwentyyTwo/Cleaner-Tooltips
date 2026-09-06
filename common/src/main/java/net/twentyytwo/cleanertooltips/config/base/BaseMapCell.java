@@ -1,6 +1,6 @@
 package net.twentyytwo.cleanertooltips.config.base;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.AbstractContainerEventHandler;
 import net.minecraft.client.gui.narration.NarratableEntry;
 import net.minecraft.network.chat.Component;
@@ -31,12 +31,12 @@ public abstract class BaseMapCell extends AbstractContainerEventHandler implemen
 
     public abstract int getCellHeight();
 
-    public abstract void render(GuiGraphics graphics,
-                                int index, int y, int x,
-                                int entryWidth, int entryHeight,
-                                int mouseX, int mouseY,
-                                boolean isSelected,
-                                float delta);
+    public abstract void extractRenderState(GuiGraphicsExtractor graphics,
+                                            int index, int y, int x,
+                                            int entryWidth, int entryHeight,
+                                            int mouseX, int mouseY,
+                                            boolean isSelected,
+                                            float delta);
 
     public void updateBounds(boolean expanded, int x, int y, int entryWidth, int entryHeight) {
     }

@@ -9,7 +9,6 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.neoforged.neoforge.common.util.AttributeTooltipContext;
 import net.neoforged.neoforge.common.util.AttributeUtil;
-import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.util.AttributeHelper;
 import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,12 +25,7 @@ public abstract class AttributeUtilMixin {
     @Inject(method = "applyModifierTooltips", at = @At("TAIL"))
     private static void addMiningSpeedTooltip(ItemStack stack, Consumer<Component> tooltip,
                                               AttributeTooltipContext ctx, CallbackInfo ci) {
-        if (CleanerTooltips.config.miningSpeed && stack != null && !stack.isEmpty()) {
-            float speed = TooltipsUtil.getDiggingSpeed(stack);
-            if (speed > 0.0f) {
-                tooltip.accept(TooltipsUtil.getDiggingSpeedComponent(speed));
-            }
-        }
+        TooltipsUtil.addDiggingSpeedText(stack, tooltip);
     }
 
     // Fixes MC-271840

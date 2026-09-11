@@ -20,9 +20,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
-import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
 import net.twentyytwo.cleanertooltips.config.ColorStopMapListEntry.ColorStopMapCell;
-import net.twentyytwo.cleanertooltips.util.TooltipsUtil;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -115,8 +113,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         AutoListListEntry attributeBlacklist = new AutoListListEntry.Builder(
                 entryBuilder, translate("option.attributeIdBlacklist"), config.attributeIdBlacklist)
                 .setTooltip(translate("option.attributeIdBlacklist.tooltip"))
-                .setDefaultValue(BetterCombatHandler.isModLoaded
-                                         ? List.of("minecraft:player.entity_interaction_range") : List.of())
+                .setDefaultValue(List.of())
                 .setSaveConsumer(newVal -> config.attributeIdBlacklist = newVal)
                 .setInsertInFront(true)
                 .setCellErrorSupplier(ATTRIBUTE_ID_VALIDATOR)
@@ -308,9 +305,11 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         SORTED_STOPS.clear();
         var config = CleanerTooltips.config;
 
-        config.attributeIdBlacklist
-                .forEach(s -> TooltipsUtil.getAttributeFromString(s).ifPresent(BLACKLISTED_ATTRIBUTES::add));
-        config.modifierIdBlacklist.forEach(s -> BLACKLISTED_MODIFIERS.add(RegexLocation.parse(s)));
+        config.attributeIdBlacklist.forEach(s -> {
+            Optional<ResourceLocation> optLoc = Optional.ofNullable(ResourceLocation.tryParse(s));
+            optLoc.flatMap(BuiltInRegistries.ATTRIBUTE::getHolder).ifPresent(BLACKLISTED_ATTRIBUTES::add);
+        });
+        config.modifierIdBlacklist.stream().map(RegexLocation::parse).forEach(BLACKLISTED_MODIFIERS::add);
 
         SORTED_STOPS.putAll(config.colorsStops);
 

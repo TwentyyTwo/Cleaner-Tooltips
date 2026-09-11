@@ -58,7 +58,8 @@
   "text.cleanertooltips.toggle.enabled": "An",
   "text.cleanertooltips.toggle.disabled": "Aus",
 
-  "text.cleanertooltips.mining_speed": "%s Abbaugeschwindigkeit",
+  "text.cleanertooltips.mining_speed": " %s Abbaugeschwindigkeit",
 
-  "key.cleanertooltips.hide_tooltip": "Attribut-Tooltips verstecken"
+  "key.cleanertooltips.categories.mod": "Cleaner Tooltips",
+  "key.cleanertooltips.show_default": "Standard-Tooltips Anzeigen"
 }

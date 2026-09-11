@@ -58,7 +58,8 @@
   "text.cleanertooltips.toggle.enabled": "On",
   "text.cleanertooltips.toggle.disabled": "Off",
 
-  "text.cleanertooltips.mining_speed": "%s Mining Speed",
+  "text.cleanertooltips.mining_speed": " %s Mining Speed",
 
-  "key.cleanertooltips.hide_tooltip": "Hide Attribute Tooltips"
+  "key.cleanertooltips.categories.mod": "Cleaner Tooltips",
+  "key.cleanertooltips.show_default": "Show Default Tooltips"
 }

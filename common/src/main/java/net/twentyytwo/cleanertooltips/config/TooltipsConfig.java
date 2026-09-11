@@ -4,7 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import net.minecraft.core.Holder;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
-import net.twentyytwo.cleanertooltips.compat.BetterCombatHandler;
+import net.twentyytwo.cleanertooltips.services.Services;
 
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -31,7 +31,7 @@ public class TooltipsConfig {
     public boolean customOrder = false;
     public GroupDisplay groupDisplay = GroupDisplay.ROWS;
 
-    public List<String> attributeIdBlacklist = BetterCombatHandler.isModLoaded
+    public List<String> attributeIdBlacklist = Services.PLATFORM.isModLoaded("bettercombat")
             ? List.of("minecraft:player.entity_interaction_range") : List.of();
     public List<String> modifierIdBlacklist = List.of("minecraft:enchantment.efficiency/mainhand",
             "apotheosis:overworld/royalty_modifier_apothic_attributes.head_#");

@@ -3,7 +3,6 @@ package net.twentyytwo.cleanertooltips;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
-import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -31,15 +30,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lwjgl.glfw.GLFW;
 
-import java.text.DecimalFormat;
-
 public class CleanerTooltips {
 
     public static final String MOD_ID = "cleanertooltips";
-    public static final KeyMapping HIDE_TOOLTIP = new KeyMapping("key.cleanertooltips.hide_tooltip",
-                                                                 InputConstants.Type.KEYSYM,
+    public static final KeyMapping HIDE_TOOLTIP = new KeyMapping("key.cleanertooltips.show_default",
                                                                  GLFW.GLFW_KEY_V,
-                                                                 KeyMapping.CATEGORY_INVENTORY);
+                                                                 "key.cleanertooltips.categories.mod");
 
     public static TooltipsConfig config = TooltipsClothConfig.init();
 
@@ -85,24 +81,19 @@ public class CleanerTooltips {
     }
 
     private static MutableComponent durabilityFormatting(ItemStack stack) {
-        int maxDurability = stack.getMaxDamage();
-        int curDurability = maxDurability - stack.getDamageValue();
-        int percentage = Math.round(((float) curDurability / maxDurability) * 100);
+        int max = stack.getMaxDamage();
+        int cur = max - stack.getDamageValue();
+        int percentage = Math.round(((float) cur / max) * 100);
 
         int durabilityColor = getDurabilityColor(stack, percentage);
 
-        switch (config.durabilityStyle) {
-            case PERCENTAGE -> {
-                return Component.literal(String.format("%d%%", percentage)).withColor(durabilityColor);
-            }
+        return switch (config.durabilityStyle) {
+            case PERCENTAGE -> Component.literal(String.format("%d%%", percentage)).withColor(durabilityColor);
             case null, default -> {
-                var remain = Component.literal(String.valueOf(curDurability)).withColor(durabilityColor);
-                if (!config.durabilityMaximum) return remain;
-
-                return remain.append(Component.literal(String.format(" / %s", maxDurability))
-                        .withStyle(ChatFormatting.DARK_GRAY));
+                var rest = Component.literal(String.valueOf(cur)).withColor(durabilityColor);
+                yield !config.durabilityMaximum ? rest : rest.append(String.format(" / %s", max)).withColor(0x555555);
             }
-        }
+        };
     }
 
     private static int getDurabilityColor(ItemStack stack, int percentage) {
@@ -110,14 +101,14 @@ public class CleanerTooltips {
             return 0xAAAAAA;
         }
 
-        switch (config.colorMode) {
+        return switch (config.colorMode) {
             case LINEAR -> {
-                if (TooltipsConfig.SORTED_STOPS.isEmpty()) return 0xAAAAAA;
+                if (TooltipsConfig.SORTED_STOPS.isEmpty()) yield 0xAAAAAA;
 
                 if (percentage <= TooltipsConfig.SORTED_STOPS.firstKey()) {
-                    return TooltipsConfig.SORTED_STOPS.firstEntry().getValue();
+                    yield TooltipsConfig.SORTED_STOPS.firstEntry().getValue();
                 } else if (percentage >= TooltipsConfig.SORTED_STOPS.lastKey()) {
-                    return TooltipsConfig.SORTED_STOPS.lastEntry().getValue();
+                    yield TooltipsConfig.SORTED_STOPS.lastEntry().getValue();
                 }
 
                 var lower = TooltipsConfig.SORTED_STOPS.floorEntry(percentage);
@@ -125,18 +116,20 @@ public class CleanerTooltips {
 
                 float delta = (float) (percentage - lower.getKey()) / (upper.getKey() - lower.getKey());
 
-                return FastColor.ARGB32.lerp(delta, lower.getValue(), upper.getValue());
+                yield FastColor.ARGB32.lerp(delta, lower.getValue(), upper.getValue());
             }
-            case NATIVE -> {
-                return stack.getBarColor();
-            }
+            case NATIVE -> stack.getBarColor();
             case null, default -> {
                 for (var e : TooltipsConfig.SORTED_STOPS.entrySet()) {
-                    if (percentage <= e.getKey()) return e.getValue();
+                    if (percentage <= e.getKey()) yield e.getValue();
                 }
-                return 0xAAAAAA;
+                yield 0xAAAAAA;
             }
-        }
+        };
+    }
+
+    private static void blit(GuiGraphics graphics, ResourceLocation location, int x, int y, int size) {
+        graphics.blit(location, x, y, 0, 0, size, size, size, size);
     }
 
     public record IconAttributeComponent(ItemStack stack) implements TooltipComponent {
@@ -211,10 +204,9 @@ public class CleanerTooltips {
                 float speed = TooltipsUtil.getDiggingSpeed(stack);
                 if (speed <= 0.0f) return null;
 
-                var component = Component.literal(DecimalFormat.getInstance().format(speed));
                 Comparison comparison = getMiningSpeedComparison(stack, speed);
 
-                return new AttributeFormattingData(component, DIGGING_SPEED, comparison);
+                return new AttributeFormattingData(Component.literal(format(speed)), DIGGING_SPEED, comparison);
             }
             return null;
         }
@@ -308,7 +300,7 @@ public class CleanerTooltips {
 
             if (TooltipsUtil.canAddDurabilityTooltip(stack)
                     && config.durabilityPos == Position.INLINE) {
-                guiGraphics.blit(DURABILITY_ICON, groupX, y - 1, 0, 0, 9, 9, 9, 9);
+                blit(guiGraphics, DURABILITY_ICON, groupX, y - 1, 9);
                 guiGraphics.drawString(Minecraft.getInstance().font, durabilityComponent, groupX + 9 + GAP, y, -1);
             }
         }
@@ -370,14 +362,14 @@ public class CleanerTooltips {
         private int renderSlotGroupIcon(GuiGraphics guiGraphics,
                                         ResourceLocation icon,
                                         int x, int y) {
-            guiGraphics.blit(icon, x, y, 0, 0, 9, 9, 9, 9);
+            blit(guiGraphics, icon, x, y, 9);
             return x + 9 + GROUP_GAP;
         }
 
         private int renderAttributeIconPair(GuiGraphics guiGraphics,
                                             AttributeFormattingData entry,
                                             int x, int y) {
-            guiGraphics.blit(entry.icon(), x, y, 0, 0, 9, 9, 9, 9);
+            blit(guiGraphics, entry.icon(), x, y, 9);
             renderComparisonArrow(guiGraphics, entry.comparison(), x, y);
             entry.applyComparison();
             guiGraphics.drawString(Minecraft.getInstance().font, entry.text(), x + 9 + GAP, y + 1, -1);
@@ -399,7 +391,7 @@ public class CleanerTooltips {
             if (config.comparisonArrow && !comparison.equals(Comparison.NONE)) {
                 ResourceLocation arrow = comparison.equals(Comparison.HIGHER) ? HIGHER : LOWER;
                 int height = TooltipsUtil.getTickToggle() ? y : y - 1;
-                guiGraphics.blit(arrow, x + 7, height, 0, 0, 3, 3, 3, 3);
+                blit(guiGraphics, arrow, x + 7, height, 3);
             }
         }
 
@@ -444,7 +436,7 @@ public class CleanerTooltips {
         @Override
         public void renderImage(@NotNull Font font, int x, int y,
                                 @NotNull GuiGraphics guiGraphics) {
-            guiGraphics.blit(DURABILITY_ICON , x, y - 1, 0, 0, 9, 9, 9, 9);
+            blit(guiGraphics, DURABILITY_ICON, x, y - 1, 9);
             guiGraphics.drawString(Minecraft.getInstance().font, text, x + 9 + GAP, y, -1);
         }
     }

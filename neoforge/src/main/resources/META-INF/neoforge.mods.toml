@@ -9,7 +9,7 @@ version="${version}"
 displayName="${mod_name}"
 authors="${mod_author}"
 description='''${description}'''
-logoFile = "icon.png"
+iconFile = "icon.png"
 
 [[mixins]]
 config = "cleanertooltips.neoforge.mixins.json"

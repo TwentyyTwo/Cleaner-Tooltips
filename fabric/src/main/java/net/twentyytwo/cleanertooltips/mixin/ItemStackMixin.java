@@ -52,13 +52,7 @@ public abstract class ItemStackMixin {
     // Add the mining speed to the end of the attributes
     @Inject(method = "addAttributeTooltips", at = @At("TAIL"))
     private void addMiningSpeedTooltip(Consumer<Component> tooltipAdder, Player player, CallbackInfo ci) {
-        ItemStack thisStack = (ItemStack) (Object) this;
-        if (CleanerTooltips.config.miningSpeed && thisStack != null && !thisStack.isEmpty()) {
-            float speed = TooltipsUtil.getDiggingSpeed(thisStack);
-            if (speed > 0.0f) {
-                tooltipAdder.accept(TooltipsUtil.getDiggingSpeedComponent(speed));
-            }
-        }
+        TooltipsUtil.addDiggingSpeedText((ItemStack) (Object) this, tooltipAdder);
     }
 
     // Fixes MC-271840

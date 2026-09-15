@@ -1,18 +1,11 @@
 package net.twentyytwo.cleanertooltips.util;
 
-import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
-import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
-import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentUtils;
-import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.EquipmentSlotGroup;
-import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.component.Tool;
 import net.minecraft.world.item.enchantment.Enchantment;
@@ -20,12 +13,13 @@ import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import net.minecraft.world.item.enchantment.ItemEnchantments;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
+import java.util.function.Consumer;
+
+import static net.minecraft.world.item.component.ItemAttributeModifiers.ATTRIBUTE_MODIFIER_FORMAT;
 
 /**
  * Collection of useful functions.
@@ -49,10 +43,6 @@ public class TooltipsUtil {
     public static ItemStack getEquippedStack(ItemStack stack) {
         var player = Minecraft.getInstance().player;
         return player != null ? player.getItemBySlot(player.getEquipmentSlotForItem(stack)) : ItemStack.EMPTY;
-    }
-
-    public static Optional<Holder.Reference<Attribute>> getAttributeFromString(String s) {
-        return BuiltInRegistries.ATTRIBUTE.get(ResourceLocation.parse(s));
     }
 
     public static List<Component> getMainhandModifierComponents() {
@@ -89,11 +79,14 @@ public class TooltipsUtil {
         return bonus;
     }
 
-    public static MutableComponent getDiggingSpeedComponent(float speed) {
-        return CommonComponents.space()
-                .append(Component.translatable("text.cleanertooltips.mining_speed",
-                        DecimalFormat.getInstance().format(speed)))
-                .withStyle(ChatFormatting.DARK_GREEN);
+    public static void addDiggingSpeedText(ItemStack stack, Consumer<Component> tooltipAdder) {
+        if (CleanerTooltips.config.miningSpeed && stack != null && !stack.isEmpty()) {
+            float speed = getDiggingSpeed(stack);
+            if (speed > 0.0f) {
+                tooltipAdder.accept(Component.translatable("text.cleanertooltips.mining_speed",
+                                                           ATTRIBUTE_MODIFIER_FORMAT.format(speed)).withColor(0xaa00));
+            }
+        }
     }
 
     public static float getDiggingSpeed(ItemStack stack) {

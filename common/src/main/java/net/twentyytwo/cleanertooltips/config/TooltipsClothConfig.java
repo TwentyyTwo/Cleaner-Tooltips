@@ -304,6 +304,9 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         SORTED_STOPS.clear();
         var config = CleanerTooltips.config;
 
+        // Sanitize attribute id blacklist
+        config.attributeIdBlacklist.replaceAll(s -> s.replaceAll("(generic|horse|player|zombie)\\.", ""));
+
         config.attributeIdBlacklist.forEach(s -> {
             Optional<ResourceLocation> optLoc = Optional.ofNullable(ResourceLocation.tryParse(s));
             optLoc.flatMap(BuiltInRegistries.ATTRIBUTE::get).ifPresent(BLACKLISTED_ATTRIBUTES::add);

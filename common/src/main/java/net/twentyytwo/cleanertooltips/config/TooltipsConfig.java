@@ -32,7 +32,7 @@ public class TooltipsConfig {
     public GroupDisplay groupDisplay = GroupDisplay.ROWS;
 
     public List<String> attributeIdBlacklist = Services.PLATFORM.isModLoaded("bettercombat")
-            ? List.of("minecraft:player.entity_interaction_range") : List.of();
+            ? List.of("minecraft:entity_interaction_range") : List.of();
     public List<String> modifierIdBlacklist = List.of("minecraft:enchantment.efficiency/mainhand");
 
     public int attributeGap = 8;

@@ -15,6 +15,8 @@ Cleaner Tooltips
 
 <h4 align="center">A simple client-side mod that changes the tooltips of tools and armor to display their attributes as icons.</h4>
 
+<h3 align="center">The 1.20 backport is a work in progress.</h3>
+
 ## Additional Features
 
 - Display the durability of items (disabled by default)

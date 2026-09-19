@@ -1,6 +1,6 @@
 plugins {
     id 'multiloader-common'
-    id 'net.neoforged.moddev'
+    id 'net.neoforged.moddev.legacyforge'
 }
 
 repositories {
@@ -14,9 +14,8 @@ repositories {
     }
 }
 
-neoForge {
-    neoFormVersion = neo_form_version
-    // Automatically enable AccessTransformers if the file exists
+legacyForge {
+    mcpVersion = minecraft_version
     def at = file('src/main/resources/META-INF/accesstransformer.cfg')
     if (at.exists()) {
         accessTransformers.from(at.absolutePath)
@@ -28,14 +27,13 @@ neoForge {
 }
 
 dependencies {
-    compileOnly "org.spongepowered:mixin:0.8.7"
+    compileOnly "org.spongepowered:mixin:0.8.5"
     // fabric and neoforge both bundle mixinextras, so it is safe to use it in common
-    compileOnly "io.github.llamalad7:mixinextras-common:${mixin_extras_version}"
-    annotationProcessor "io.github.llamalad7:mixinextras-common:${mixin_extras_version}"
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
 
     api "me.shedaniel.cloth:cloth-config-forge:${cloth_config_version}"
 
-    compileOnly "maven.modrinth:better-combat:2.3.1+1.21.1-neoforge"
+    compileOnly "maven.modrinth:better-combat:1.9.0+1.20.1-forge"
     compileOnly "maven.modrinth:legendary-tooltips:BabRJO04"
     compileOnly "maven.modrinth:iceberg:IMssx9du"
 }

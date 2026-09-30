@@ -18,16 +18,12 @@ import java.util.List;
 @Mixin(TooltipDecor.class)
 public abstract class TooltipDecorMixin {
 
-    @Definition(id = "components", local = @Local(type = List.class, argsOnly = true))
     @Definition(id = "get", method = "Ljava/util/List;get(I)Ljava/lang/Object;")
     @Definition(id = "ClientTextTooltip", type = ClientTextTooltip.class)
-    @Expression("components.get(?) instanceof ClientTextTooltip")
-    @ModifyExpressionValue(
-            method = "drawBorder",
-            at = @At("MIXINEXTRAS:EXPRESSION")
-    )
+    @Expression("?.get(?) instanceof ClientTextTooltip")
+    @ModifyExpressionValue(method = "drawBorder", at = @At("MIXINEXTRAS:EXPRESSION"))
     private static boolean addIconCondition(boolean original,
-            @Local(argsOnly = true, name = "components") List<ClientTooltipComponent> components,
+            @Local(argsOnly = true) List<ClientTooltipComponent> components,
             @Local(name = "i") int i) {
         return original || (components.get(i) instanceof ClientIconComponent);
     }

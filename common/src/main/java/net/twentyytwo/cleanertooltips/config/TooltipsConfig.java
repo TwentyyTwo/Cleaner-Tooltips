@@ -6,6 +6,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.twentyytwo.cleanertooltips.services.Services;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,8 +33,8 @@ public class TooltipsConfig {
     public GroupDisplay groupDisplay = GroupDisplay.ROWS;
 
     public List<String> attributeIdBlacklist = Services.PLATFORM.isModLoaded("bettercombat")
-            ? List.of("minecraft:entity_interaction_range") : List.of();
-    public List<String> modifierIdBlacklist = List.of("minecraft:enchantment.efficiency/mainhand");
+            ? new ArrayList<>(List.of("minecraft:entity_interaction_range")) : new ArrayList<>();
+    public List<String> modifierIdBlacklist = new ArrayList<>(List.of("minecraft:enchantment.efficiency/mainhand"));
 
     public int attributeGap = 8;
     public int innerGap = 3;

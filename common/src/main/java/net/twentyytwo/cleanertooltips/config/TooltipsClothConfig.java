@@ -22,6 +22,7 @@ import net.minecraft.resources.Identifier;
 import net.twentyytwo.cleanertooltips.CleanerTooltips;
 import net.twentyytwo.cleanertooltips.config.ColorStopMapListEntry.ColorStopMapCell;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -113,7 +114,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         AutoListListEntry attributeBlacklist = new AutoListListEntry.Builder(
                 entryBuilder, translate("option.attributeIdBlacklist"), config.attributeIdBlacklist)
                 .setTooltip(translate("option.attributeIdBlacklist.tooltip"))
-                .setDefaultValue(List.of())
+                .setDefaultValue(new ArrayList<>())
                 .setSaveConsumer(newVal -> config.attributeIdBlacklist = newVal)
                 .setInsertInFront(true)
                 .setCellErrorSupplier(ATTRIBUTE_ID_VALIDATOR)
@@ -124,7 +125,7 @@ public class TooltipsClothConfig extends TooltipsConfig implements ConfigData {
         FilterableListListEntry modifierBlacklist = new FilterableListListEntry.Builder(
                 entryBuilder, translate("option.modifierIdBlacklist"), config.modifierIdBlacklist)
                 .setTooltip(translate("option.modifierIdBlacklist.tooltip"))
-                .setDefaultValue(List.of("minecraft:enchantment.efficiency/mainhand"))
+                .setDefaultValue(new ArrayList<>(List.of("minecraft:enchantment.efficiency/mainhand")))
                 .setSaveConsumer(newVal -> config.modifierIdBlacklist = newVal)
                 .setInsertInFront(true)
                 .setFilter(TooltipsClothConfig::isValidLocationRegex)

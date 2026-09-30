@@ -3,6 +3,7 @@ package net.twentyytwo.cleanertooltips;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -29,13 +30,12 @@ import net.twentyytwo.cleanertooltips.util.ClientIconComponent;
 import net.twentyytwo.cleanertooltips.util.Comparison;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lwjgl.glfw.GLFW;
 
 public class CleanerTooltips {
 
     public static final String MOD_ID = "cleanertooltips";
     public static final KeyMapping HIDE_TOOLTIP = new KeyMapping("key.cleanertooltips.show_default",
-                                                                 GLFW.GLFW_KEY_V,
+                                                                 InputConstants.KEY_V,
                                                                  KeyMapping.Category.register(location("mod")));
 
     public static TooltipsConfig config = TooltipsClothConfig.init();

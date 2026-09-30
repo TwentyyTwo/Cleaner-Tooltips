@@ -1,5 +1,6 @@
 package net.twentyytwo.cleanertooltips.config;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.KeyEvent;
@@ -8,7 +9,6 @@ import net.twentyytwo.cleanertooltips.config.base.FilterableEditBox;
 import net.twentyytwo.cleanertooltips.mixin.EditBoxAccessor;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -56,15 +56,15 @@ public class AutoEditBox extends FilterableEditBox {
 
     @Override
     public boolean keyPressed(@NotNull KeyEvent keyEvent) {
-        if (keyEvent.key() == GLFW.GLFW_KEY_TAB && (keyEvent.modifiers() & GLFW.GLFW_MOD_SHIFT) != 0) {
+        if (keyEvent.key() == InputConstants.KEY_TAB && (keyEvent.modifiers() & InputConstants.MOD_SHIFT) != 0) {
             if (handleShiftTab(this)) return true;
-        } else if (keyEvent.key() == GLFW.GLFW_KEY_TAB) {
+        } else if (keyEvent.key() == InputConstants.KEY_TAB) {
             if (handleTab(this)) return true;
-        } else if (keyEvent.key() == GLFW.GLFW_KEY_DOWN || keyEvent.key() == GLFW.GLFW_KEY_RIGHT) {
+        } else if (keyEvent.key() == InputConstants.KEY_DOWN || keyEvent.key() == InputConstants.KEY_RIGHT) {
             shiftAmount++;
             this.onValueChange(this.getValue(), true);
             return true;
-        } else if (keyEvent.key() == GLFW.GLFW_KEY_UP || keyEvent.key() == GLFW.GLFW_KEY_LEFT) {
+        } else if (keyEvent.key() == InputConstants.KEY_UP || keyEvent.key() == InputConstants.KEY_LEFT) {
             shiftAmount--;
             this.onValueChange(this.getValue(), true);
             return true;
